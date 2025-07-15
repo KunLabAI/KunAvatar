@@ -1,0 +1,245 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Plus, 
+  Settings, 
+  PanelLeft, 
+  PanelRight, 
+  Server,
+  BrainCircuit,
+  Bot,
+  MessageSquareText,
+  History
+} from 'lucide-react';
+import { Conversation } from '@/lib/database';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+
+interface SidebarProps {
+  conversations: Conversation[];
+}
+
+// 简化的侧边栏状态管理
+function useSidebarState() {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const toggleSidebar = () => {
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    
+    if (typeof window !== 'undefined') {
+      document.documentElement.setAttribute('data-sidebar-state', newState ? 'expanded' : 'collapsed');
+      localStorage.setItem('sidebar-expanded', JSON.stringify(newState));
+    }
+  };
+
+  // 在客户端挂载后同步真实状态
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const state = document.documentElement.getAttribute('data-sidebar-state');
+      const actualState = state === 'expanded';
+      if (actualState !== isExpanded) {
+        setIsExpanded(actualState);
+      }
+    }
+  }, [isExpanded]);
+
+  return { isExpanded, toggleSidebar };
+}
+
+export function Sidebar({ conversations }: SidebarProps) {
+  const { isExpanded, toggleSidebar } = useSidebarState();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // 处理创建新对话的逻辑
+  const handleNewConversation = () => {
+    router.push('/simple-chat?new=true');
+  };
+
+  // 处理logo点击 - 进入聊天空状态页面
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push('/simple-chat');
+  };
+
+  // 处理开始对话按钮 - 进入最近一次对话或新建对话
+  const handleStartChat = () => {
+    // 获取最新的对话（按updated_at排序，第一个就是最新的）
+    const latestConversation = conversations && conversations.length > 0 ? conversations[0] : null;
+    
+    if (latestConversation) {
+      // 有对话历史，进入最新对话
+      router.push(`/simple-chat?id=${latestConversation.id}`);
+    } else {
+      // 没有对话历史，新建对话
+      router.push('/simple-chat?new=true');
+    }
+  };
+
+  return (
+    <div className="sidebar-container relative bg-theme-card border-r border-theme-border flex flex-col h-full">
+      {/* 顶部区域 */}
+      <div className="group p-4 border-b border-theme-border flex items-center relative">
+        <button onClick={handleLogoClick} className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 text-left">
+          <Image
+            src="/assets/logo@64.svg"
+            alt="Kun Avatar Logo"
+            width={32}
+            height={32}
+            className="w-8 h-8 transition-all duration-300 flex-shrink-0"
+          />
+          <h1 className="sidebar-text text-xl font-bold text-theme-foreground tracking-tight">
+            Kun Avatar
+          </h1>
+        </button>
+        {/* 缩进/展开按钮 - 悬浮在侧边栏外部右侧 */}
+        <button
+          onClick={toggleSidebar}
+          className={`absolute -right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-card-hover transition-all duration-200 bg-theme-card  z-10 ${
+            isExpanded ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+          }`}
+          title={isExpanded ? "收起侧边栏" : "展开侧边栏"}
+        >
+          {isExpanded ? (
+            <PanelLeft className="w-4 h-4" />
+          ) : (
+            <PanelRight className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+
+      {/* 新建对话区域 */}
+      <div className="p-3">
+        <button
+          onClick={handleNewConversation}
+          className="sidebar-button group relative w-full flex items-center gap-3 p-3 rounded-lg bg-theme-primary text-white hover:bg-theme-primary-hover transition-colors duration-200"
+        >
+          <Plus className="w-5 h-5 flex-shrink-0" />
+          <span className="sidebar-text text-sm font-semibold">新建对话</span>
+          <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+            新建对话
+          </span>
+        </button>
+      </div>
+      
+      {/* 导航菜单区域 */}
+      <div className="pl-2 flex-1">
+        <nav className="space-y-1">
+          <button
+            onClick={handleStartChat}
+            className={`sidebar-nav-item sidebar-button group relative flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 w-full text-left ${
+              pathname === '/simple-chat' 
+                ? 'active text-theme-foreground' 
+                : 'text-theme-foreground-muted hover:text-theme-foreground'
+            }`}
+          >
+            <div className="sidebar-icon-container">
+              <MessageSquareText className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <span className="sidebar-text text-sm">开始对话</span>
+            <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+              {conversations && conversations.length > 0 ? '进入最近对话' : '开始新对话'}
+            </span>
+          </button>
+          <Link
+            href="/mcp-config"
+            className={`sidebar-nav-item sidebar-button group relative flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
+              pathname === '/mcp-config' 
+                ? 'active text-theme-foreground' 
+                : 'text-theme-foreground-muted hover:text-theme-foreground'
+            }`}
+          >
+            <div className="sidebar-icon-container">
+              <Server className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <span className="sidebar-text text-sm">MCP配置</span>
+            <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+              MCP配置
+            </span>
+          </Link>
+          
+          <Link
+            href="/model-manager"
+            className={`sidebar-nav-item sidebar-button group relative flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
+              pathname === '/model-manager' 
+                ? 'active text-theme-foreground' 
+                : 'text-theme-foreground-muted hover:text-theme-foreground'
+            }`}
+          >
+            <div className="sidebar-icon-container">
+              <BrainCircuit className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <span className="sidebar-text text-sm">模型管理</span>
+            <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+              模型管理
+            </span>
+          </Link>
+          
+          <Link
+            href="/agents"
+            className={`sidebar-nav-item sidebar-button group relative flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
+              pathname === '/agents' 
+                ? 'active text-theme-foreground' 
+                : 'text-theme-foreground-muted hover:text-theme-foreground'
+            }`}
+          >
+            <div className="sidebar-icon-container">
+              <Bot className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <span className="sidebar-text text-sm">智能体管理</span>
+            <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+              智能体管理
+            </span>
+          </Link>
+          
+
+        </nav>
+      </div>
+
+      {/* 底部区域 */}
+      <div className="border-t border-theme-border">
+        <div className="p-3 space-y-2">
+          <Link
+            href="/conversations"
+            className={`sidebar-button sidebar-nav-item group relative w-full flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
+              pathname === '/conversations'
+                ? 'active text-theme-foreground'
+                : 'text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-card-hover'
+            }`}
+          >
+            <div className="sidebar-icon-container">
+              <History className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <span className="sidebar-text text-sm">对话历史</span>
+            <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+              对话历史
+            </span>
+          </Link>
+          
+          {/* 设置按钮 */}
+          <Link
+            href="/settings"
+            className={`sidebar-button sidebar-nav-item group relative w-full flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
+              pathname === '/settings'
+                ? 'active text-theme-foreground'
+                : 'text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-card-hover'
+            }`}
+          >
+            <div className="sidebar-icon-container">
+              <Settings className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <span className="sidebar-text text-sm">设置</span>
+            <span className="sidebar-tooltip absolute left-full ml-4 px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 pointer-events-none">
+              设置
+            </span>
+          </Link>
+        </div>
+
+      </div>
+    </div>
+  );
+}

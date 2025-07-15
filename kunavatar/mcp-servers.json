@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "local": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "src/lib/mcp/mcp-server.ts"
+      ],
+      "description": "本地硬编码MCP工具服务器，包含计算器、时间、文件操作等基础工具",
+      "enabled": true
+    },
+    "12306-MCP车票查询工具": {
+      "type": "sse",
+      "url": "https://mcp.api-inference.modelscope.net/31679cda84794e/sse",
+      "path": "/",
+      "protocol": "http",
+      "description": "@Joooook/12306-mcp -服务器提供一个简单的API接口，允许用户搜索12306的车票。"
+    },
+    "Tavily MCP Server": {
+      "type": "sse",
+      "url": "https://glama.ai/mcp/instances/sovn1bacav/sse?token=ceb4a04b-6f92-4a5f-b499-318a9b35450e",
+      "path": "/",
+      "protocol": "http",
+      "description": "Tavily MCP Server国际版"
+    }
+  }
+}

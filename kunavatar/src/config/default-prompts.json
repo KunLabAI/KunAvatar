@@ -1,0 +1,20 @@
+{
+  "prompt_optimize_system_prompt": {
+    "key": "prompt_optimize_system_prompt",
+    "value": "提示词优化任务：\n\n将用户的简单提示词转化为详细、具体的提示词。\n\n要求：\n- 只输出优化后的提示词\n- 不要任何解释或前缀\n- 保持用户核心意图\n- 不要使用思考模式，直接输出结果",
+    "description": "提示词优化系统提示词",
+    "category": "prompt_optimize"
+  },
+  "title_summary_system_prompt": {
+    "key": "title_summary_system_prompt",
+    "value": "消息标题总结任务：\n\n根据对话内容生成简洁、准确的标题。\n\n要求：\n- 标题长度控制在10-20个字符\n- 体现对话的核心主题\n- 使用简洁明了的语言\n- 不要包含特殊符号或格式\n- 直接输出标题，不要解释",
+    "description": "消息标题总结系统提示词",
+    "category": "title_summary"
+  },
+  "memory_system_prompt": {
+    "key": "memory_system_prompt",
+    "value": "记忆模块任务：\n\n从对话中提取和整理重要信息，形成结构化记忆。\n\n要求：\n- 提取关键事实、偏好和上下文信息\n- 按重要性排序记忆内容\n- 使用简洁的格式存储\n- 避免重复和冗余信息\n- 保持记忆的时效性和相关性",
+    "description": "记忆模块系统提示词",
+    "category": "memory"
+  }
+}

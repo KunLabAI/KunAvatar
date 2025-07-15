@@ -1,0 +1,17 @@
+{
+  "name": "kun-avatar-launcher",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "KunAvatar 智能启动器",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node start.js",
+    "install-deps": "cd kunavatar && npm install",
+    "build": "cd kunavatar && npm run build",
+    "lint": "cd kunavatar && npm run lint"
+  },
+  "keywords": ["kunavatar", "launcher", "auto-config"],
+  "author": "KunAvatar Team",
+  "license": "MIT"
+}

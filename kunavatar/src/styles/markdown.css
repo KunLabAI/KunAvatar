@@ -1,0 +1,639 @@
+/* Markdown渲染器样式 - 独立样式文件 */
+
+/* 基础容器样式 */
+.markdown-renderer {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.7;
+  color: var(--color-foreground);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  min-width: 0;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* 确保所有子元素都遵循宽度限制 */
+.markdown-renderer * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 标题样式 */
+.markdown-renderer h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 2rem 0 1rem 0;
+  color: var(--color-foreground);
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 0.75rem;
+  position: relative;
+}
+
+.markdown-renderer h1:first-child {
+  margin-top: 0;
+}
+
+.markdown-renderer h1::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 4rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+  border-radius: 1px;
+}
+
+.markdown-renderer h2 {
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.75rem 0 0.875rem 0;
+  color: var(--color-foreground);
+  position: relative;
+}
+
+.markdown-renderer h2::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 1.5rem;
+  background: var(--color-primary);
+  border-radius: 2px;
+  opacity: 0.8;
+}
+
+.markdown-renderer h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1.5rem 0 0.75rem 0;
+  color: var(--color-foreground);
+}
+
+.markdown-renderer h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1.25rem 0 0.625rem 0;
+  color: var(--color-foreground);
+}
+
+.markdown-renderer h5 {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 1rem 0 0.5rem 0;
+  color: var(--color-foreground);
+}
+
+.markdown-renderer h6 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 1rem 0 0.5rem 0;
+  color: var(--color-foreground-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 段落样式 */
+.markdown-renderer p {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--color-foreground);
+}
+
+.markdown-renderer p:last-child {
+  margin-bottom: 0;
+}
+
+/* 代码块容器样式 */
+.markdown-code-block {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  width: 80%;
+  max-width: 100%;
+}
+
+/* 代码块标题栏 */
+.markdown-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+.markdown-code-language {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+  font-weight: 500;
+  color: var(--color-foreground-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.markdown-code-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.375rem;
+  border: none;
+  background: transparent;
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  opacity: 0.8;
+}
+
+.markdown-code-copy-btn:hover {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+.markdown-code-copy-btn.copied {
+  color: var(--color-success);
+}
+
+/* 代码块内容样式 */
+.markdown-code-content {
+  position: relative;
+  background: var(--color-card);
+}
+
+.markdown-code-content pre {
+  margin: 0 !important;
+  padding: 1.25rem !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', 'Consolas', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+  overflow-x: auto;
+}
+
+/* 内联代码样式 */
+.markdown-inline-code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.875em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  font-weight: 500;
+  /* 添加换行和宽度限制 */
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  display: inline;
+  overflow-wrap: break-word;
+}
+
+/* 列表样式 */
+.markdown-renderer ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.markdown-renderer ul {
+  position: relative;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.markdown-renderer li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.markdown-renderer li::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.6rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.markdown-renderer ul::before {
+  content: '';
+  position: absolute;
+  top: 0.6rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* 嵌套列表样式 */
+.markdown-renderer ul ul {
+  margin: 0.25rem 0;
+  padding-left: 0.5rem;
+}
+
+.markdown-renderer ul ul li {
+  padding-left: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.markdown-renderer ul ul li::before {
+  left: 0.375rem;
+  top: 0.6rem;
+  width: 4px;
+  height: 4px;
+  background: var(--color-foreground-muted);
+}
+
+/* 三级嵌套列表样式 */
+.markdown-renderer ul ul ul {
+  padding-left: 1.25rem;
+}
+
+.markdown-renderer ul ul ul li {
+  padding-left: 1.25rem;
+}
+
+.markdown-renderer ul ul ul li::before {
+  left: 0.25rem;
+  width: 3px;
+  height: 3px;
+  background: var(--color-foreground-muted);
+  opacity: 0.7;
+}
+
+.markdown-renderer ol {
+  list-style: none;
+  counter-reset: ol-counter;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.markdown-renderer ol li {
+  position: relative;
+  padding-left: 2rem;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  counter-increment: ol-counter;
+}
+
+.markdown-renderer ol li::before {
+  content: counter(ol-counter);
+  position: absolute;
+  top: 0.6rem;
+  width: auto;
+  height: 1.6;
+  color: var(--color-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* 嵌套有序列表样式 */
+.markdown-renderer ol ol {
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+  counter-reset: ol-counter-nested;
+}
+
+.markdown-renderer ol ol li {
+  padding-left: 1.75rem;
+  margin: 0.25rem 0;
+  counter-increment: ol-counter-nested;
+}
+
+.markdown-renderer ol ol li::before {
+  content: counter(ol-counter-nested, lower-alpha);
+  width: auto;
+  height: auto;
+  font-size: 0.7rem;
+  color: var(--color-foreground-secondary);
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* 三级嵌套有序列表样式 */
+.markdown-renderer ol ol ol {
+  padding-left: 1.25rem;
+  counter-reset: ol-counter-nested2;
+}
+
+.markdown-renderer ol ol ol li {
+  padding-left: 1.5rem;
+  counter-increment: ol-counter-nested2;
+}
+
+.markdown-renderer ol ol ol li::before {
+  content: counter(ol-counter-nested2, lower-roman);
+  width: auto;
+  height: auto;
+  font-size: 0.65rem;
+  color: var(--color-foreground-muted);
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* 混合嵌套列表样式 */
+.markdown-renderer ul ol,
+.markdown-renderer ol ul {
+  margin: 0;
+}
+
+.markdown-renderer ul ol li,
+.markdown-renderer ol ul li {
+  margin: 0.25rem 0;
+}
+
+/* 修复混合嵌套列表的计数器问题 */
+.markdown-renderer ul ol {
+  counter-reset: ol-counter;
+}
+
+.markdown-renderer ul ol li {
+  counter-increment: ol-counter;
+}
+
+.markdown-renderer ul ol li::before {
+  content: counter(ol-counter);
+  position: absolute;
+  left: 0;
+  top: 0.6rem;
+  width: auto;
+  height: auto;
+  color: var(--color-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* 有序列表中的无序子列表不应该影响父级计数器 */
+.markdown-renderer ol ul {
+  margin: 0.25rem 0;
+}
+
+.markdown-renderer ol ul li {
+  /* 重置无序列表项的计数器增量 */
+  counter-increment: none;
+}
+
+.markdown-renderer ol ul li::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.6rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+/* 引用块样式 */
+.markdown-renderer blockquote {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem 1.25rem 2rem;
+  background: linear-gradient(135deg, 
+    rgba(var(--color-primary-rgb), 0.03) 0%, 
+    rgba(var(--color-primary-rgb), 0.08) 100%);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.15);
+  border-radius: 0.5rem;
+  color: var(--color-foreground-secondary);
+  font-style: italic;
+}
+
+.markdown-renderer blockquote::before {
+  content: '"';
+  position: absolute;
+  top: 0.5rem;
+  left: 0.75rem;
+  font-size: 2rem;
+  color: var(--color-primary);
+  font-family: serif;
+  opacity: 0.3;
+}
+
+.markdown-renderer blockquote p {
+  margin: 0;
+}
+
+/* 表格样式 */
+.markdown-table-wrapper {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+}
+
+.markdown-renderer table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-background);
+}
+
+.markdown-renderer thead {
+  background: linear-gradient(135deg, 
+    var(--color-background-secondary) 0%, 
+    var(--color-background-tertiary) 100%);
+}
+
+.markdown-renderer th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-foreground);
+  border-bottom: 2px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.markdown-renderer th:last-child {
+  border-right: none;
+}
+
+.markdown-renderer td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  font-size: 0.875rem;
+}
+
+.markdown-renderer td:last-child {
+  border-right: none;
+}
+
+.markdown-renderer tbody tr:hover {
+  background: var(--color-background-secondary);
+}
+
+.markdown-renderer tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 链接样式 */
+.markdown-renderer a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.markdown-renderer a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
+  transition: width 0.3s ease;
+}
+
+.markdown-renderer a:hover {
+  color: var(--color-primary-hover);
+}
+
+.markdown-renderer a:hover::after {
+  width: 100%;
+}
+
+/* 分割线样式 */
+.markdown-renderer hr {
+  margin: 2rem 0;
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--color-border) 20%, 
+    var(--color-border-secondary) 50%, 
+    var(--color-border) 80%, 
+    transparent 100%);
+  border-radius: 1px;
+}
+
+/* 强调样式 */
+.markdown-renderer strong {
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.markdown-renderer em {
+  font-style: italic;
+  color: var(--color-foreground-secondary);
+}
+
+.markdown-renderer del {
+  text-decoration: line-through;
+  color: var(--color-foreground-muted);
+  opacity: 0.7;
+}
+
+/* 图片样式 */
+.markdown-renderer img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* 任务列表样式 */
+.markdown-renderer input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #22c55e;
+  vertical-align: middle;
+  margin-top: -0.1rem;
+}
+
+/* 响应式优化 */
+
+@media (max-width: 480px) {
+  .markdown-code-block {
+    width: 100%;
+    margin: 1rem 0;
+    border-radius: 0.375rem;
+  }
+  
+  .markdown-code-header {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .markdown-code-copy-btn {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* 深色主题特定样式 */
+.dark .markdown-code-block {
+  background: transparent;
+  border-color: #333;
+}
+
+.dark .markdown-code-header {
+  font-size: 0.8rem;
+  height: 2.5rem;
+  background: #2a2a2a;
+  border-color: #333;
+}
+
+.dark .markdown-code-content pre {
+  background: transparent !important;
+}
+
+/* 浅色主题特定样式 */
+html:not(.dark) .markdown-code-block {
+  background: transparent;
+}
+
+html:not(.dark) .markdown-code-header {
+  background: #f8f9fa;
+}
+
+html:not(.dark) .markdown-code-content pre {
+  background: transparent !important;
+}
+
+/* 打印样式 */
+@media print {
+  .markdown-renderer {
+    color: black;
+  }
+  
+  .markdown-code-copy-btn {
+    display: none;
+  }
+  
+  .markdown-renderer a::after {
+    display: none;
+  }
+}
