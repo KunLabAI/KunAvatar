@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { usePromptOptimizeSettings, useAvailableModels, useUserPermissions } from './hooks';
 import { Sidebar } from '../Sidebar';
 import { Conversation } from '@/lib/database';
@@ -25,13 +26,27 @@ function ConnectedNotificationContainer() {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('account');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // 从URL参数获取初始标签页，如果没有则默认为'account'
+  const initialTab = searchParams.get('tab') || 'account';
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
   const { settings, isLoaded, updateSetting } = usePromptOptimizeSettings();
   const { models: availableModels, isLoading: modelsLoading, error: modelsError } = useAvailableModels();
   const { isAdmin, loading: permissionsLoading } = useUserPermissions();
   
   // 获取对话数据用于侧边栏
   const { conversations } = useConversations();
+
+  // 处理标签页切换，同时更新URL参数
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // 更新URL参数但不刷新页面
+    const newUrl = `/settings?tab=${tab}`;
+    window.history.replaceState(null, '', newUrl);
+  };
 
   // 当模型列表加载完成且设置已加载时，自动设置默认模型
   useEffect(() => {
@@ -54,7 +69,7 @@ export default function SettingsPage() {
   // 如果当前标签页是用户管理但用户不是管理员，切换到账户管理
   useEffect(() => {
     if (!permissionsLoading && activeTab === 'users' && !isAdmin) {
-      setActiveTab('account');
+      handleTabChange('account');
     }
   }, [isAdmin, permissionsLoading, activeTab]);
   
@@ -91,7 +106,7 @@ export default function SettingsPage() {
                   <h1 className="text-2xl font-bold mb-6 text-theme-foreground">设置</h1>
                   
                   {/* 标签页导航 */}
-                  <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
+                  <SettingsTabs activeTab={activeTab} onTabChange={handleTabChange} isAdmin={isAdmin} />
 
                   {/* Tab内容区 */}
                   {activeTab === 'account' && (

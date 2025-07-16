@@ -26,13 +26,13 @@ export interface PromptOptimizeSettings {
 // 默认设置
 const DEFAULT_SETTINGS: PromptOptimizeSettings = {
   promptModel: '', // 将在运行时设置为第一个可用模型
-  promptEnabled: true,
+  promptEnabled: false, // 默认关闭提示优化功能
   promptSystemPrompt: defaultPrompts.prompt_optimize_system_prompt.value,
   titleSummaryModel: '', // 将在运行时设置为第一个可用模型
-  titleSummaryEnabled: true, // 默认启用标题总结功能
+  titleSummaryEnabled: false, // 默认关闭标题总结功能
   titleSummarySystemPrompt: defaultPrompts.title_summary_system_prompt.value,
   memoryModel: '', // 将在运行时设置为第一个可用模型
-  memoryEnabled: false,
+  memoryEnabled: false, // 默认关闭全局记忆功能
   memoryTriggerRounds: 20,
   memoryTriggerTokens: 8000,
   memorySystemPrompt: defaultPrompts.memory_system_prompt.value,

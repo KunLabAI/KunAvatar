@@ -9,8 +9,9 @@ interface AppInfoTabProps {
 }
 
 export function AppInfoTab({}: AppInfoTabProps) {
-  // 从package.json获取版本信息（这里先硬编码，后续可以动态获取）
-  const currentVersion = '1.0.0';
+  // 从package.json动态获取版本信息
+  const packageJson = require('../../../../../package.json');
+  const currentVersion = packageJson.version;
 
   return (
     <section className="bg-theme-background">
@@ -92,7 +93,6 @@ export function AppInfoTab({}: AppInfoTabProps) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium text-theme-foreground mb-1">当前版本</h3>
-                <p className="text-theme-foreground-muted text-sm">应用当前运行的版本号</p>
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-theme-primary/10 text-theme-primary">
