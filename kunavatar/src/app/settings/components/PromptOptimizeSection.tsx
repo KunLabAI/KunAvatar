@@ -77,9 +77,6 @@ export function PromptOptimizeSection({
       <div className="flex items-center gap-4 mb-4">
         {/* 优化模型 */}
         <div className="flex items-center gap-3 flex-1">
-          <label className="font-medium whitespace-nowrap" style={{ color: 'var(--color-foreground)' }}>
-            优化模型
-          </label>
           <div className="relative flex-1" style={{ maxWidth: '300px' }}>
             {modelsLoading ? (
               <div className="flex items-center justify-center h-9 form-input-base disabled:opacity-50">

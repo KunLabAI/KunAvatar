@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { ChatStyle, DisplaySize } from '../components/input-controls';
-import { useUserSettings } from '@/hooks/useUserSettings';
+import { useUserSettings } from '@/contexts/UserSettingsContext';
 
 export function useChatStyle() {
   const { settings, loading, updateSetting } = useUserSettings();

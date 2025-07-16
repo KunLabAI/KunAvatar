@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Palette, Monitor, Sun, Moon, MessageSquare, Bot, Check, Minimize2 } from 'lucide-react';
 import { useTheme } from '@/theme/contexts/ThemeContext';
 import { ChatStyle, DisplaySize } from '@/app/simple-chat/components/input-controls';
-import { useUserSettings } from '@/hooks/useUserSettings';
+import { useUserSettings } from '@/contexts/UserSettingsContext';
 
 interface AppearanceTabProps {
   // 可以接收一些props
@@ -33,7 +33,7 @@ export function AppearanceTab({}: AppearanceTabProps) {
 
   // 当设置加载完成后，应用主题设置
   useEffect(() => {
-    if (!loading && themePreference) {
+    if (!loading && themePreference && typeof window !== 'undefined') {
       if (themePreference === 'system') {
         // 如果是系统主题，立即应用当前系统偏好
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -46,13 +46,18 @@ export function AppearanceTab({}: AppearanceTabProps) {
 
   // 应用颜色主题
   useEffect(() => {
-    if (!loading && colorTheme) {
+    if (!loading && colorTheme && typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-color-theme', colorTheme);
     }
   }, [loading, colorTheme]);
 
   // 更新主题（使用用户设置系统）
   const updateTheme = async (newTheme: 'light' | 'dark' | 'system') => {
+    // 确保在客户端环境中运行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // 立即更新UI
     if (newTheme === 'system') {
       // 检测系统主题偏好
@@ -75,6 +80,11 @@ export function AppearanceTab({}: AppearanceTabProps) {
 
   // 更新颜色主题
   const updateColorTheme = async (themeName: string) => {
+    // 确保在客户端环境中运行
+    if (typeof document === 'undefined') {
+      return;
+    }
+    
     // 立即更新UI
     document.documentElement.setAttribute('data-color-theme', themeName);
     

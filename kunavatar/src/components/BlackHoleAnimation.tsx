@@ -129,7 +129,7 @@ export default function BlackHoleAnimation({ className = '', offsetX = 0, starsO
 
       // 黑洞参数
       const BLACK_HOLE_RADIUS = 1.3;
-      const DISK_INNER_RADIUS = BLACK_HOLE_RADIUS - 3; // 减小内半径，让吸积盘覆盖黑洞
+      const DISK_INNER_RADIUS = BLACK_HOLE_RADIUS * 1.1; // 减小内半径，让吸积盘覆盖黑洞
       const DISK_OUTER_RADIUS = 8.0;
       const DISK_TILT_ANGLE = Math.PI / 3.0;
 
@@ -248,14 +248,14 @@ export default function BlackHoleAnimation({ className = '', offsetX = 0, starsO
 
       // 创建黑洞
       const createBlackHole = () => {
-        const blackHoleGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS, 64, 32);
+        const blackHoleGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS, 128, 32);
         const blackHoleMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         return new THREE.Mesh(blackHoleGeom, blackHoleMat);
       };
 
       // 创建事件视界
       const createEventHorizon = () => {
-        const eventHorizonGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS * 1.05, 64, 32);
+        const eventHorizonGeom = new THREE.SphereGeometry(BLACK_HOLE_RADIUS * 1.2, 64, 32);
         const eventHorizonMat = new THREE.ShaderMaterial({
           uniforms: {
             uTime: { value: 0 }
@@ -301,7 +301,7 @@ export default function BlackHoleAnimation({ className = '', offsetX = 0, starsO
             uColorOuter: { value: new THREE.Color(0x4477ff) },
             uNoiseScale: { value: 2.5 },
             uFlowSpeed: { value: 0.22 },
-            uDensity: { value: 1.3 }
+            uDensity: { value: 1.6 }
           },
           vertexShader: `
             varying vec2 vUv;

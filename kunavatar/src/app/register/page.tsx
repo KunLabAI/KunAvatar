@@ -288,24 +288,18 @@ export default function RegisterPage() {
           {/* 小屏幕背景遮罩 */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden"></div>
           
-          <div className="w-full max-w-md bg-[var(--color-card)]/90 lg:bg-[var(--color-card)]/80 backdrop-blur-xl border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-[var(--color-card)]/90 backdrop-blur-sm border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10 max-h-[90vh] overflow-y-auto">
             {/* 品牌标题 */}
             <div className="text-center mb-6 lg:mb-8">
-              <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-foreground)] mb-2">
+              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
                 Kun Avatar
               </h1>
               <div className="w-16 h-0.5 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] mx-auto rounded-full mb-4 lg:mb-6"></div>
             </div>
             <div className="text-center mb-4 lg:mb-6">
-              <h2 className="text-xl lg:text-2xl font-bold text-[var(--color-foreground)] mb-2">
+              <h2 className="text-xl lg:text-2xl font-bold text-[var(--color-foreground)] mb-6">
                 创建新账户
               </h2>
-              <p className="text-sm text-[var(--color-foreground-secondary)]">
-                或者{' '}
-                <Link href="/login" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
-                  登录到现有账户
-                </Link>
-              </p>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -439,8 +433,32 @@ export default function RegisterPage() {
               >
                 {loading ? '注册中...' : '创建账户'}
               </button>
+              
+              {/* 登录到现有账户按钮 */}
+              <Link
+                href="/login"
+                className="w-full flex justify-center items-center py-3 px-4 mt-3 border border-[var(--color-border)] text-sm font-medium rounded-lg text-[var(--color-foreground)] bg-transparent hover:bg-[var(--color-card-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-all duration-200"
+              >
+                登录到现有账户
+              </Link>
             </div>
         </form>
+        
+        {/* 版权信息 */}
+        <div className="text-center pt-4 ">
+          <p className="text-xs text-[var(--color-foreground-muted)]">
+            © 2025{' '}
+            <a 
+              href="https://kunpuai.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+            >
+              KunpuAI
+            </a>
+            , Inc. All rights reserved.
+          </p>
+        </div>
          </div>
        </div>
      </div>

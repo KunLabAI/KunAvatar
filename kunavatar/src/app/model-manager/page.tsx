@@ -9,7 +9,7 @@ import ModelDetailsModal from './components/ModelDetailsModal';
 import ModelfileForm, { ModelfileData } from './components/ModelfileForm';
 import FileUploadModelForm, { FileUploadModelData } from './components/FileUploadModelForm';
 import { motion } from 'framer-motion';
-import { Loader, Code, Upload } from 'lucide-react';
+import { Loader, Code, Upload, RefreshCw } from 'lucide-react';
 import { useNotification } from '@/components/notification';
 import Modal from '@/components/Modal';
 import { Sidebar } from '../Sidebar';
@@ -32,11 +32,6 @@ function ModelManagerPageContent() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<CustomModel | null>(null);
   const [hasPermissionError, setHasPermissionError] = useState(false);
-  const [ollamaStatus, setOllamaStatus] = useState<{
-    available: boolean;
-    syncAttempted: boolean;
-    syncError: string | null;
-  }>({ available: true, syncAttempted: false, syncError: null });
 
   // 使用路由进行客户端跳转
   const router = useRouter();
@@ -65,19 +60,8 @@ function ModelManagerPageContent() {
       if (data.success) {
         setModels(data.models);
         
-        // 更新Ollama状态信息
-        setOllamaStatus({
-          available: data.ollama_available ?? true,
-          syncAttempted: data.sync_attempted ?? false,
-          syncError: data.sync_error ?? null
-        });
-        
-        // 如果是强制同步且Ollama不可用，显示友好提示
-        if (forceSync && !data.ollama_available) {
-          notification.warning(
-            'Ollama服务不可用', 
-            '已从数据库加载模型数据。启动Ollama后可获取最新模型信息。'
-          );
+        if (forceSync && data.models.length > 0) {
+          notification.success('同步成功', `已同步 ${data.models.length} 个模型`);
         }
       } else {
         console.error('加载模型失败:', data.error);

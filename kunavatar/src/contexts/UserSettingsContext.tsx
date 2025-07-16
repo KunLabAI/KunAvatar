@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface UserSettings {
   themePreference: string;
@@ -7,7 +9,7 @@ interface UserSettings {
   displaySize: string;
 }
 
-interface UseUserSettingsReturn {
+interface UserSettingsContextType {
   settings: UserSettings;
   loading: boolean;
   error: string | null;
@@ -23,7 +25,13 @@ const defaultSettings: UserSettings = {
   displaySize: 'fullscreen'
 };
 
-export function useUserSettings(): UseUserSettingsReturn {
+const UserSettingsContext = createContext<UserSettingsContextType | undefined>(undefined);
+
+interface UserSettingsProviderProps {
+  children: ReactNode;
+}
+
+export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
   // 优化：先从localStorage读取初始值，避免闪屏
   const [settings, setSettings] = useState<UserSettings>(() => {
     // 尝试从localStorage获取初始设置，避免默认值导致的闪屏
@@ -38,13 +46,29 @@ export function useUserSettings(): UseUserSettingsReturn {
       return defaultSettings;
     }
   });
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+  
+  // 缓存时间：15天
+  const CACHE_DURATION = 15 * 24 * 60 * 60 * 1000;
 
   // 获取用户设置
-  const fetchSettings = useCallback(async () => {
+  const fetchSettings = useCallback(async (forceRefresh = false) => {
+    // 确保在客户端环境中运行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     try {
+      // 检查缓存是否有效
+      const now = Date.now();
+      if (!forceRefresh && isInitialized && (now - lastFetchTime) < CACHE_DURATION) {
+        return;
+      }
+
       // 如果已经初始化过，不要再显示loading状态，避免界面抖动
       if (!isInitialized) {
         setLoading(true);
@@ -63,6 +87,7 @@ export function useUserSettings(): UseUserSettingsReturn {
         setSettings(localSettings);
         setLoading(false);
         setIsInitialized(true);
+        setLastFetchTime(now);
         return;
       }
 
@@ -83,6 +108,7 @@ export function useUserSettings(): UseUserSettingsReturn {
             );
             return hasChanged ? newSettings : prevSettings;
           });
+          setLastFetchTime(now);
         } else {
           throw new Error(data.error || '获取设置失败');
         }
@@ -95,6 +121,7 @@ export function useUserSettings(): UseUserSettingsReturn {
           displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen'
         };
         setSettings(localSettings);
+        setLastFetchTime(now);
       } else {
         throw new Error('获取设置失败');
       }
@@ -103,22 +130,30 @@ export function useUserSettings(): UseUserSettingsReturn {
       setError(err instanceof Error ? err.message : '获取设置失败');
       
       // 使用本地存储作为后备
-      const localSettings = {
-        themePreference: localStorage.getItem('theme-preference') || 'system',
-        colorTheme: localStorage.getItem('color-theme') || 'kun',
-        chatStyle: localStorage.getItem('simple-chat-style') || 'assistant',
-        displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen'
-      };
-      setSettings(localSettings);
+      if (typeof window !== 'undefined') {
+        const localSettings = {
+          themePreference: localStorage.getItem('theme-preference') || 'system',
+          colorTheme: localStorage.getItem('color-theme') || 'kun',
+          chatStyle: localStorage.getItem('simple-chat-style') || 'assistant',
+          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen'
+        };
+        setSettings(localSettings);
+      }
+      setLastFetchTime(Date.now());
     } finally {
       setLoading(false);
       setIsInitialized(true);
     }
-  }, [isInitialized]);
+  }, [isInitialized, lastFetchTime, CACHE_DURATION]);
 
   // 更新单个设置
   const updateSetting = useCallback(async (key: string, value: string): Promise<boolean> => {
     try {
+      // 确保在客户端环境中运行
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       const token = localStorage.getItem('accessToken');
       
       // 先更新本地状态
@@ -161,6 +196,8 @@ export function useUserSettings(): UseUserSettingsReturn {
 
       if (response.ok) {
         const data = await response.json();
+        // 更新缓存时间
+        setLastFetchTime(Date.now());
         return data.success;
       } else {
         console.error('更新设置失败:', response.statusText);
@@ -175,6 +212,11 @@ export function useUserSettings(): UseUserSettingsReturn {
   // 批量更新界面设置
   const updateAppearanceSettings = useCallback(async (newSettings: Partial<UserSettings>): Promise<boolean> => {
     try {
+      // 确保在客户端环境中运行
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      
       const token = localStorage.getItem('accessToken');
       
       // 先更新本地状态
@@ -217,6 +259,8 @@ export function useUserSettings(): UseUserSettingsReturn {
 
       if (response.ok) {
         const data = await response.json();
+        // 更新缓存时间
+        setLastFetchTime(Date.now());
         return data.success;
       } else {
         console.error('批量更新设置失败:', response.statusText);
@@ -228,9 +272,9 @@ export function useUserSettings(): UseUserSettingsReturn {
     }
   }, []);
 
-  // 刷新设置
+  // 强制刷新设置
   const refreshSettings = useCallback(async () => {
-    await fetchSettings();
+    await fetchSettings(true);
   }, [fetchSettings]);
 
   // 初始化时获取设置
@@ -238,19 +282,7 @@ export function useUserSettings(): UseUserSettingsReturn {
     fetchSettings();
   }, [fetchSettings]);
 
-  // 监听设置迁移完成事件
-  useEffect(() => {
-    const handleMigrationComplete = () => {
-      refreshSettings();
-    };
-
-    window.addEventListener('userSettingsMigrated', handleMigrationComplete);
-    return () => {
-      window.removeEventListener('userSettingsMigrated', handleMigrationComplete);
-    };
-  }, [refreshSettings]);
-
-  return {
+  const value: UserSettingsContextType = {
     settings,
     loading,
     error,
@@ -258,4 +290,18 @@ export function useUserSettings(): UseUserSettingsReturn {
     updateAppearanceSettings,
     refreshSettings
   };
+
+  return (
+    <UserSettingsContext.Provider value={value}>
+      {children}
+    </UserSettingsContext.Provider>
+  );
+}
+
+export function useUserSettings(): UserSettingsContextType {
+  const context = useContext(UserSettingsContext);
+  if (context === undefined) {
+    throw new Error('useUserSettings must be used within a UserSettingsProvider');
+  }
+  return context;
 }

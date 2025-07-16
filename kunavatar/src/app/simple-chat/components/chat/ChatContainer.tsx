@@ -10,7 +10,7 @@ import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { ErrorDisplay } from '../ui/ErrorDisplay';
 import { ToolSettings } from '../tools/ToolSettings';
-import { useUserSettings } from '@/hooks/useUserSettings';
+import { useUserSettings } from '@/contexts/UserSettingsContext';
 
 import { AgentWithRelations } from '@/app/agents/types';
 import { Bot } from 'lucide-react';

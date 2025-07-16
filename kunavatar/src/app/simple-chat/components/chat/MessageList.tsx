@@ -9,7 +9,7 @@ import { ChatStyle, DisplaySize } from '../input-controls';
 import { SimpleMessage } from '../../types';
 import ModelLogo from '@/app/model-manager/components/ModelLogo';
 import { AgentWithRelations } from '@/app/agents/types';
-import { useUserSettings } from '@/hooks/useUserSettings';
+import { useUserSettings } from '@/contexts/UserSettingsContext';
 import { useAutoScroll } from '@/app/simple-chat/hooks/useAutoScroll';
 import { AgentAvatar } from '../ui/AgentAvatar';
 
