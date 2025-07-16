@@ -80,7 +80,7 @@ Whether for personal use, team collaboration, or enterprise deployment, KunAvata
 
 ### 🧠 Agent System
 - **Configurable Agents** - Create professional domain AI assistants
-- **Role Playing** - Support for different personalities and professional backgrounds
+- **Custom MCP Tools** - Tailor a unique toolset for each agent
 - **System Prompt Management** - Flexible prompt configuration and optimization
 - **Agent Memory Association** - Each agent maintains independent memory systems
 
