@@ -73,7 +73,7 @@ export default function OllamaNotification({
               </li>
               <li className="flex items-start gap-2">
                 <span className="bg-theme-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mt-0.5">4</span>
-                <span>点击"重新检测"按钮</span>
+                <span>点击&ldquo;重新检测&rdquo;按钮</span>
               </li>
             </ol>
           </div>
