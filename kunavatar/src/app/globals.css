@@ -480,49 +480,65 @@ html.theme-changing * {
   }
 }
 
-/* 侧边栏相关样式 */
+/* 侧边栏展开/收缩样式 - 简洁版本 */
 html[data-sidebar-state="collapsed"] .sidebar-container {
   width: 64px;
 }
 
 html[data-sidebar-state="expanded"] .sidebar-container {
-  width: 208px;
+  width: 200px;
 }
 
-.sidebar-container {
-  transition: width 0.3s ease;
+/* 移动端响应式设计 */
+@media (max-width: 768px) {
+  .sidebar-container {
+    /* 移动端默认隐藏，悬停时显示 */
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    width: 280px;
+    height: 100vh;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 悬停时显示侧边栏 */
+  .sidebar-container:hover {
+    transform: translateX(0);
+  }
+  
+  /* 触发区域悬停时也显示侧边栏 */
+  .fixed.left-0.top-0.w-5:hover + .sidebar-container,
+  .fixed.left-0.top-0.w-5:hover ~ * .sidebar-container {
+    transform: translateX(0);
+  }
+  
+  /* 移动端隐藏tooltip */
+  .sidebar-tooltip {
+    display: none !important;
+  }
+  
+  /* 确保主内容区域不被侧边栏遮挡 */
+  .sidebar-container + * {
+    margin-left: 0 !important;
+  }
 }
 
-/* 防止hydration闪烁 - 最高优先级规则，立即生效 */
+/* 文本显示控制 */
 html[data-sidebar-state="collapsed"] .sidebar-text {
   display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  width: 0 !important;
-  overflow: hidden !important;
 }
 
 html[data-sidebar-state="expanded"] .sidebar-text {
   display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  width: auto !important;
-  overflow: visible !important;
-}
-
-/* 收缩状态下显示的元素 */
-html[data-sidebar-state="expanded"] .sidebar-collapsed-only {
-  display: none !important;
-}
-
-html[data-sidebar-state="collapsed"] .sidebar-collapsed-only {
-  display: flex !important;
 }
 
 /* 按钮布局控制 */
 html[data-sidebar-state="expanded"] .sidebar-button {
   justify-content: flex-start !important;
-  padding: 0.75rem 1rem 0.75rem 0.75rem !important;
+  padding: 0.75rem !important;
 }
 
 html[data-sidebar-state="collapsed"] .sidebar-button {
@@ -532,13 +548,12 @@ html[data-sidebar-state="collapsed"] .sidebar-button {
 
 /* 图标容器样式 */
 html[data-sidebar-state="collapsed"] .sidebar-icon-container {
-  width: 2rem !important;
-  height: 2rem !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
-  margin: 0 auto !important;
 }
 
 html[data-sidebar-state="expanded"] .sidebar-icon-container {
@@ -548,93 +563,20 @@ html[data-sidebar-state="expanded"] .sidebar-icon-container {
   flex-shrink: 0 !important;
   width: 1.25rem !important;
   height: 1.25rem !important;
-  margin: 0 !important;
 }
 
-/* 工具提示显示控制 */
+/* 工具提示显示控制和位置优化 */
 html[data-sidebar-state="collapsed"] .sidebar-tooltip {
   display: flex !important;
+  transition: opacity 0.2s ease;
+  /* 优化tooltip位置，让其紧贴侧边栏右侧 */
+  left: calc(100% + 8px) !important;
+  margin-left: 0 !important;
+  z-index: 50 !important;
 }
 
 html[data-sidebar-state="expanded"] .sidebar-tooltip {
   display: none !important;
-}
-
-/* 导航栏选中状态的右侧竖条样式 */
-.sidebar-nav-item {
-  position: relative;
-}
-
-.sidebar-nav-item.active {
-  background-color: transparent !important;
-}
-
-.sidebar-nav-item.active::after {
-  content: '';
-  position: absolute;
-  right: -1px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 5px;
-  height: 32px;
-  background: linear-gradient(135deg, 
-    var(--color-primary) 0%, 
-    var(--color-primary-hover) 100%);
-  border-radius: 3px 0 0 3px;
-  box-shadow: 0 2px 6px rgba(var(--color-primary-rgb), 0.25);
-  transition: all 0.2s ease-in-out;
-}
-
-/* 收缩状态下的选中竖条调整 */
-html[data-sidebar-state="collapsed"] .sidebar-nav-item.active::after {
-  right: 0;
-  height: 28px;
-  width: 4px;
-}
-
-/* 悬停状态保持原有效果 */
-.sidebar-nav-item:hover {
-  background-color: var(--theme-card-hover) !important;
-}
-
-.sidebar-nav-item.active:hover {
-  background-color: var(--theme-card-hover) !important;
-}
-
-.sidebar-nav-item.active:hover::after {
-  height: 36px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-html[data-sidebar-state="collapsed"] .sidebar-nav-item.active:hover::after {
-  height: 32px;
-}
-
-/* 收缩状态下主题切换区域的特殊处理 */
-html[data-sidebar-state="collapsed"] .sidebar-button:has(.bg-gradient-to-br) {
-  justify-content: center !important;
-  padding: 0.75rem !important;
-}
-
-html[data-sidebar-state="collapsed"] .sidebar-button:has(.bg-gradient-to-br) .sidebar-icon-container {
-  margin: 0 !important;
-}
-
-/* 主题切换图标容器特殊处理 */
-html[data-sidebar-state="collapsed"] .theme-toggle-icon {
-  margin: 0 auto !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-/* 统一图标容器过渡效果，防止抖动 */
-.sidebar-icon-container {
-  transition: width 0.3s ease, height 0.3s ease, margin 0.3s ease !important;
-}
-
-/* 确保图标本身不会抖动 */
-.sidebar-icon-container > * {
-  transition: none !important;
 }
 
 /* 抽屉弹窗滑动动画 */
