@@ -6,7 +6,7 @@
 
 <div class="badges-container">
 
-[![Version](https://img.shields.io/github/package-json/v/KunLabAI/kun-avatar/main?filename=kunavatar%2Fpackage.json&style=for-the-badge&logo=github&logoColor=white&color=gradient)](https://github.com/KunLabAI/kun-avatar) [![Ollama](https://img.shields.io/badge/Ollama-Compatible-00D4AA?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/) [![License](https://img.shields.io/badge/License-Apache%202.0-FF6B6B?style=for-the-badge&logo=apache&logoColor=white)](https://opensource.org/licenses/Apache-2.0) 
+[![Ollama](https://img.shields.io/badge/Ollama-Compatible-00D4AA?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/) [![License](https://img.shields.io/badge/License-Apache%202.0-FF6B6B?style=for-the-badge&logo=apache&logoColor=white)](https://opensource.org/licenses/Apache-2.0) 
 </div>
 
 English | [简体中文](./README.md)
@@ -16,41 +16,6 @@ English | [简体中文](./README.md)
 ## ✨ Project Overview
 
 KunAvatar is a lightweight locally deployed AI application that not only provides a complete AI conversation solution, but also has outstanding advantages in **memory systems**, **auxiliary models**, **MCP tool calling**, and **enterprise-level user management**.
-
-## 📋 Table of Contents
-
-<table>
-<tr>
-<td width="33%">
-
-**🚀 Quick Start**
-- [Project Overview](#-project-overview)
-- [Core Advantages](#-core-advantages)
-- [Quick Start](#-quick-start)
-- [User Guide](#-user-guide)
-
-</td>
-<td width="33%">
-
-**⚡ Core Features**
-- [Core Features](#-core-features)
-- [Feature Highlights](#-feature-highlights)
-- [Tech Stack](#️-tech-stack)
-- [Project Structure](#-project-structure)
-
-</td>
-<td width="33%">
-
-**🤝 Community**
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Contact Us](#-contact-us)
-
-</td>
-</tr>
-</table>
-
 
 ### 🎯 Core Advantages
 
@@ -62,7 +27,7 @@ KunAvatar is a lightweight locally deployed AI application that not only provide
 
 Whether for personal use, team collaboration, or enterprise deployment, KunAvatar provides professional, secure, and intelligent AI interaction experience.
 
-## 🎯 Core Features
+## 🎯 Main Features
 
 ### 🤖 Intelligent Conversation System
 - **Streaming Response** - Real-time AI reply display for smooth conversation experience
@@ -240,51 +205,7 @@ Kun-Avatar/
 │   ├── 📁 scripts/                # Utility scripts
 │   ├── 📁 public/                 # Static assets
 │   └── 📄 package.json            # Application dependencies
-├── 📁 docs/                       # Project documentation
-│   ├── 📄 projectdoc.md           # Detailed project documentation
-│   ├── 📄 mcp-usage-guide.md      # MCP usage guide
-│   └── 📄 ollamaapi.md            # Ollama API documentation
-└── 📄 局域网部署说明.md            # LAN deployment guide
 ```
-
-## 🌟 Feature Highlights
-
-### 🧠 Advanced Memory System
-- **Intelligent Context Management** - Automatically analyze conversation content, extract key information to form structured memory
-- **Recursive Memory Updates** - Dynamically update and optimize existing memory based on new conversation content
-- **Background Asynchronous Processing** - Memory generation occurs in background without affecting conversation response speed
-- **Memory Optimization Algorithm** - Intelligently compress long conversations while retaining core information
-- **User-Level Memory Configuration** - Support personalized memory settings and management strategies
-
-### 🎯 Auxiliary Model System
-- **Multi-Model Collaboration Architecture** - Main conversation model and dedicated auxiliary models work in division
-- **Intelligent Prompt Optimization** - Dedicated models automatically optimize user input and system prompts
-- **Automatic Title Summary** - Intelligently generate conversation titles and content summaries
-- **Model Capability Detection** - Automatically detect whether models support advanced features like tool calling
-- **Performance Monitoring Analysis** - Real-time monitoring of model response time and quality metrics
-
-### 🔧 MCP Tool Ecosystem
-- **Three Connection Protocols** - Support stdio, SSE, Streamable HTTP multiple transport methods
-- **One-Click Tool Discovery** - Automatically scan and connect available MCP servers
-- **Multi-Server Unified Management** - Centrally manage multiple tool servers with unified calling interface
-- **Real-Time Status Monitoring** - Monitor tool connection status, execution results, and performance metrics
-- **Fine-Grained Permission Control** - Support tool-level access permission management
-- **Streaming Communication Support** - SSE and HTTP streaming transport for real-time interactive experience
-
-### 👥 Enterprise-Level User Management
-- **RBAC Permission System** - Complete role-based access control system
-- **Resource-Level Data Management** - Support fine-grained management of users, roles, and permissions
-- **Multi-Tenant Data Isolation** - Ensure complete isolation of data between different users and organizations
-- **User Status Control** - Support multiple status management like user activation, suspension, disable
-- **Operation Audit Logs** - Complete recording of user operations and system access logs
-- **Enterprise-Level Security** - JWT authentication, password encryption, attack protection and other security measures
-
-### 💬 Intelligent Conversation Experience
-- **Streaming Response Display** - Real-time AI reply display with instant feedback
-- **Multi-Turn Context Maintenance** - Intelligently maintain coherence and logic in long conversations
-- **Code Syntax Highlighting** - Support code highlighting for multiple programming languages
-- **Markdown Rendering** - Complete support for Markdown format content rendering
-- **Conversation History Management** - Persistent storage with search and export functionality
 
 ## 🚀 Roadmap
 
