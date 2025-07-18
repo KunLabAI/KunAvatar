@@ -2,101 +2,117 @@
 
 <img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="200" height="200" />
 
-# 🤖 KunAvatar - AI as Your Avatar
+# KunAvatar - AI is Your Avatar
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.3.3-black)](https://nextjs.org/) [![React](https://img.shields.io/badge/React-19.1.0-blue)](https://reactjs.org/) [![Ollama](https://img.shields.io/badge/Ollama-Compatible-green)](https://ollama.ai/)
+<div class="badges-container">
+
+[![Version](https://img.shields.io/github/package-json/v/KunLabAI/kun-avatar/main?filename=kunavatar%2Fpackage.json&style=for-the-badge&logo=github&logoColor=white&color=gradient)](https://github.com/KunLabAI/kun-avatar) [![Ollama](https://img.shields.io/badge/Ollama-Compatible-00D4AA?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/) [![License](https://img.shields.io/badge/License-Apache%202.0-FF6B6B?style=for-the-badge&logo=apache&logoColor=white)](https://opensource.org/licenses/Apache-2.0) 
+</div>
 
 English | [简体中文](./README.md)
 
 </div>
 
-## 📋 Table of Contents
-
-- [✨ Project Overview](#-project-overview)
-- [🎯 Core Features](#-core-features)
-  - [🤖 Intelligent Conversation System](#-intelligent-conversation-system)
-  - [🧠 Advanced Memory System](#-advanced-memory-system)
-  - [🎯 Auxiliary Model System](#-auxiliary-model-system)
-  - [🧠 Agent System](#-agent-system)
-  - [🔧 MCP Tool Integration](#-mcp-tool-integration)
-  - [👥 Enterprise User Management](#-enterprise-user-management)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [🚀 Quick Start](#-quick-start)
-- [📖 User Guide](#-user-guide)
-- [🔧 Available Commands](#-available-commands)
-- [📁 Project Structure](#-project-structure)
-- [🌟 Feature Highlights](#-feature-highlights)
-- [🚀 Roadmap](#-roadmap)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-- [🙏 Acknowledgments](#-acknowledgments)
-- [📞 Contact Us](#-contact-us)
-
 ## ✨ Project Overview
 
-KunAvatar is a lightweight, locally-deployed AI application that provides not only a complete AI conversation solution, but also excels in **memory systems**, **auxiliary models**, **MCP tool integration**, and **enterprise-grade user management**.
+KunAvatar is a lightweight locally deployed AI application that not only provides a complete AI conversation solution, but also has outstanding advantages in **memory systems**, **auxiliary models**, **MCP tool calling**, and **enterprise-level user management**.
+
+## 📋 Table of Contents
+
+<table>
+<tr>
+<td width="33%">
+
+**🚀 Quick Start**
+- [Project Overview](#-project-overview)
+- [Core Advantages](#-core-advantages)
+- [Quick Start](#-quick-start)
+- [User Guide](#-user-guide)
+
+</td>
+<td width="33%">
+
+**⚡ Core Features**
+- [Core Features](#-core-features)
+- [Feature Highlights](#-feature-highlights)
+- [Tech Stack](#️-tech-stack)
+- [Project Structure](#-project-structure)
+
+</td>
+<td width="33%">
+
+**🤝 Community**
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Contact Us](#-contact-us)
+
+</td>
+</tr>
+</table>
+
 
 ### 🎯 Core Advantages
 
-- **🧠 Intelligent Memory** - Recursive memory system that enables AI to truly "remember" conversation content
-- **🎯 Model Collaboration** - Multi-model synergy where main models focus on conversation while auxiliary models optimize experience
-- **🔧 Tool Ecosystem** - MCP tool integration supporting multiple protocols including SSE and Streamable HTTP
-- **👥 Enterprise Management** - Complete RBAC permission system with multi-tenant and resource-level data management
-- **🚀 Local Deployment** - Fully localized data for privacy protection with LAN access support
+- **🧠 Intelligent Memory** - Recursive memory system that allows AI to truly "remember" conversation content
+- **🎯 Model Collaboration** - Multi-model collaborative work, main model focuses on conversation, auxiliary models optimize experience
+- **🔧 Tool Ecosystem** - MCP tool integration supporting multiple protocols like SSE, Streamable HTTP
+- **👥 Enterprise Management** - Complete RBAC permission system, supporting multi-tenancy and resource-level data management
+- **🚀 Local Deployment** - Completely localized data, protecting privacy and security, supporting LAN access
 
-Whether for personal use, team collaboration, or enterprise deployment, KunAvatar provides professional, secure, and intelligent AI interaction experiences.
+Whether for personal use, team collaboration, or enterprise deployment, KunAvatar provides professional, secure, and intelligent AI interaction experience.
 
 ## 🎯 Core Features
 
 ### 🤖 Intelligent Conversation System
-- **Streaming Responses** - Real-time AI reply display for smooth conversation experience
-- **Multi-Model Support** - Compatible with all Ollama models with hot-swapping capability
-- **Context Memory** - Intelligent memory management maintaining long conversation coherence
-- **Conversation History** - Complete conversation records with search functionality
+- **Streaming Response** - Real-time AI reply display for smooth conversation experience
+- **Multi-Model Support** - Compatible with all Ollama models, supporting hot model switching
+- **Context Memory** - Intelligent memory management, maintaining coherence in long conversations
+- **Conversation History** - Complete conversation records and search functionality
 
 ### 🧠 Advanced Memory System
-- **Intelligent Context Management** - Automatic conversation analysis and key information extraction
-- **Recursive Memory Updates** - Dynamic updating and optimization of memory content
-- **Memory Optimization Algorithms** - Intelligent compression and organization of conversation history
-- **Background Memory Service** - Asynchronous memory processing without affecting conversation flow
-- **Global Memory Settings** - User-level memory configuration and management support
+- **Intelligent Context Management** - Automatically analyze conversation content and extract key information
+- **Recursive Memory Updates** - Dynamically update and optimize memory content
+- **Memory Optimization Algorithm** - Intelligently compress and organize historical conversations
+- **Background Memory Service** - Asynchronous memory generation without affecting conversation fluency
+- **Global Memory Settings** - Support user-level memory configuration and management
 
 ### 🔧 MCP Tool Integration
-- **Multi-Transport Protocol Support** - Supports stdio, SSE, and Streamable HTTP connections
-- **One-Click Tool Discovery** - Automatic MCP server discovery and connection for quick tool access
-- **Multi-Server Management** - Simultaneous management of multiple MCP servers with unified tool interfaces
-- **Real-Time Tool Execution** - Enables AI to execute external tools
+- **Multi-Transport Protocol Support** - Support stdio, SSE, Streamable HTTP three connection methods
+- **One-Click Tool Discovery** - Automatically discover and connect MCP servers, quickly obtain available tools
+- **Multi-Server Management** - Simultaneously manage multiple MCP servers with unified tool calling interface
+- **Real-Time Tool Calling** - Enable AI to execute external tools
 - **Tool Status Monitoring** - Real-time monitoring of tool connection status and execution results
-- **Tool Permission Management** - Fine-grained control over tool access permissions
-- **SSE Streaming Connection** - Server-Sent Events real-time communication support
-- **HTTP Streaming Transport** - Official recommended Streamable HTTP transport method
+- **Tool Permission Management** - Fine-grained control of tool access permissions
+- **SSE Streaming Connection** - Support Server-Sent Events real-time communication
+- **HTTP Streaming Transport** - Officially recommended Streamable HTTP transport method
 - **STDIO Standard I/O** - Integrated multiple local STDIO tools
 
 ### 🎯 Auxiliary Model System
-- **Multi-Model Collaboration** - Main and auxiliary models working in synergy
-- **Prompt Optimization** - Dedicated models for optimizing user input and system prompts
-- **Title & Summary Generation** - Automatic conversation title and content summary generation
-- **Memory Models** - Support for custom memory models to optimize conversation effectiveness
+- **Multi-Model Collaboration** - Main model and auxiliary models work together
+- **Prompt Optimization** - Dedicated models optimize user input and system prompts
+- **Title Summary Generation** - Automatically generate conversation titles and content summaries
+- **Memory Model** - Support custom memory models to optimize conversation effects
 
 ### 🧠 Agent System
 - **Configurable Agents** - Create professional domain AI assistants
-- **Custom MCP Tools** - Tailor a unique toolset for each agent
+- **MCP Tool Customization** - Customize exclusive tool lists for each agent
 - **System Prompt Management** - Flexible prompt configuration and optimization
-- **Agent Memory Association** - Each agent maintains independent memory systems
+- **Agent Memory Association** - Each agent has an independent memory system
 
-### 👥 Enterprise User Management
-- **Resource-Level Data Management** - Fine-grained management of users, roles, and permissions
-- **RBAC Access Control** - Role-based access control system
-- **Enterprise Modules** - Multi-tenant support, data isolation, and permission auditing
-- **User Status Management** - Support for user activation, suspension, and disabling
-- **Role Permission Assignment** - Flexible role creation and permission allocation mechanisms
-- **Data Security Isolation** - Ensures complete data isolation between different users
+### 👥 Enterprise-Level User Management
+- **Resource-Level Data Management** - Support fine-grained management of users, roles, and permissions
+- **RBAC Permission Control** - Role-based access control system
+- **Enterprise Modules** - Support multi-tenancy, data isolation, permission auditing
+- **User Status Management** - Support user activation, suspension, disable status control
+- **Role Permission Assignment** - Flexible role creation and permission assignment mechanism
+- **Data Security Isolation** - Ensure complete isolation of different user data
 
 ## 🛠️ Tech Stack
 
 ### Frontend Technologies
 - **Next.js 15** - React full-stack framework with App Router support
-- **React 19** - Latest React version with improved performance
+- **React 19** - Latest React version with better performance
 - **TypeScript** - Type-safe JavaScript superset
 - **Tailwind CSS** - Utility-first CSS framework
 - **Framer Motion** - Powerful animation library
@@ -110,8 +126,7 @@ Whether for personal use, team collaboration, or enterprise deployment, KunAvata
 
 ### AI Integration
 - **Ollama** - Local large language model runtime
-- **MCP (Model Context Protocol)** - Tool invocation protocol
-- **Streaming Responses** - Real-time AI reply display
+- **MCP (Model Context Protocol)** - Tool calling protocol
 
 ## 🚀 Quick Start
 
@@ -123,20 +138,40 @@ Whether for personal use, team collaboration, or enterprise deployment, KunAvata
 
 ### Installation Steps
 
-1. **Clone the Repository**
+1. **Clone the project**
 ```bash
 git clone https://github.com/KunLabAI/kun-avatar.git
 cd kun-avatar
 ```
 
-2. **Install Dependencies**
+2. **Install dependencies**
 ```bash
 npm run install
 ```
 
-3. **Start the Application**
+3. **Build the project**
+```bash
+npm run build
+```
+
+4. **Start the application**
 ```bash
 npx start
+```
+
+### Development Mode
+
+For manual startup, use:
+
+```bash
+cd kunavatar
+npx next dev
+```
+
+For script one-click startup, use:
+
+```bash
+node start.js
 ```
 
 The application will automatically:
@@ -145,44 +180,26 @@ The application will automatically:
 - 🚀 Start development server
 - 📱 Open application in browser
 
-### Alternative Start Methods
-
-For manual startup:
-
-```bash
-cd kunavatar
-npx run dev
-```
-
-For script-based startup:
-```bash
-node start.js
-```
-
 ## 📖 User Guide
 
-### Initial Setup
+### Initial Configuration
 
 1. **Install Ollama**
    - Visit [Ollama Official Website](https://ollama.ai/) to download and install
-   - Pull required models: `ollama pull llama2`
+   - Pull the models you need: `ollama pull gemma3`
 
-2. **Create Administrator Account**
+2. **Create admin account**
 ```bash
 cd kunavatar/scripts
 node init-admin.js
 ```
 
-3. **Configure MCP Servers** (Optional)
-   - Add external tool servers in MCP configuration page
-   - Configure tool permissions and parameters
-
 ### Basic Usage
 
-1. **Start Conversations**
+1. **Start Conversation**
    - Select AI model
-   - Choose agent (optional)
-   - Begin conversing with AI
+   - Select agent (optional)
+   - Start conversation with AI
 
 2. **Manage Conversations**
    - View conversation history
@@ -194,15 +211,6 @@ node init-admin.js
    - Set system prompts
    - Configure model parameters
 
-## 🔧 Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm start` | Smart startup (recommended) |
-| `npm run install` | Install project dependencies |
-| `npm run build` | Build production version |
-| `npm run init-admin` | Initialize administrator account |
-
 ## 📁 Project Structure
 
 ```
@@ -211,12 +219,12 @@ Kun-Avatar/
 ├── 📄 package.json                # Launcher configuration
 ├── 📁 kunavatar/                  # Main application directory
 │   ├── 📁 src/                    # Source code
-│   │   ├── 📁 app/                # Next.js pages and APIs
+│   │   ├── 📁 app/                # Next.js pages and API
 │   │   │   ├── 📁 api/            # API routes
-│   │   │   │   ├── 📁 chat/       # Chat-related APIs
-│   │   │   │   ├── 📁 models/     # Model management APIs
-│   │   │   │   ├── 📁 mcp/        # MCP tool APIs
-│   │   │   │   └── 📁 auth/       # Authentication APIs
+│   │   │   │   ├── 📁 chat/       # Chat-related API
+│   │   │   │   ├── 📁 models/     # Model management API
+│   │   │   │   ├── 📁 mcp/        # MCP tool API
+│   │   │   │   └── 📁 auth/       # Authentication API
 │   │   │   ├── 📁 simple-chat/    # Chat interface
 │   │   │   ├── 📁 model-manager/  # Model management
 │   │   │   ├── 📁 mcp-config/     # MCP configuration
@@ -236,45 +244,45 @@ Kun-Avatar/
 │   ├── 📄 projectdoc.md           # Detailed project documentation
 │   ├── 📄 mcp-usage-guide.md      # MCP usage guide
 │   └── 📄 ollamaapi.md            # Ollama API documentation
-└── 📄 局域网部署说明.md            # Deployment guide
+└── 📄 局域网部署说明.md            # LAN deployment guide
 ```
 
 ## 🌟 Feature Highlights
 
 ### 🧠 Advanced Memory System
-- **Intelligent Context Management** - Automatic conversation analysis and structured memory formation from key information
-- **Recursive Memory Updates** - Dynamic updating and optimization of existing memories based on new conversation content
+- **Intelligent Context Management** - Automatically analyze conversation content, extract key information to form structured memory
+- **Recursive Memory Updates** - Dynamically update and optimize existing memory based on new conversation content
 - **Background Asynchronous Processing** - Memory generation occurs in background without affecting conversation response speed
-- **Memory Optimization Algorithms** - Intelligent compression of long conversations while preserving core information
-- **User-Level Memory Configuration** - Personalized memory settings and management strategies
+- **Memory Optimization Algorithm** - Intelligently compress long conversations while retaining core information
+- **User-Level Memory Configuration** - Support personalized memory settings and management strategies
 
 ### 🎯 Auxiliary Model System
-- **Multi-Model Collaborative Architecture** - Main conversation models work with specialized auxiliary models
+- **Multi-Model Collaboration Architecture** - Main conversation model and dedicated auxiliary models work in division
 - **Intelligent Prompt Optimization** - Dedicated models automatically optimize user input and system prompts
-- **Automatic Title & Summary** - Intelligent generation of conversation titles and content summaries
-- **Model Capability Detection** - Automatic detection of model support for advanced features like tool calling
-- **Performance Monitoring & Analysis** - Real-time monitoring of model response times and quality metrics
+- **Automatic Title Summary** - Intelligently generate conversation titles and content summaries
+- **Model Capability Detection** - Automatically detect whether models support advanced features like tool calling
+- **Performance Monitoring Analysis** - Real-time monitoring of model response time and quality metrics
 
 ### 🔧 MCP Tool Ecosystem
-- **Three Connection Protocols** - Support for stdio, SSE, and Streamable HTTP transport methods
-- **One-Click Tool Discovery** - Automatic scanning and connection of available MCP servers
-- **Unified Multi-Server Management** - Centralized management of multiple tool servers with unified interfaces
+- **Three Connection Protocols** - Support stdio, SSE, Streamable HTTP multiple transport methods
+- **One-Click Tool Discovery** - Automatically scan and connect available MCP servers
+- **Multi-Server Unified Management** - Centrally manage multiple tool servers with unified calling interface
 - **Real-Time Status Monitoring** - Monitor tool connection status, execution results, and performance metrics
-- **Fine-Grained Permission Control** - Tool-level access permission management
-- **Streaming Communication Support** - SSE and HTTP streaming for real-time interactive experiences
+- **Fine-Grained Permission Control** - Support tool-level access permission management
+- **Streaming Communication Support** - SSE and HTTP streaming transport for real-time interactive experience
 
-### 👥 Enterprise User Management
+### 👥 Enterprise-Level User Management
 - **RBAC Permission System** - Complete role-based access control system
-- **Resource-Level Data Management** - Fine-grained management of users, roles, and permissions
-- **Multi-Tenant Data Isolation** - Complete data isolation between different users and organizations
-- **User Status Control** - Support for user activation, suspension, disabling, and other status management
+- **Resource-Level Data Management** - Support fine-grained management of users, roles, and permissions
+- **Multi-Tenant Data Isolation** - Ensure complete isolation of data between different users and organizations
+- **User Status Control** - Support multiple status management like user activation, suspension, disable
 - **Operation Audit Logs** - Complete recording of user operations and system access logs
-- **Enterprise Security** - JWT authentication, password encryption, attack protection, and other security measures
+- **Enterprise-Level Security** - JWT authentication, password encryption, attack protection and other security measures
 
 ### 💬 Intelligent Conversation Experience
 - **Streaming Response Display** - Real-time AI reply display with instant feedback
-- **Multi-Turn Context Preservation** - Intelligent maintenance of long conversation coherence and logic
-- **Code Syntax Highlighting** - Support for multiple programming language code highlighting
+- **Multi-Turn Context Maintenance** - Intelligently maintain coherence and logic in long conversations
+- **Code Syntax Highlighting** - Support code highlighting for multiple programming languages
 - **Markdown Rendering** - Complete support for Markdown format content rendering
 - **Conversation History Management** - Persistent storage with search and export functionality
 
@@ -285,29 +293,29 @@ We are actively developing more exciting features. Here's our development roadma
 ### 📋 Near-Term Plans
 
 #### 🧠 Memory System Optimization
-- **Intelligent Context Compression** - More efficient conversation context compression algorithms
-- **Hierarchical Memory Management** - Support for short-term, medium-term, and long-term memory layered storage
-- **Memory Retrieval Optimization** - Improved accuracy and speed of memory retrieval
-- **Memory Visualization** - Visual management interface for memory content
+- **Intelligent Context Compression** - Implement more efficient conversation context compression algorithms
+- **Memory Hierarchical Management** - Support layered storage of short-term, medium-term, and long-term memory
+- **Memory Retrieval Optimization** - Improve accuracy and speed of memory retrieval
+- **Memory Visualization** - Provide visual management interface for memory content
 
-#### 🔄 Enhanced Model Management
-- **One-Click Model Pulling** - Direct model pulling and installation from Ollama official repository
-- **Model Version Management** - Support for model version control and rollback functionality
+#### 🔄 Model Management Enhancement
+- **One-Click Model Pull** - Directly pull and install models from Ollama official repository
+- **Model Version Management** - Support model version control and rollback functionality
 
 #### 💻 Desktop Client Support
 - **Windows Client** - Native Windows desktop application
 - **macOS Client** - Native macOS desktop application
-- **Linux Client** - Support for mainstream Linux distributions
-- **Cross-Platform Sync** - Real-time data synchronization between desktop and web clients
-- **Offline Mode** - Support for completely offline AI conversation functionality
+- **Linux Client** - Support mainstream Linux distributions
+- **Cross-Platform Sync** - Real-time data synchronization between desktop and web
+- **Offline Mode** - Support completely offline AI conversation functionality
 
 #### 🌐 Multi-Language Support
-- **Multi-Language Model Support** - Support for more language models and translation features
-- **Multi-Language Interface** - Multi-language user interface and interaction
+- **Multi-Language Model Support** - Support more language models and translation features
+- **Multi-Language Interface** - Provide multi-language user interface and interaction
 
 ### 💡 Contributing Ideas
 
-We welcome community ideas and suggestions! If you have great ideas or feature requests, please:
+We welcome community ideas and suggestions! If you have good ideas or feature requests, please:
 
 - 📝 Submit feature requests in [Issues](https://github.com/KunLabAI/kun-avatar/issues)
 - 💬 Participate in discussions in [Discussions](https://github.com/KunLabAI/kun-avatar/discussions)
@@ -321,10 +329,10 @@ We welcome all forms of contributions! Whether bug reports, feature suggestions,
 
 ### How to Contribute
 
-1. **Fork the Project**
-2. **Create Feature Branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit Changes** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push to Branch** (`git push origin feature/AmazingFeature`)
+1. **Fork the project**
+2. **Create feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to branch** (`git push origin feature/AmazingFeature`)
 5. **Create Pull Request**
 
 ### Development Guidelines
@@ -340,9 +348,9 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENS
 
 ## 🙏 Acknowledgments
 
-- [Ollama](https://ollama.ai/) - Local AI model runtime
+- [Ollama](https://ollama.ai/) - Providing local AI model runtime
 - [Next.js](https://nextjs.org/) - Powerful React framework
-- [Model Context Protocol](https://modelcontextprotocol.io/) - Tool invocation protocol standard
+- [Model Context Protocol](https://modelcontextprotocol.io/) - Tool calling protocol standard
 - All contributors and users for their support
 
 ## 📞 Contact Us
