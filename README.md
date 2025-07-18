@@ -6,7 +6,7 @@
 
 <div class="badges-container">
 
-[![Version](https://img.shields.io/github/package-json/v/KunLabAI/kun-avatar/main?filename=kunavatar%2Fpackage.json&style=for-the-badge&logo=github&logoColor=white&color=gradient)](https://github.com/KunLabAI/kun-avatar) [![Ollama](https://img.shields.io/badge/Ollama-Compatible-00D4AA?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/) [![License](https://img.shields.io/badge/License-Apache%202.0-FF6B6B?style=for-the-badge&logo=apache&logoColor=white)](https://opensource.org/licenses/Apache-2.0) 
+[![Ollama](https://img.shields.io/badge/Ollama-Compatible-00D4AA?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/) [![License](https://img.shields.io/badge/License-Apache%202.0-FF6B6B?style=for-the-badge&logo=apache&logoColor=white)](https://opensource.org/licenses/Apache-2.0) 
 
 </div>
 
@@ -18,41 +18,6 @@
 
 KunAvatar 是一个轻量级本地部署的AI应用，它不仅提供了完整的AI对话解决方案，更在**记忆系统**、**辅助模型**、**MCP工具调用**和**企业级用户管理**等方面具有突出优势。
 
-## 📋 目录
-
-<table>
-<tr>
-<td width="33%">
-
-**🚀 快速开始**
-- [项目简介](#-项目简介)
-- [核心优势](#-核心优势)
-- [快速开始](#-快速开始)
-- [使用指南](#-使用指南)
-
-</td>
-<td width="33%">
-
-**⚡ 核心功能**
-- [核心特性](#-核心特性)
-- [功能亮点](#-功能亮点)
-- [技术栈](#️-技术栈)
-- [项目结构](#-项目结构)
-
-</td>
-<td width="33%">
-
-**🤝 社区参与**
-- [后续计划](#-后续计划)
-- [贡献指南](#-贡献指南)
-- [许可证](#-许可证)
-- [联系我们](#-联系我们)
-
-</td>
-</tr>
-</table>
-
-
 ### 🎯 核心优势
 
 - **🧠 智能记忆** - 递归式记忆系统，让AI真正"记住"对话内容
@@ -63,7 +28,7 @@ KunAvatar 是一个轻量级本地部署的AI应用，它不仅提供了完整�
 
 无论是个人使用、团队协作还是企业部署，KunAvatar 都能为您提供专业、安全、智能的AI交互体验。
 
-## 🎯 核心特性
+## 🎯 主要特性
 
 ### 🤖 智能对话系统
 - **流式对话响应** - 实时显示AI回复，提供流畅的对话体验
@@ -241,51 +206,7 @@ Kun-Avatar/
 │   ├── 📁 scripts/                # 工具脚本
 │   ├── 📁 public/                 # 静态资源
 │   └── 📄 package.json            # 应用依赖
-├── 📁 docs/                       # 项目文档
-│   ├── 📄 projectdoc.md           # 项目详细文档
-│   ├── 📄 mcp-usage-guide.md      # MCP使用指南
-│   └── 📄 ollamaapi.md            # Ollama API文档
-└── 📄 局域网部署说明.md            # 部署指南
 ```
-
-## 🌟 功能亮点
-
-### 🧠 高级记忆系统
-- **智能上下文管理** - 自动分析对话内容，提取关键信息形成结构化记忆
-- **递归式记忆更新** - 基于新对话内容动态更新和优化已有记忆
-- **后台异步处理** - 记忆生成在后台进行，不影响对话响应速度
-- **记忆优化算法** - 智能压缩长对话，保留核心信息
-- **用户级记忆配置** - 支持个性化记忆设置和管理策略
-
-### 🎯 辅助模型系统
-- **多模型协作架构** - 主对话模型与专用辅助模型分工协作
-- **智能提示词优化** - 专用模型自动优化用户输入和系统提示
-- **自动标题摘要** - 智能生成对话标题和内容摘要
-- **模型能力检测** - 自动检测模型是否支持工具调用等高级功能
-- **性能监控分析** - 实时监控各模型响应时间和质量指标
-
-### 🔧 MCP 工具生态
-- **三种连接协议** - 支持 stdio、SSE、Streamable HTTP 多种传输方式
-- **一键工具发现** - 自动扫描和连接可用的MCP服务器
-- **多服务器统一管理** - 集中管理多个工具服务器，统一调用接口
-- **实时状态监控** - 监控工具连接状态、执行结果和性能指标
-- **细粒度权限控制** - 支持工具级别的访问权限管理
-- **流式通信支持** - SSE和HTTP流式传输，提供实时交互体验
-
-### 👥 企业级用户管理
-- **RBAC权限体系** - 完整的基于角色的访问控制系统
-- **资源级数据管理** - 支持用户、角色、权限的细粒度管理
-- **多租户数据隔离** - 确保不同用户和组织的数据完全隔离
-- **用户状态控制** - 支持用户激活、暂停、禁用等多种状态管理
-- **操作审计日志** - 完整记录用户操作和系统访问日志
-- **企业级安全** - JWT认证、密码加密、防护攻击等安全措施
-
-### 💬 智能对话体验
-- **流式响应显示** - 实时显示AI回复，提供即时反馈
-- **多轮上下文保持** - 智能维护长对话的连贯性和逻辑性
-- **代码语法高亮** - 支持多种编程语言的代码高亮显示
-- **Markdown渲染** - 完整支持Markdown格式的内容渲染
-- **对话历史管理** - 持久化存储，支持搜索和导出功能
 
 ## 🚀 后续计划
 
