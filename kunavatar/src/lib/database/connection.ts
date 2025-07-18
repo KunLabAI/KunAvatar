@@ -456,8 +456,30 @@ const executeInitialization = (db: Database.Database) => {
     insertPermission.run(crypto.randomUUID(), name, displayName, description, resource, action);
   });
 
+  // 初始化本地MCP服务器记录
+  const insertLocalServer = db.prepare(`
+    INSERT OR IGNORE INTO mcp_servers (
+      name, display_name, description, type, enabled, 
+      command, args, working_directory, 
+      created_at, updated_at, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+  `);
+  
+  insertLocalServer.run(
+    'local',
+    '本地MCP服务器',
+    '内置的本地MCP服务器，提供基础工具功能（计算器、时间获取、文件操作等）',
+    'stdio',
+    1, // enabled
+    'npx',
+    JSON.stringify(['tsx', 'src/lib/mcp/mcp-server.ts']),
+    process.cwd(),
+    'disconnected' // 初始状态为断开，等待首次连接
+  );
+
   try {
     console.log('✅ 数据库结构已成功初始化。');
+    console.log('✅ 本地MCP服务器记录已创建。');
     // 创建锁文件表示初始化完成
     fs.closeSync(fs.openSync(lockFilePath, 'w'));
   } catch (error) {

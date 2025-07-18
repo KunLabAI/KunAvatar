@@ -1,7 +1,6 @@
 'use client';
 
 import { CustomModel } from '@/lib/database/custom-models';
-import { motion } from 'framer-motion';
 import { Eye, Pencil, Trash2, Tag, ServerOff, AlertCircle, MessageCircle } from 'lucide-react';
 import ModelLogoComponent from '@/app/model-manager/components/ModelLogo';
 
@@ -47,18 +46,10 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
   }
 
   return (
-    <motion.div 
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {models.map((model, index) => (
-        <motion.div 
+        <div 
           key={model.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
           className="rounded-xl hover:border-theme-primary/30 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group border border-theme-border"
           style={{ backgroundColor: 'var(--color-card)' }}
         >
@@ -155,8 +146,8 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
               </button>
             </div>
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 }

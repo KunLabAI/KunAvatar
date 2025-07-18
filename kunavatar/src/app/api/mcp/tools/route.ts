@@ -15,7 +15,7 @@ function ensureLocalServerExists() {
     const existingServer = db.prepare('SELECT id, args FROM mcp_servers WHERE name = ?').get('local') as { id: number, args: string } | undefined;
     
     if (!existingServer) {
-      // 创建本地服务器记录
+      // 创建本地服务器记录（这种情况应该很少发生，因为数据库初始化时已经创建了）
       const result = db.prepare(`
         INSERT INTO mcp_servers (
           name, display_name, description, type, enabled, 
@@ -25,7 +25,7 @@ function ensureLocalServerExists() {
       `).run(
         'local',
         '本地MCP服务器',
-        '内置的本地MCP服务器，提供基础工具功能',
+        '内置的本地MCP服务器，提供基础工具功能（计算器、时间获取、文件操作等）',
         'stdio',
         1, // enabled
         'npx',
@@ -244,7 +244,44 @@ export async function GET(request: Request) {
     if (!refresh) {
       tools = getToolsFromDatabase(serverName ?? undefined, includeDisabled);
       
-      // 直接返回数据库中的工具，不再连接外部服务器
+      // 如果数据库中没有工具数据，尝试自动连接并注册本地工具
+      if (tools.length === 0 && (!serverName || serverName === 'local')) {
+        console.log('数据库中没有工具数据，尝试自动连接本地MCP服务器...');
+        try {
+          // 确保本地服务器记录存在
+          ensureLocalServerExists();
+          
+          const { mcpServerClient } = require('../../../../lib/mcp/mcp-client-server');
+          
+          // 尝试连接本地服务器
+          if (!mcpServerClient.isClientConnected()) {
+            const connected = await mcpServerClient.connect();
+            if (connected) {
+              console.log('本地MCP服务器连接成功，正在注册工具...');
+              
+              const localTools = mcpServerClient.getAvailableTools();
+              const localToolsWithServer = localTools.map((tool: any) => ({
+                ...tool,
+                serverName: 'local',
+                serverType: 'stdio'
+              }));
+              
+              // 保存工具到数据库
+              if (localToolsWithServer.length > 0) {
+                await saveToolsToDatabase(localToolsWithServer);
+                console.log(`已自动注册 ${localToolsWithServer.length} 个本地工具到数据库`);
+                
+                // 重新从数据库获取工具
+                tools = getToolsFromDatabase(serverName ?? undefined, includeDisabled);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('自动连接本地MCP服务器失败:', error);
+        }
+      }
+      
+      // 直接返回数据库中的工具
       console.log(`从数据库获取到 ${tools.length} 个工具`);
       return NextResponse.json({
         success: true,

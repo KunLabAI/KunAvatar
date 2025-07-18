@@ -167,7 +167,7 @@ function McpConfigPageContent() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <h1 className="page-title">
-                       🌐MCP 服务器配置
+                       MCP 服务器管理
                       </h1>
                       <p className="page-subtitle mt-2">
                         管理模型上下文协议服务器，配置工具和连接
