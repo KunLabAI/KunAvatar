@@ -71,7 +71,6 @@ function AgentsPageContent() {
   const prepareAndOpenModal = async (agent: AgentWithRelations | null) => {
     setSelectedAgent(agent);
     setIsModalDataLoading(true);
-    setIsModalOpen(true);
 
     try {
       const token = localStorage.getItem('accessToken');
@@ -98,11 +97,13 @@ function AgentsPageContent() {
       setAvailableServers(serversData.servers || []);
       setAllAvailableTools(toolsData.tools || []);
 
+      // 数据加载完成后再打开弹窗
+      setIsModalOpen(true);
+
     } catch (err) {
       const message = err instanceof Error ? err.message : '无法打开智能体编辑器';
       setError(message);
       notification.error('操作失败', message);
-      setIsModalOpen(false);
     } finally {
       setIsModalDataLoading(false);
     }
@@ -212,7 +213,7 @@ function AgentsPageContent() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                      🤖 智能体管理
+                      智能体管理
                     </h1>
                     <p className="page-subtitle mt-2">
                       创建和管理 AI 智能体，配置专属的对话助手 · 共 {agents.length} 个智能体
@@ -221,10 +222,17 @@ function AgentsPageContent() {
                   <div className="flex-shrink-0">
                     <button
                       onClick={handleCreate}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium"
+                      disabled={isModalDataLoading}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span className="hidden sm:inline">创建智能体</span>
+                      {isModalDataLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {isModalDataLoading ? '加载中...' : '创建智能体'}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -266,25 +274,14 @@ function AgentsPageContent() {
 
               {/* 智能体表单弹窗 */}
               {isModalOpen && (
-                isModalDataLoading ? (
-                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-theme-card border border-theme-border rounded-2xl p-8 flex flex-col items-center gap-6 shadow-2xl">
-                      <InlineLoading 
-                        text="正在加载表单数据..."
-                        size="normal"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <AgentFormModal
-                    agent={selectedAgent}
-                    onClose={handleModalClose}
-                    onSave={handleModalSave}
-                    availableModels={availableModels}
-                    availableServers={availableServers}
-                    allAvailableTools={allAvailableTools}
-                  />
-                )
+                <AgentFormModal
+                  agent={selectedAgent}
+                  onClose={handleModalClose}
+                  onSave={handleModalSave}
+                  availableModels={availableModels}
+                  availableServers={availableServers}
+                  allAvailableTools={allAvailableTools}
+                />
               )}
 
               {/* 删除确认弹窗 */}

@@ -12,6 +12,7 @@ interface ServerToolSelectorProps {
   onServerChange: (serverIds: number[]) => void;
   onToolChange: (toolIds: number[]) => void;
   maxTools?: number;
+  disabled?: boolean; // 新增：禁用状态
 }
 
 export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
@@ -21,11 +22,14 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
   selectedToolIds,
   onServerChange,
   onToolChange,
-  maxTools = 10
+  maxTools = 10,
+  disabled = false
 }) => {
   // 管理每个服务器的展开状态
   const [expandedServers, setExpandedServers] = useState<Set<number>>(new Set());
   const handleServerToggle = (serverId: number) => {
+    if (disabled) return; // 禁用时不响应点击
+    
     const isSelected = selectedServerIds.includes(serverId);
     let newServerIds: number[];
     
@@ -59,6 +63,8 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
 
   // 切换服务器展开状态
   const toggleServerExpanded = (serverId: number) => {
+    if (disabled) return; // 禁用时不响应点击
+    
     setExpandedServers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(serverId)) {
@@ -71,6 +77,8 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
   };
 
   const handleToolToggle = (toolId: number) => {
+    if (disabled) return; // 禁用时不响应点击
+    
     const isSelected = selectedToolIds.includes(toolId);
     
     if (isSelected) {
@@ -83,7 +91,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       {availableServers.map(server => {
         const isServerSelected = selectedServerIds.includes(server.id);
         const isExpanded = expandedServers.has(server.id);
@@ -98,20 +106,21 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                 : 'bg-theme-card hover:bg-theme-card-hover'
             }`}>
               {/* Checkbox区域 - 只负责选择服务器和全选工具 */}
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className={`flex items-center gap-3 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={isServerSelected}
                   onChange={() => handleServerToggle(server.id)}
-                  className="w-4 h-4 text-theme-primary border-theme-border rounded focus:ring-theme-primary"
+                  disabled={disabled}
+                  className="w-4 h-4 text-theme-primary border-theme-border rounded focus:ring-theme-primary disabled:opacity-50"
                 />
                 <Server className="w-5 h-5 text-theme-foreground-muted" />
               </label>
               
               {/* 服务器信息区域 - 点击展开/收起 */}
               <div 
-                className="flex-1 cursor-pointer" 
-                onClick={() => serverTools.length > 0 && toggleServerExpanded(server.id)}
+                className={`flex-1 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                onClick={() => !disabled && serverTools.length > 0 && toggleServerExpanded(server.id)}
               >
                 <span className="text-sm font-medium text-theme-foreground">
                   {server.display_name}
@@ -126,8 +135,9 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
               {/* 展开/收起按钮 - 始终显示（如果有工具） */}
               {serverTools.length > 0 && (
                 <button
-                  onClick={() => toggleServerExpanded(server.id)}
-                  className="p-1 rounded hover:bg-theme-background-secondary transition-colors"
+                  onClick={() => !disabled && toggleServerExpanded(server.id)}
+                  disabled={disabled}
+                  className="p-1 rounded hover:bg-theme-background-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title={isExpanded ? '收起工具列表' : '展开工具列表'}
                 >
                   {isExpanded ? (
@@ -150,25 +160,25 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                   <div className="space-y-2">
                     {serverTools.map(tool => {
                       const isToolSelected = selectedToolIds.includes(tool.id);
-                      const isDisabled = !isToolSelected && selectedToolIds.length >= maxTools;
+                      const isToolDisabled = disabled || (!isToolSelected && selectedToolIds.length >= maxTools);
                       
                       return (
                         <label 
                           key={tool.id}
-                          className={`flex items-center gap-2 p-2 rounded text-xs cursor-pointer transition-colors ${
+                          className={`flex items-center gap-2 p-2 rounded text-xs transition-colors ${
                             isToolSelected
                               ? 'bg-theme-primary/5 text-theme-primary'
-                              : isDisabled
+                              : isToolDisabled
                               ? 'bg-theme-card text-theme-foreground-muted cursor-not-allowed opacity-50'
-                              : 'bg-theme-card text-theme-foreground hover:bg-theme-card-hover'
+                              : 'bg-theme-card text-theme-foreground hover:bg-theme-card-hover cursor-pointer'
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isToolSelected}
                             onChange={() => handleToolToggle(tool.id)}
-                            disabled={isDisabled}
-                            className="w-3 h-3 text-theme-primary border-theme-border rounded focus:ring-theme-primary"
+                            disabled={isToolDisabled}
+                            className="w-3 h-3 text-theme-primary border-theme-border rounded focus:ring-theme-primary disabled:opacity-50"
                           />
                           <span className="font-medium">{tool.name}</span>
                         </label>

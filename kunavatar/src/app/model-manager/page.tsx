@@ -8,7 +8,6 @@ import ModelForm from './components/ModelForm';
 import ModelDetailsModal from './components/ModelDetailsModal';
 import ModelfileForm, { ModelfileData } from './components/ModelfileForm';
 import FileUploadModelForm, { FileUploadModelData } from './components/FileUploadModelForm';
-import { motion } from 'framer-motion';
 import { Loader, Code, Upload, RefreshCw } from 'lucide-react';
 import { useNotification } from '@/components/notification';
 import Modal from '@/components/Modal';
@@ -363,7 +362,7 @@ function ModelManagerPageContent() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                    🧠 模型管理
+                    模型管理
                     </h1>          
                     
                     <p className="page-subtitle mt-2">
@@ -390,12 +389,7 @@ function ModelManagerPageContent() {
               </div>
             
             {/* 主要内容区域 */}
-            <motion.div 
-              className="space-y-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="space-y-6">
               {/* 处理状态指示器 */}
               {isProcessing && (
                 <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40">
@@ -419,7 +413,7 @@ function ModelManagerPageContent() {
                   onStartChat={handleStartChat}
                 />
               </div>
-            </motion.div>
+            </div>
 
             {/* 模型表单弹窗 */}
             {isModalOpen && (

@@ -280,6 +280,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                           clearValidation(); // 清除之前的验证结果
                         }}
                         maxTools={10}
+                        disabled={validationResult?.supportsTools === false}
                       />
                       {formData.tool_ids.length >= 10 && (
                         <p className="text-sm text-theme-warning flex items-center gap-2">

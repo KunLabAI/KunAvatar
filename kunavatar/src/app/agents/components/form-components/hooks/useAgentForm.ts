@@ -47,6 +47,7 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
     validationResult,
     performValidation,
     clearValidation,
+    isModelValidated,
   } = useModelToolValidation({
     availableModels,
     selectedModelId: formData.model_id,
@@ -127,7 +128,6 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
   const handleSubmit = async () => {
     setErrors(null);
     setApiError(null);
-    clearValidation();
     
     // 基础表单验证
     const result = agentSchema.safeParse(formData);
@@ -138,10 +138,13 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
     }
 
     // 模型工具兼容性验证
-    const validationResult = await performValidation();
-    if (!validationResult.isValid) {
-      setApiError(validationResult.message || '模型工具配置验证失败');
-      return;
+    // 如果有选择工具，且模型未验证过或验证失败，则需要验证
+    if (formData.tool_ids.length > 0 && !isModelValidated()) {
+      const validationResult = await performValidation();
+      if (!validationResult.isValid) {
+        setApiError(validationResult.message || '模型工具配置验证失败');
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -210,5 +213,6 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
     validationResult,
     performValidation,
     clearValidation,
+    isModelValidated,
   };
 };
