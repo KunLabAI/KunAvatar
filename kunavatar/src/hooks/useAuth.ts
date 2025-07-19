@@ -21,6 +21,7 @@ interface AuthContextType {
   login: (token: string) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  initialized: boolean; // 新增：标记是否已初始化
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,8 +37,9 @@ export function useAuth() {
 export function useAuthState() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // 改为false，避免初始加载状态
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false); // 新增：标记是否已初始化
 
   const logout = () => {
     localStorage.removeItem('accessToken');
@@ -57,16 +59,20 @@ export function useAuthState() {
     }, 100);
   };
 
-  const checkAuth = useCallback(async (retryCount = 0) => {
+  const checkAuth = useCallback(async (retryCount = 0, silent = false) => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       setUser(null);
       setLoading(false);
+      setInitialized(true);
       return;
     }
 
     try {
-      setLoading(true);
+      // 只有在非静默模式下才设置loading状态
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
       
       const response = await fetch('/api/auth/me', {
@@ -100,7 +106,7 @@ export function useAuthState() {
       // 网络错误重试机制（最多重试1次）
       if (retryCount < 1 && (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('Failed to fetch'))) {
         console.log(`认证检查重试 ${retryCount + 1}/1`);
-        setTimeout(() => checkAuth(retryCount + 1), 1000);
+        setTimeout(() => checkAuth(retryCount + 1, silent), 1000);
         return;
       }
       
@@ -113,11 +119,13 @@ export function useAuthState() {
       }
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    // 初始化时静默检查认证状态
+    checkAuth(0, true);
   }, [checkAuth]);
 
   return {
@@ -127,5 +135,6 @@ export function useAuthState() {
     login,
     logout,
     checkAuth,
+    initialized, // 暴露初始化状态
   };
 }

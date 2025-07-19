@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import Loading from './Loading';
@@ -9,29 +9,44 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   redirectTo?: string;
+  showLoadingOnAuth?: boolean; // 新增：是否在认证时显示加载界面
 }
 
 export function ProtectedRoute({ 
   children, 
   requireAuth = true, 
-  redirectTo = '/login' 
+  redirectTo = '/login',
+  showLoadingOnAuth = false // 默认不显示加载界面，实现隐式检测
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, initialized } = useAuth();
   const router = useRouter();
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // 检查本地token状态
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    setHasToken(!!token);
+  }, []);
 
   useEffect(() => {
     // 只有在认证状态确定且需要认证但用户未登录时才跳转
-    if (!loading && requireAuth && !user) {
-      // 检查是否有token，如果没有token直接跳转
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
+    if (initialized && requireAuth && !user && hasToken !== null) {
+      // 如果没有token或认证失败，直接跳转
+      if (!hasToken) {
+        setIsRedirecting(true);
         router.replace(redirectTo);
       }
     }
-  }, [user, loading, requireAuth, redirectTo, router]);
+  }, [user, initialized, requireAuth, redirectTo, router, hasToken]);
 
-  // 如果正在加载，显示加载状态
-  if (loading) {
+  // 如果正在重定向，不显示任何内容
+  if (isRedirecting) {
+    return null;
+  }
+
+  // 如果需要显示加载状态且正在加载
+  if (showLoadingOnAuth && loading) {
     return (
       <div className="flex h-screen bg-theme-background items-center justify-center">
         <Loading 
@@ -46,8 +61,34 @@ export function ProtectedRoute({
     );
   }
 
-  // 如果需要认证但用户未登录，显示友好提示（这种情况应该很少见，因为会被重定向）
-  if (requireAuth && !user) {
+  // 如果还未初始化，根据是否有token决定是否显示内容
+  if (!initialized) {
+    // 如果有token，先显示内容，后台进行认证
+    if (hasToken) {
+      return <>{children}</>;
+    }
+    // 如果没有token且需要认证，不显示内容
+    if (requireAuth) {
+      return null;
+    }
+    // 如果不需要认证，直接显示内容
+    return <>{children}</>;
+  }
+
+  // 如果正在加载但不需要显示加载界面，先渲染内容（隐式检测）
+  if (loading) {
+    // 如果有token，先显示内容，后台进行认证
+    if (hasToken) {
+      return <>{children}</>;
+    }
+    // 如果没有token且需要认证，不显示内容
+    if (requireAuth) {
+      return null;
+    }
+  }
+
+  // 如果需要认证但用户未登录且已初始化，显示友好提示
+  if (requireAuth && !user && initialized) {
     return (
       <div className="flex h-screen bg-theme-background items-center justify-center">
         <div className="text-center">

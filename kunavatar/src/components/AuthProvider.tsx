@@ -21,6 +21,7 @@ interface AuthContextType {
   login: (token: string) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  initialized: boolean; // 新增：标记是否已初始化
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
