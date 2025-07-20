@@ -60,12 +60,6 @@ export function Sidebar({ conversations }: SidebarProps) {
     router.push('/simple-chat?new=true');
   };
 
-  // 处理logo点击 - 进入聊天空状态页面
-  const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push('/simple-chat');
-  };
-
   // 处理开始对话按钮 - 进入最近一次对话或新建对话
   const handleStartChat = () => {
     // 获取最新的对话（按updated_at排序，第一个就是最新的）
@@ -88,7 +82,6 @@ export function Sidebar({ conversations }: SidebarProps) {
       <div className="sidebar-container bg-theme-card border-r border-theme-border flex flex-col h-full">
         {/* 顶部区域 */}
         <div className="group p-4 border-b border-theme-border flex items-center relative">
-        <button onClick={handleLogoClick} className="flex items-center gap-3 flex-1 text-left">
           <Image
             src="/assets/logo@64.svg"
             alt="Kun Avatar Logo"
@@ -99,7 +92,6 @@ export function Sidebar({ conversations }: SidebarProps) {
           <h1 className="sidebar-text text-xl font-bold text-theme-foreground tracking-tight">
             Kun Avatar
           </h1>
-        </button>
         {/* 展开/收缩按钮 */}
         <button
           onClick={toggleSidebar}

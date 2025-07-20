@@ -106,16 +106,23 @@ export function formatDatabaseMessages(dbMessages: any[]): FormattedMessagesResu
 
 /**
  * 检测是否为智能体模式
+ * 优先检查对话记录中的agent_id，因为URL参数在新建对话时可能不准确
  * @param currentConversation 当前对话对象
  * @returns 是否为智能体模式
  */
 export function isAgentMode(currentConversation?: any): boolean {
+  // 优先检查对话中的智能体ID（最可靠的标识）
+  if (currentConversation?.agent_id) {
+    return true;
+  }
+  
+  // 其次检查URL参数（用于新建智能体对话）
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
     const hasAgentParam = urlParams.get('agent');
-    const hasConversationAgent = currentConversation?.agent_id;
-    return !!hasAgentParam || !!hasConversationAgent;
+    return !!hasAgentParam;
   }
+  
   return false;
 }
 
@@ -170,10 +177,9 @@ export function validateConversationForChat(
 export function getModelFromAgent(
   agents: any[],
   agentId: number,
-  fallbackModel: string = 'llama3.2'
 ): string {
   const agent = agents.find(a => a.id === agentId);
-  return agent?.model?.base_model || fallbackModel;
+  return agent?.model?.base_model || 'undefined';
 }
 
 /**

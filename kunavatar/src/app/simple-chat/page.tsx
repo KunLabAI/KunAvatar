@@ -156,6 +156,8 @@ function SimpleChatPageContent() {
     createConversation,
     switchConversation,
     setSelectedModel,
+    agents,
+    selectedAgentId, // 🔥 传递当前选择的智能体ID
   });
 
   // 📥 消息加载
@@ -190,7 +192,7 @@ function SimpleChatPageContent() {
     try {
       setIsProcessingUrl(true);
       const conversationId = await createConversation({
-        model: selectedModel || 'llama3.2',
+        model: selectedModel || 'undefined',
         agentId: selectedAgentId || undefined
       });
       

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CustomModel } from '@/lib/database/custom-models';
+import { isAgentMode as isAgentModeUtil } from './utils/conversationUtils';
 
 // 本地存储键名
 const SELECTED_MODEL_KEY = 'chat_selected_model';
@@ -81,20 +82,15 @@ export function useModelManager(): UseModelManagerReturn {
     }
   }, []);
 
-  // 检测智能体模式 - 支持传入对话信息
+  // 检测智能体模式 - 复用 conversationUtils 中的逻辑
   const checkAgentMode = useCallback((currentConversation?: any) => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasAgentParam = urlParams.get('agent');
-      const hasConversationAgent = currentConversation?.agent_id;
-      const newIsAgentMode = !!hasAgentParam || !!hasConversationAgent;
-      if (newIsAgentMode !== isAgentMode) {
-        setIsAgentMode(newIsAgentMode);
-        console.log(`🔄 智能体模式状态更新: ${isAgentMode} -> ${newIsAgentMode} (URL参数: ${!!hasAgentParam}, 对话智能体ID: ${hasConversationAgent})`);
-      }
-      return newIsAgentMode;
+    const newIsAgentMode = isAgentModeUtil(currentConversation);
+    
+    if (newIsAgentMode !== isAgentMode) {
+      setIsAgentMode(newIsAgentMode);
+      console.log(`🔄 智能体模式状态更新: ${isAgentMode} -> ${newIsAgentMode}`);
     }
-    return false;
+    return newIsAgentMode;
   }, [isAgentMode]);
 
   // 包装setSelectedModel以添加持久化
@@ -113,7 +109,7 @@ export function useModelManager(): UseModelManagerReturn {
     }, 50);
   }, [saveModelSelection, checkAgentMode]);
 
-  // 智能模型选择函数 - 在智能体模式下允许恢复历史模型
+  // 智能模型选择函数 - 🔥 修复：智能体模式下完全不干预，由 useAgentManager 负责
   const selectBestModel = useCallback((
     availableModels: CustomModel[],
     conversationId?: string,
@@ -123,23 +119,20 @@ export function useModelManager(): UseModelManagerReturn {
   ) => {
     const currentIsAgentMode = checkAgentMode(currentConversation);
     
-    // 在智能体模式下，如果有历史对话模型，自动恢复
-    if (currentIsAgentMode && conversationModel && conversationId) {
-      console.log(`🤖 智能体模式：自动恢复对话 ${conversationId} 的历史模型: ${conversationModel}`);
-      setSelectedModelWithPersistence(conversationModel, conversationId);
-      return conversationModel;
+    // 🔥 智能体模式下完全不处理，避免与 useAgentManager 冲突
+    if (currentIsAgentMode) {
+      console.log(`🤖 智能体模式：模型选择由 useAgentManager 完全负责，selectBestModel 跳过处理`);
+      return undefined;
     }
     
     // 非智能体模式下，新对话保持空状态
-    if (!currentIsAgentMode) {
-      console.log('🚫 非智能体模式：自动模型选择已禁用，新对话保持空状态');
-      if (conversationModel) {
-        console.log(`💡 该对话历史使用模型: ${conversationModel}，但不会自动设置`);
-      }
+    console.log('🎯 非智能体模式：自动模型选择已禁用，新对话保持空状态');
+    if (conversationModel) {
+      console.log(`💡 该对话历史使用模型: ${conversationModel}，但不会自动设置`);
     }
     
     return undefined;
-  }, [saveModelSelection, checkAgentMode, setSelectedModelWithPersistence]);
+  }, [checkAgentMode]);
 
   // 获取模型但不自动选择
   useEffect(() => {

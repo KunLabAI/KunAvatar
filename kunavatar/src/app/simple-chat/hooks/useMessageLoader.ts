@@ -87,22 +87,20 @@ export function useMessageLoader({
       setMessages([]);
       setToolCalls([]);
       
-      // 加载对话消息，并在智能体模式下自动恢复模型
+      // 加载对话消息
       loadConversationMessages(currentConversation.id)
         .then(lastUsedModel => {
           console.log(`对话 ${currentConversation.id} 消息已加载`);
           
-          // 检查是否为智能体模式
-          if (isAgentMode(currentConversation) && currentConversation.model && selectBestModelRef.current && modelsRef.current) {
-            // 智能体模式下自动恢复历史模型
-            console.log(`🤖 智能体模式检测到：尝试恢复对话历史模型`);
+          // 🔥 移除冲突逻辑：智能体模式的模型恢复完全由 useAgentManager 负责
+          // 只在非智能体模式下才处理模型恢复
+          if (!isAgentMode(currentConversation) && currentConversation.model && selectBestModelRef.current && modelsRef.current) {
+            console.log(`🎯 非智能体模式：尝试恢复对话历史模型: ${currentConversation.model}`);
             selectBestModelRef.current(modelsRef.current, currentConversation.id, lastUsedModel, currentConversation.model, currentConversation);
+          } else if (isAgentMode(currentConversation)) {
+            console.log(`🤖 智能体模式检测到，模型恢复由 useAgentManager 负责处理`);
           } else {
-            // 非智能体模式下需要手动选择模型
-            console.log(`对话 ${currentConversation.id} 消息已加载，需要手动选择模型`);
-            if (currentConversation.model) {
-              console.log(`💡 该对话历史使用模型: ${currentConversation.model}`);
-            }
+            console.log(`对话 ${currentConversation.id} 消息已加载，需要手动选择模型或智能体`);
           }
         })
         .catch(error => {
