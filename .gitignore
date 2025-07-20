@@ -35,3 +35,5 @@ out/
 # 依赖锁定文件备份
 package-lock.json.*
 package-lock.json
+
+upload/

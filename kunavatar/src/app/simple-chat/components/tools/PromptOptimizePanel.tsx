@@ -75,7 +75,7 @@ export function PromptOptimizePanel({ onInsertText, onToggle }: PromptOptimizePa
         },
         body: JSON.stringify({
           text: inputText,
-          model: settings?.promptModel || 'llama3.2:3b',
+          model: settings?.promptModel || 'undefined',
         }),
       });
       

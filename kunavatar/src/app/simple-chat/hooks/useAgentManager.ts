@@ -180,6 +180,44 @@ export function useAgentManager({
     }
   }, [searchParams, agents, currentConversation, selectAgent]);
 
+  // 从对话记录恢复智能体状态
+  const processConversationAgent = useCallback(() => {
+    // 如果当前对话有 agent_id，且智能体列表已加载
+    if (currentConversation?.agent_id && agents.length > 0) {
+      const agentId = currentConversation.agent_id;
+      const agentExists = agents.some(agent => agent.id === agentId);
+      
+      // 只有当前未选择智能体或选择的智能体不匹配时才处理
+      if (agentExists && selectedAgentId !== agentId) {
+        console.log('🔄 从对话记录恢复智能体状态:', agentId, '对话ID:', currentConversation.id);
+        
+        // 设置选择器模式为智能体模式
+        setSelectorMode('agent');
+        
+        // 选择对应的智能体
+        selectAgent(agentId, currentConversation.id).then(() => {
+          console.log('✅ 从对话记录恢复智能体状态完成');
+        }).catch(error => {
+          console.error('从对话记录恢复智能体状态失败:', error);
+        });
+      }
+    } else if (currentConversation && !currentConversation.agent_id && selectedAgentId !== null) {
+      // 🔥 修复：只有在明确是已存在的对话且没有智能体时才清空状态
+      // 避免在新建对话过程中错误清空智能体选择
+      const isExistingConversation = currentConversation.created_at && 
+        new Date(currentConversation.created_at).getTime() < Date.now() - 5000; // 5秒前创建的对话
+      
+      if (isExistingConversation) {
+        console.log('🔄 已存在的对话无智能体，清空智能体状态');
+        setSelectedAgent(null);
+        setSelectedAgentId(null);
+        setSelectorMode('model');
+      } else {
+        console.log('🤖 新建对话中，保持当前智能体选择状态');
+      }
+    }
+  }, [currentConversation, agents, selectedAgentId, selectAgent]);
+
   // 初始化时加载Agents
   useEffect(() => {
     loadAgents();
@@ -191,6 +229,13 @@ export function useAgentManager({
       processUrlAgentParam();
     }
   }, [agents, processUrlAgentParam]);
+
+  // 当对话切换时，恢复智能体状态
+  useEffect(() => {
+    if (agents.length > 0 && currentConversation) {
+      processConversationAgent();
+    }
+  }, [agents, currentConversation?.id, currentConversation?.agent_id, processConversationAgent]);
 
   return {
     agents,

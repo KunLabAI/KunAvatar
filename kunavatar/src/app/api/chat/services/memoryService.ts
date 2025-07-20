@@ -198,7 +198,7 @@ export class MemoryService {
   ): Promise<MemorySummaryResult | null> {
     try {
       const summaryPrompt = this.buildSummaryPrompt(messages, settings);
-      const summaryModel = settings.memory_model || 'qwen2.5:3b';
+      const summaryModel = settings.memory_model || 'undefined';
       
       const response = await ollamaClient.chat({
         model: summaryModel,
@@ -313,7 +313,7 @@ ${conversationText}
       // 返回默认设置
       return {
         memory_enabled: false,
-        memory_model: 'qwen2.5:3b',
+        memory_model: 'undefined',
         memory_trigger_rounds: 20,
         max_memory_entries: 10,
         summary_style: 'detailed',
@@ -326,7 +326,7 @@ ${conversationText}
 
     return {
       memory_enabled: settingsMap.get('memory_enabled') === '1',
-      memory_model: String(settingsMap.get('memory_model') || 'qwen2.5:3b'),
+      memory_model: String(settingsMap.get('memory_model') || 'undefined'),
       memory_trigger_rounds: parseInt(String(settingsMap.get('memory_trigger_rounds') || '20'), 10),
       max_memory_entries: parseInt(String(settingsMap.get('max_memory_entries') || '10'), 10),
       summary_style: (settingsMap.get('summary_style') as any) || 'detailed',
