@@ -287,6 +287,6 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENS
 
 **If this project helps you, please give us a ⭐️**
 
-Made with ❤️ by KunAvatar Team
+Made with ❤️ by KunLab Team
 
 </div>
