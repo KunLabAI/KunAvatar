@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { AgentWithRelations } from '../types';
 import { 
   Eye, 
@@ -86,9 +87,11 @@ const AgentList: React.FC<AgentListProps> = ({
             <div className="flex items-center gap-4 mb-4">
               <div className="steam-icon-container w-14 h-14">
                 {agent.avatar ? (
-                  <img 
+                  <Image 
                     src={agent.avatar} 
                     alt={agent.name}
+                    width={56}
+                    height={56}
                     className="w-full h-full rounded-xl object-cover"
                   />
                 ) : (

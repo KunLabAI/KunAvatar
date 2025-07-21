@@ -116,11 +116,11 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
     } finally {
       setLoading(false);
     }
-  }, []); // 移除依赖项，避免无限循环
+  }, [notification]); // 添加 notification 依赖项
 
   useEffect(() => {
     fetchUserInfo();
-  }, []); // 只在组件挂载时执行一次
+  }, [fetchUserInfo]);
 
   // 获取安全的用户信息（有默认值）
   const getSafeUserInfo = () => userInfo || defaultUserInfo;

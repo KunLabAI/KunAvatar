@@ -58,7 +58,7 @@ function ConversationsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, []); // 移除notification依赖，避免重复调用
+  }, [notification]);
 
   useEffect(() => {
     fetchConversations();

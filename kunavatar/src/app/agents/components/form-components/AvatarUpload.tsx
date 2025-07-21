@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { Bot, Camera, X } from 'lucide-react';
 
 interface AvatarUploadProps {
@@ -26,7 +27,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const img = new Image();
+      const img = new (window as any).Image(); // 使用原生 HTML Image 构造函数
       
       img.onload = () => {
         // 设置最大尺寸
@@ -122,9 +123,11 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       <div className="relative">
         <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center overflow-hidden border-2 border-theme-border">
           {previewUrl ? (
-            <img 
+            <Image 
               src={previewUrl} 
               alt="头像预览" 
+              width={80}
+              height={80}
               className="w-full h-full object-cover"
               onError={(e) => {
                 console.error('头像预览加载失败:', previewUrl);
