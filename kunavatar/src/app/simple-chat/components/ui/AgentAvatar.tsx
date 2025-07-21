@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Bot } from 'lucide-react';
 
 interface AgentAvatarProps {
@@ -40,9 +41,11 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   if (agent?.avatar) {
     return (
       <div className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0 ${className}`}>
-        <img 
+        <Image 
           src={agent.avatar} 
           alt={agent.name}
+          width={48}
+          height={48}
           className="w-full h-full object-cover"
           onError={(e) => {
             // 如果图片加载失败，隐藏图片元素，让父组件显示fallback

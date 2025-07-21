@@ -235,7 +235,7 @@ export function useAgentManager({
     if (agents.length > 0 && currentConversation) {
       processConversationAgent();
     }
-  }, [agents, currentConversation?.id, currentConversation?.agent_id, processConversationAgent]);
+  }, [agents, currentConversation, processConversationAgent]);
 
   return {
     agents,

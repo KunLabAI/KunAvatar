@@ -753,7 +753,7 @@ export default function BlackHoleAnimation({ className = '', offsetX = 0, starsO
         sceneRef.current.cleanup();
       }
     };
-  }, [offsetX]);
+  }, [offsetX, starsOnly]);
 
   return (
     <div 

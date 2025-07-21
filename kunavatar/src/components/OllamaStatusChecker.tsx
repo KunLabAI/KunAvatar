@@ -50,14 +50,14 @@ export default function OllamaStatusChecker() {
 
       return () => clearTimeout(timer);
     }
-  }, [user, currentSessionId, hasCheckedOnLogin, isChecking, checkOllamaStatus]);
+  }, [user, currentSessionId, hasCheckedOnLogin, isChecking, checkOllamaStatus, isAvailable, status.status, shouldShowNotification]);
 
   // 监听状态变化，如果检测到Ollama不可用，显示提示
   useEffect(() => {
     if (hasCheckedOnLogin && !isAvailable && status.status === 'disconnected' && shouldShowNotification()) {
       setShowNotification(true);
     }
-  }, [hasCheckedOnLogin, isAvailable, status.status]);
+  }, [hasCheckedOnLogin, isAvailable, status.status, shouldShowNotification]);
 
   // 用户注销时重置状态
   useEffect(() => {

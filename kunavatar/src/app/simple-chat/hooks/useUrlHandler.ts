@@ -117,6 +117,22 @@ export function useUrlHandler({
       const modelParam = urlParams.get('model');
       const agentParam = urlParams.get('agent');
       
+      console.log('🔄 URL 变化检测:', {
+        currentUrl,
+        shouldCreateNew,
+        conversationId,
+        modelParam,
+        agentParam,
+        selectedAgentId,
+        conversationLoading
+      });
+      
+      // 如果正在加载对话，等待加载完成
+      if (conversationLoading) {
+        console.log('⏳ 对话正在加载中，等待加载完成...');
+        return;
+      }
+      
       // 处理创建新对话的逻辑
       console.log('🔍 创建对话条件检查:', {
         shouldCreateNew,

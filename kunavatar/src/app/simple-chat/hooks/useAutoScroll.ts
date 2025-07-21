@@ -192,8 +192,9 @@ export function useAutoScroll({ messages, isStreaming }: UseAutoScrollOptions): 
   // 清理定时器
   useEffect(() => {
     return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
+      const currentTimeout = scrollTimeoutRef.current;
+      if (currentTimeout) {
+        clearTimeout(currentTimeout);
       }
     };
   }, []);

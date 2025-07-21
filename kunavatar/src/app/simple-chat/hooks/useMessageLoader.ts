@@ -110,7 +110,7 @@ export function useMessageLoader({
       setMessages([]);
       setToolCalls([]);
     }
-  }, [currentConversation?.id, loadConversationMessages, setMessages, setToolCalls]); // 只依赖对话ID变化，避免函数引用变化导致的重复触发
+  }, [currentConversation, loadConversationMessages, setMessages, setToolCalls]);
 
   return {
     loadConversationMessages,
