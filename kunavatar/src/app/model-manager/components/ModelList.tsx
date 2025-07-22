@@ -107,7 +107,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
           </div>
           
           {/* 卡片底部操作区 - 悬停显示 */}
-          <div className="bg-theme-background-secondary/50 px-3 py-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
+          <div className="bg-theme-background-secondary/50 px-2 pb-5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
             <div className="flex items-center justify-evenly">
               {/* 开始对话按钮 */}
               <button

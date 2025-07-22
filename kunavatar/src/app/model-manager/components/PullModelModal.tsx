@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Download, AlertCircle, CheckCircle, X, Loader, Minus } from 'lucide-react';
+import { Download, AlertCircle, CheckCircle, X, Loader, Minus, ExternalLink } from 'lucide-react';
 import ModalWrapper from './ModalWrapper';
 import MinimizedPullModal from './MinimizedPullModal';
 import { useNotification } from '@/components/notification';
 import { useDownloadManager, DownloadProgress } from '@/contexts/DownloadManagerContext';
+import { useThemeToggle } from '@/theme/contexts/ThemeContext';
+import Image from 'next/image';
 
 interface PullModelModalProps {
   isOpen: boolean;
@@ -25,6 +27,9 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
   const [modelName, setModelName] = useState('');
   const [originalInput, setOriginalInput] = useState(''); // 新增：保存用户原始输入
   const [isPulling, setIsPulling] = useState(false);
+  
+  // 使用主题检测
+  const { isDark } = useThemeToggle();
   
   // 使用全局下载管理器
   const {
@@ -283,6 +288,18 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
     }
   }, [downloadState.modelName, downloadState.originalInput, downloadState.isMinimized, downloadState.isActive, isPulling]);
 
+  // 统一的图标样式，与其他弹窗保持一致
+  const modalIcon = (
+    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center">
+      <Download className="w-7 h-7 text-white" />
+    </div>
+  );
+
+  // 外部链接处理函数
+  const handleExternalLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   // 清理定时器
   useEffect(() => {
     return () => {
@@ -317,7 +334,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
         maxWidth="2xl"
         showMinimizeButton={downloadState.isActive && !downloadState.isCompleted && !downloadState.hasError}
         onMinimize={handleMinimize}
-        icon={<Download className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />}
+        icon={modalIcon}
       >
         <div className="space-y-6">
           {/* 模型名称输入 */}
@@ -350,12 +367,6 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                 }}
                 disabled={isPulling}
               />
-              <p 
-                className="text-xs mt-2"
-                style={{ color: 'var(--color-foreground-muted)' }}
-              >
-                支持直接粘贴 &quot;ollama run model_name&quot; 命令，系统会自动提取模型名称
-              </p>
             </div>
 
             {/* 当前状态 */}
@@ -485,26 +496,76 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
               backgroundColor: 'var(--color-card-secondary)'
             }}
           >
-            <div className="flex justify-end gap-3">
-              {downloadState.isActive ? (
-                <>
-                  <button
-                    onClick={handleMinimize}
-                    className="px-4 py-2 rounded-lg border transition-colors"
+            <div className="flex justify-between items-center">
+              {/* 左侧：外部链接图标 */}
+              <div className="flex items-center gap-3"> 
+                {/* Ollama 图标按钮 */}
+                <button
+                  onClick={() => handleExternalLink('https://ollama.com/library/')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 hover:scale-105"
+                  style={{
+                    backgroundColor: 'var(--color-background)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-foreground)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--color-background-hover)';
+                    e.currentTarget.style.borderColor = 'var(--color-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
+                    e.currentTarget.style.borderColor = 'var(--color-border)';
+                  }}
+                  title="访问 Ollama 模型库"
+                >
+                  <Image
+                    src="/assets/modelslogo/Ollama_icon.svg"
+                    alt="Ollama"
+                    width={20}
+                    height={20}
+                    className="flex-shrink-0"
                     style={{
-                      backgroundColor: 'var(--color-background)',
-                      borderColor: 'var(--color-border)',
-                      color: 'var(--color-foreground)'
+                      filter: isDark ? 'invert(1) brightness(0.9)' : 'none'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-background-hover)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                    }}
-                  >
-                    最小化
-                  </button>
+                  />
+                  <span className="text-sm">Ollama</span>
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </button>
+
+                {/* 魔搭社区图标按钮 */}
+                <button
+                  onClick={() => handleExternalLink('https://modelscope.cn/models')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 hover:scale-105"
+                  style={{
+                    backgroundColor: 'var(--color-background)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-foreground)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--color-background-hover)';
+                    e.currentTarget.style.borderColor = 'var(--color-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
+                    e.currentTarget.style.borderColor = 'var(--color-border)';
+                  }}
+                  title="访问魔搭社区模型库"
+                >
+                  <Image
+                    src="/assets/modelslogo/Modelscope_icon.svg"
+                    alt="魔搭社区"
+                    width={20}
+                    height={20}
+                    className="flex-shrink-0"
+                  />
+                  <span className="text-sm">ModelScope</span>
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </button>
+              </div>
+
+              {/* 右侧：主要操作按钮 */}
+              <div className="flex gap-3">
+                {downloadState.isActive ? (
                   <button
                     onClick={handleCancel}
                     className="px-4 py-2 rounded-lg border transition-colors"
@@ -522,68 +583,68 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                   >
                     取消下载
                   </button>
-                </>
-              ) : downloadState.hasError ? (
-                <button
-                  onClick={handleClose}
-                  className="px-4 py-2 rounded-lg border transition-colors"
-                  style={{
-                    backgroundColor: 'var(--color-background)',
-                    borderColor: 'var(--color-border)',
-                    color: 'var(--color-foreground)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--color-background)';
-                  }}
-                >
-                  关闭
-                </button>
-              ) : downloadState.isCompleted ? (
-                <button
-                  onClick={handleClose}
-                  className="px-4 py-2 rounded-lg border transition-colors"
-                  style={{
-                    backgroundColor: 'var(--color-success)',
-                    borderColor: 'var(--color-success)',
-                    color: 'white'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--color-success-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--color-success)';
-                  }}
-                >
-                  完成
-                </button>
-              ) : (
-                <button
-                  onClick={handlePullModel}
-                  disabled={!modelName.trim()}
-                  className="px-4 py-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  style={{
-                    backgroundColor: modelName.trim() ? 'var(--color-primary)' : 'var(--color-background)',
-                    borderColor: modelName.trim() ? 'var(--color-primary)' : 'var(--color-border)',
-                    color: modelName.trim() ? 'white' : 'var(--color-foreground-muted)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (modelName.trim()) {
-                      e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (modelName.trim()) {
-                      e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    }
-                  }}
-                >
-                  <Download className="w-4 h-4" />
-                  开始拉取
-                </button>
-              )}
+                ) : downloadState.hasError ? (
+                  <button
+                    onClick={handleClose}
+                    className="px-4 py-2 rounded-lg border transition-colors"
+                    style={{
+                      backgroundColor: 'var(--color-background)',
+                      borderColor: 'var(--color-border)',
+                      color: 'var(--color-foreground)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-background-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-background)';
+                    }}
+                  >
+                    关闭
+                  </button>
+                ) : downloadState.isCompleted ? (
+                  <button
+                    onClick={handleClose}
+                    className="px-4 py-2 rounded-lg border transition-colors"
+                    style={{
+                      backgroundColor: 'var(--color-success)',
+                      borderColor: 'var(--color-success)',
+                      color: 'white'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-success-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--color-success)';
+                    }}
+                  >
+                    完成
+                  </button>
+                ) : (
+                  <button
+                    onClick={handlePullModel}
+                    disabled={!modelName.trim()}
+                    className="px-4 py-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    style={{
+                      backgroundColor: modelName.trim() ? 'var(--color-primary)' : 'var(--color-background)',
+                      borderColor: modelName.trim() ? 'var(--color-primary)' : 'var(--color-border)',
+                      color: modelName.trim() ? 'white' : 'var(--color-foreground-muted)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (modelName.trim()) {
+                        e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (modelName.trim()) {
+                        e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                      }
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                    开始拉取
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
