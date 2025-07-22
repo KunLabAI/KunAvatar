@@ -23,6 +23,7 @@ interface PullProgress {
 
 export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModelModalProps) {
   const [modelName, setModelName] = useState('');
+  const [originalInput, setOriginalInput] = useState(''); // 新增：保存用户原始输入
   const [isPulling, setIsPulling] = useState(false);
   
   // 使用全局下载管理器
@@ -67,9 +68,18 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
 
   // 处理输入变化，自动屏蔽 "ollama run" 前缀
   const handleModelNameChange = (value: string) => {
+    setOriginalInput(value); // 保存原始输入
     // 移除 "ollama run" 前缀（不区分大小写）
     const cleanedValue = value.replace(/^ollama\s+run\s+/i, '').trim();
     setModelName(cleanedValue);
+  };
+
+  // 获取显示的模型名称（优先显示完整命令，否则显示模型名称）
+  const getDisplayModelName = () => {
+    if (originalInput.toLowerCase().startsWith('ollama run')) {
+      return originalInput;
+    }
+    return modelName || originalInput;
   };
 
   // 开始拉取模型
@@ -84,8 +94,8 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
     // 创建新的 AbortController
     abortControllerRef.current = new AbortController();
     
-    // 启动全局下载管理器
-    startDownload(modelName.trim(), abortControllerRef.current);
+    // 启动全局下载管理器，传入原始输入
+    startDownload(modelName.trim(), originalInput || modelName.trim(), abortControllerRef.current);
 
     try {
       const token = localStorage.getItem('accessToken');
@@ -246,6 +256,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
     } else {
       resetDownload();
       setModelName('');
+      setOriginalInput(''); // 重置原始输入
       setIsPulling(false);
       onClose();
     }
@@ -267,9 +278,10 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
   useEffect(() => {
     if (downloadState.modelName && !downloadState.isMinimized && !isPulling) {
       setModelName(downloadState.modelName);
+      setOriginalInput(downloadState.originalInput || downloadState.modelName); // 同步原始输入
       setIsPulling(downloadState.isActive);
     }
-  }, [downloadState.modelName, downloadState.isMinimized, downloadState.isActive, isPulling]);
+  }, [downloadState.modelName, downloadState.originalInput, downloadState.isMinimized, downloadState.isActive, isPulling]);
 
   // 清理定时器
   useEffect(() => {
@@ -285,7 +297,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
       {/* 最小化状态 */}
       {downloadState.isMinimized && (
         <MinimizedPullModal
-          modelName={downloadState.modelName}
+          modelName={downloadState.originalInput || downloadState.modelName}
           totalProgress={totalProgress}
           downloadSpeed={downloadState.downloadSpeed}
           elapsedTime={downloadState.elapsedTime}
@@ -319,7 +331,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
               </label>
               <input
                 type="text"
-                value={modelName}
+                value={originalInput || modelName}
                 onChange={(e) => handleModelNameChange(e.target.value)}
                 placeholder="例如: llama3.2:latest 或直接粘贴 ollama run 命令"
                 className="w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2"
@@ -377,12 +389,22 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
             {downloadState.progress.length > 0 && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span 
-                    className="text-sm font-medium"
-                    style={{ color: 'var(--color-foreground)' }}
-                  >
-                    下载进度
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span 
+                      className="text-sm font-medium"
+                      style={{ color: 'var(--color-foreground)' }}
+                    >
+                      下载进度
+                    </span>
+                    {downloadState.isActive && (
+                      <span 
+                        className="text-xs"
+                        style={{ color: 'var(--color-foreground-muted)' }}
+                      >
+                        {downloadState.downloadSpeed || '计算中...'}
+                      </span>
+                    )}
+                  </div>
                   <span 
                     className="text-sm"
                     style={{ color: 'var(--color-foreground-muted)' }}
@@ -390,46 +412,6 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                     {totalProgress.toFixed(1)}%
                   </span>
                 </div>
-
-                {/* 统计信息 */}
-                {downloadState.isActive && (
-                  <div 
-                    className="grid grid-cols-2 gap-4 p-4 rounded-lg border"
-                    style={{
-                      backgroundColor: 'var(--color-card)',
-                      borderColor: 'var(--color-border)'
-                    }}
-                  >
-                    <div>
-                      <div 
-                        className="text-xs"
-                        style={{ color: 'var(--color-foreground-muted)' }}
-                      >
-                        下载速度
-                      </div>
-                      <div 
-                        className="text-sm font-medium"
-                        style={{ color: 'var(--color-foreground)' }}
-                      >
-                        {downloadState.downloadSpeed || '计算中...'}
-                      </div>
-                    </div>
-                    <div>
-                      <div 
-                        className="text-xs"
-                        style={{ color: 'var(--color-foreground-muted)' }}
-                      >
-                        已用时间
-                      </div>
-                      <div 
-                        className="text-sm font-medium"
-                        style={{ color: 'var(--color-foreground)' }}
-                      >
-                        {downloadState.elapsedTime || '0:00'}
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* 总体进度条 */}
                 <div className="space-y-2">

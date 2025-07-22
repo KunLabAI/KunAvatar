@@ -16,8 +16,12 @@ import OllamaStatusChecker from '@/components/OllamaStatusChecker'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Kun Agent',
-  description: '智能对话助手',
+  title: 'Kun Avatar',
+  icons: {
+    icon: '/assets/logo@64.svg',
+    shortcut: '/assets/logo@64.svg',
+    apple: '/assets/logo@64.svg',
+  },
 }
 
 export default function RootLayout({

@@ -216,7 +216,7 @@ function AgentsPageContent() {
                       智能体管理
                     </h1>
                     <p className="page-subtitle mt-2">
-                      创建和管理 AI 智能体，配置专属的对话助手 · 共 {agents.length} 个智能体
+                      创建和管理 AI 智能体 · 共 {agents.length} 个智能体
                     </p>
                   </div>
                   <div className="flex-shrink-0">

@@ -10,7 +10,7 @@ import {
   Server, 
   Bot, 
   Axe,
-  PencilRuler,
+  Pencil,
   MessageCircle,
   Brain,
 } from 'lucide-react';
@@ -85,7 +85,7 @@ const AgentList: React.FC<AgentListProps> = ({
           <div className="p-6 flex-grow">
             {/* 智能体头像和基本信息 */}
             <div className="flex items-center gap-4 mb-4">
-              <div className="steam-icon-container w-14 h-14">
+              <div className="w-14 h-14">
                 {agent.avatar ? (
                   <Image 
                     src={agent.avatar} 
@@ -145,7 +145,13 @@ const AgentList: React.FC<AgentListProps> = ({
               {onStartChat && (
                 <button
                   onClick={() => onStartChat(agent)}
-                  className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-green-500/10 hover:text-green-500 transition-all duration-300 hover:scale-110"
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-success transition-all duration-300"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
                   title="开始对话"
                 >
                   <MessageCircle className="w-5 h-5" />
@@ -156,7 +162,13 @@ const AgentList: React.FC<AgentListProps> = ({
               {onShowMemory && (
                 <button
                   onClick={() => onShowMemory(agent)}
-                  className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-purple-500/10 hover:text-purple-500 transition-all duration-300 hover:scale-110"
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-info transition-all duration-300"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
                   title="查看记忆"
                 >
                   <Brain className="w-5 h-5" />
@@ -167,7 +179,13 @@ const AgentList: React.FC<AgentListProps> = ({
               {onShowDetails && (
                 <button
                   onClick={() => onShowDetails(agent)}
-                  className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-theme-primary/10 hover:text-theme-primary transition-all duration-300 hover:scale-110"
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-primary transition-all duration-300"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
                   title="查看详情"
                 >
                   <Eye className="w-5 h-5" />
@@ -177,16 +195,28 @@ const AgentList: React.FC<AgentListProps> = ({
               {/* 编辑按钮 */}
               <button
                 onClick={() => onEdit(agent)}
-                className="steam-button steam-button-warning flex items-center justify-center w-10 h-10"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-warning transition-all duration-300"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
                 title="编辑"
               >
-                <PencilRuler className="w-5 h-5" />
+                <Pencil className="w-5 h-5" />
               </button>
               
               {/* 删除按钮 */}
               <button
                 onClick={() => onDelete(agent.id)}
-                className="steam-button steam-button-error flex items-center justify-center w-10 h-10"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-error transition-all duration-300"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
                 title="删除"
               >
                 <Trash2 className="w-5 h-5" />
