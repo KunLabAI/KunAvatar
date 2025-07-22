@@ -2,7 +2,7 @@
 
 <img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="200" height="200" />
 
-# KunAvatar - AI就是你的化身
+# KunAvatar
 
 <div class="badges-container">
 

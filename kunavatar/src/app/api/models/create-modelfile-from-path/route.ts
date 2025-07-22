@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { CustomModelService } from '@/lib/database/custom-models';
 import { withAuth, canAccessResource, AuthenticatedRequest } from '@/lib/middleware/auth';
+import { getUserOllamaClient } from '@/lib/ollama';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -75,9 +76,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     console.log('用户输入名称:', trimmedDisplayName);
     console.log('清理后的Ollama模型名称:', ollamaModelName);
     
+    // 获取用户特定的 Ollama 客户端
+    const ollamaClient = getUserOllamaClient(request.user!.id);
+    const ollamaBaseUrl = ollamaClient.getBaseUrl();
+    
     // 检查模型是否已存在
     try {
-      const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
       const checkResponse = await fetch(`${ollamaBaseUrl}/api/show`, {
         method: 'POST',
         headers: {
@@ -299,51 +303,151 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
 
     console.log('模型创建命令执行完成');
 
-    // 获取模型详细信息
+    // 获取模型详细信息 - 这是关键步骤，必须成功获取真实的模型信息
     let modelDetails = null;
     try {
-      const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
       const showResponse = await fetch(`${ollamaBaseUrl}/api/show`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: ollamaModelName
+          name: ollamaModelName  // 使用 'name' 而不是 'model'
         }),
       });
 
       if (showResponse.ok) {
         modelDetails = await showResponse.json();
+        console.log('获取到的模型详细信息:', JSON.stringify(modelDetails, null, 2));
+      } else {
+        const errorText = await showResponse.text();
+        console.error('获取模型详情失败:', showResponse.status, errorText);
+        throw new Error(`无法获取模型详情: ${errorText}`);
       }
     } catch (detailsError) {
-      console.warn('获取模型详情失败:', detailsError);
+      console.error('获取模型详情失败:', detailsError);
+      return NextResponse.json(
+        { 
+          error: '模型创建成功但获取详情失败',
+          message: '模型已成功导入到Ollama，但无法获取模型详细信息。请稍后重试或手动刷新模型列表。',
+          type: 'details_error'
+        },
+        { status: 500 }
+      );
     }
 
-    // 保存模型信息到数据库
+    // 从模型详情中提取真实信息
+    const extractSystemPrompt = (modelfile: string): string => {
+      if (!modelfile) return '';
+      
+      // 尝试多种 SYSTEM 指令格式（不区分大小写）
+      const patterns = [
+        // 三引号格式：SYSTEM """content"""
+        /(?:SYSTEM|system)\s+"""([\s\S]*?)"""/i,
+        // 双引号格式：SYSTEM "content"
+        /(?:SYSTEM|system)\s+"([^"]*?)"/i,
+        // 单引号格式：SYSTEM 'content'
+        /(?:SYSTEM|system)\s+'([^']*?)'/i,
+        // 无引号格式（到行尾）：SYSTEM content
+        /(?:SYSTEM|system)\s+([^\n\r]*)/i,
+      ];
+      
+      for (const pattern of patterns) {
+        const match = modelfile.match(pattern);
+        if (match && match[1].trim()) {
+          return match[1].trim();
+        }
+      }
+      return '';
+    };
+
+    // 解析参数字符串为对象
+    const parseParameters = (parametersStr: string): Record<string, any> => {
+      const params: Record<string, any> = {};
+      
+      if (!parametersStr) return params;
+      
+      const lines = parametersStr.split('\n');
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+        
+        const spaceIndex = trimmedLine.indexOf(' ');
+        if (spaceIndex === -1) continue;
+        
+        const key = trimmedLine.substring(0, spaceIndex).trim();
+        const value = trimmedLine.substring(spaceIndex + 1).trim();
+        
+        // 尝试解析为数字或布尔值
+        if (value === 'true') {
+          params[key] = true;
+        } else if (value === 'false') {
+          params[key] = false;
+        } else if (!isNaN(Number(value))) {
+          params[key] = Number(value);
+        } else {
+          // 移除引号
+          params[key] = value.replace(/^["']|["']$/g, '');
+        }
+      }
+      
+      return params;
+    };
+
+    // 获取模型的真实大小 - 从Ollama tags接口获取
+    const getModelSize = async (modelName: string): Promise<number> => {
+      try {
+        const tagsResponse = await fetch(`${ollamaBaseUrl}/api/tags`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (tagsResponse.ok) {
+          const tagsData = await tagsResponse.json();
+          const model = tagsData.models?.find((m: any) => m.name === modelName);
+          if (model && typeof model.size === 'number') {
+            console.log(`获取到模型 ${modelName} 的大小: ${model.size} 字节`);
+            return model.size;
+          }
+        }
+        console.warn(`无法从tags接口获取模型 ${modelName} 的大小`);
+        return 0;
+      } catch (error) {
+        console.error(`获取模型 ${modelName} 大小时出错:`, error);
+        return 0;
+      }
+    };
+
+    // 保存模型信息到数据库 - 使用真实的模型信息
     try {
+      const systemPrompt = extractSystemPrompt(modelDetails.modelfile || '');
+      const parameters = parseParameters(modelDetails.parameters || '');
+      const modelSize = await getModelSize(ollamaModelName); // 获取真实的模型大小
+      
       const modelData = {
         base_model: ollamaModelName, // Ollama 使用的模型名称
         display_name: trimmedDisplayName, // 用户友好的显示名称
-        model_hash: ollamaModelName, // 使用模型名称作为哈希值
-        family: 'custom', // 自定义模型
+        model_hash: modelDetails.digest || ollamaModelName, // 使用真实的digest
+        family: modelDetails.details?.family || 'custom', // 使用真实的模型家族
         description: description || `从文件创建的自定义模型: ${trimmedDisplayName}`,
-        system_prompt: '',
-        parameters: {},
+        system_prompt: systemPrompt, // 从modelfile中提取的真实系统提示词
+        parameters: parameters, // 解析后的真实参数
         tags: tags || [],
-        template: '',
-        license: '',
-        size: 0, // 文件大小暂时设为0
-        digest: '', // 摘要暂时为空
-        ollama_modified_at: undefined, // 自定义模型没有Ollama修改时间
-        // 从模型详情中获取的信息
-        architecture: modelDetails?.details?.architecture || 'unknown',
-        parameter_count: modelDetails?.details?.parameter_count || 0,
-        context_length: 2048,
-        embedding_length: 0,
-        quantization_level: quantize || '',
-        format: model_type || 'gguf',
-        capabilities: [],
+        template: modelDetails.template || '', // 真实的模板
+        license: modelDetails.license || '', // 真实的许可证
+        size: modelSize, // 使用从tags接口获取的真实大小
+        digest: modelDetails.digest || '', // 真实的摘要
+        ollama_modified_at: modelDetails.modified_at || undefined,
+        // 从模型详情中获取的真实信息
+        architecture: modelDetails.details?.family || modelDetails.model_info?.['general.architecture'] || 'unknown',
+        parameter_count: modelDetails.details?.parameter_count || modelDetails.model_info?.['general.parameter_count'] || 0,
+        context_length: modelDetails.model_info?.['llama.context_length'] || modelDetails.model_info?.['context_length'] || 2048,
+        embedding_length: modelDetails.model_info?.['llama.embedding_length'] || modelDetails.model_info?.['embedding_length'] || 0,
+        quantization_level: modelDetails.details?.quantization_level || quantize || '',
+        format: modelDetails.details?.format || model_type || 'gguf',
+        capabilities: modelDetails.capabilities || [],
       };
 
       console.log('保存到数据库的模型数据:', modelData);
@@ -362,11 +466,24 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           original_name: trimmedDisplayName,
           description: modelData.description,
           tags: modelData.tags,
-          model_type,
+          model_type: modelData.format,
           created_from: 'file_path',
           file_paths: files.map((f: any) => f.path),
-          details: modelDetails,
-          quantize
+          details: {
+            ...modelDetails,
+            // 添加一些计算出的信息
+            system_prompt: systemPrompt,
+            parsed_parameters: parameters,
+            file_size: 0,
+            architecture: modelData.architecture,
+            parameter_count: modelData.parameter_count,
+            context_length: modelData.context_length,
+            embedding_length: modelData.embedding_length,
+            quantization_level: modelData.quantization_level,
+            format: modelData.format,
+            capabilities: modelData.capabilities
+          },
+          quantize: modelData.quantization_level
         }
       });
 
@@ -380,13 +497,22 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           name: ollamaModelName,
           display_name: trimmedDisplayName,
           original_name: trimmedDisplayName,
-          description,
-          tags,
-          model_type,
+          description: description || `从文件创建的自定义模型: ${trimmedDisplayName}`,
+          tags: tags || [],
+          model_type: modelDetails?.details?.format || model_type || 'gguf',
           created_from: 'file_path',
           file_paths: files.map((f: any) => f.path),
-          details: modelDetails,
-          quantize
+          details: {
+            ...modelDetails,
+            architecture: modelDetails?.details?.family || modelDetails?.model_info?.['general.architecture'] || 'unknown',
+            parameter_count: modelDetails?.details?.parameter_count || modelDetails?.model_info?.['general.parameter_count'] || 0,
+            context_length: modelDetails?.model_info?.['llama.context_length'] || modelDetails?.model_info?.['context_length'] || 2048,
+            embedding_length: modelDetails?.model_info?.['llama.embedding_length'] || modelDetails?.model_info?.['embedding_length'] || 0,
+            quantization_level: modelDetails?.details?.quantization_level || quantize || '',
+            format: modelDetails?.details?.format || model_type || 'gguf',
+            capabilities: modelDetails?.capabilities || []
+          },
+          quantize: modelDetails?.details?.quantization_level || quantize || ''
         }
       });
     }

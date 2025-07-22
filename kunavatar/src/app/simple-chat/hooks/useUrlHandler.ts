@@ -264,7 +264,7 @@ export function useUrlHandler({
     handleUrlChange().catch(error => {
       console.error('URL处理失败:', error);
     });
-  }, [currentUrlSearch, models, conversationLoading, selectedModel, currentConversation, agents]); // 使用currentUrlSearch监听URL变化
+  }, [currentUrlSearch, models, conversationLoading, selectedModel, currentConversation, agents, isProcessingUrl, selectedAgentId]); // 使用currentUrlSearch监听URL变化
 
   return {
     isProcessingUrl,

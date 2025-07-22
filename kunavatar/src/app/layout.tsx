@@ -9,6 +9,8 @@ import { NotificationManager } from '@/components/notification/NotificationManag
 import { AuthProvider } from '@/components/AuthProvider'
 import { AuthErrorBoundary } from '@/components/AuthErrorBoundary'
 import { UserSettingsProvider } from '@/contexts/UserSettingsContext'
+import { DownloadManagerProvider } from '@/contexts/DownloadManagerContext'
+import { GlobalDownloadManager } from '@/components/GlobalDownloadManager'
 import OllamaStatusChecker from '@/components/OllamaStatusChecker'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -34,13 +36,16 @@ export default function RootLayout({
           <AuthErrorBoundary>
             <AuthProvider>
               <UserSettingsProvider>
-                <NotificationProvider>
-                  <div className="min-h-screen">
-                    {children}
-                  </div>
-                  <NotificationManager />
-                  <OllamaStatusChecker />
-                </NotificationProvider>
+                <DownloadManagerProvider>
+                  <NotificationProvider>
+                    <div className="min-h-screen">
+                      {children}
+                    </div>
+                    <NotificationManager />
+                    <GlobalDownloadManager />
+                    <OllamaStatusChecker />
+                  </NotificationProvider>
+                </DownloadManagerProvider>
               </UserSettingsProvider>
             </AuthProvider>
           </AuthErrorBoundary>
