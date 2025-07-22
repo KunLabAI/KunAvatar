@@ -82,20 +82,22 @@ export function Sidebar({ conversations }: SidebarProps) {
       <div className="sidebar-container bg-theme-card border-r border-theme-border flex flex-col h-full">
         {/* 顶部区域 */}
         <div className="group p-4 border-b border-theme-border flex items-center relative">
-          <Image
-            src="/assets/logo@64.svg"
-            alt="Kun Avatar Logo"
-            width={32}
-            height={32}
-            className="w-8 h-8 flex-shrink-0"
-          />
+          <div className="w-8 h-8 flex-shrink-0 relative">
+            <Image
+              src="/assets/logo@64.svg"
+              alt="Kun Avatar Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
           <h1 className="sidebar-text text-xl font-bold text-theme-foreground tracking-tight">
             Kun Avatar
           </h1>
         {/* 展开/收缩按钮 */}
         <button
           onClick={toggleSidebar}
-          className={`absolute -right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-card-hover bg-theme-card z-10 ${
+          className={`absolute -right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-card-hover bg-theme-card z-10 transition-opacity duration-200 ${
             isExpanded ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
           }`}
           title={isExpanded ? "收起侧边栏" : "展开侧边栏"}

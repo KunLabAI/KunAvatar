@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Minus } from 'lucide-react';
 import { useEffect } from 'react';
 
 interface ModalWrapperProps {
@@ -12,6 +12,8 @@ interface ModalWrapperProps {
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | '6xl';
   showCloseButton?: boolean;
+  showMinimizeButton?: boolean;
+  onMinimize?: () => void;
   icon?: React.ReactNode;
 }
 
@@ -23,6 +25,8 @@ export default function ModalWrapper({
   children,
   maxWidth = '2xl',
   showCloseButton = true,
+  showMinimizeButton = false,
+  onMinimize,
   icon
 }: ModalWrapperProps) {
   // 添加ESC键退出弹窗功能
@@ -88,14 +92,26 @@ export default function ModalWrapper({
                   )}
                 </div>
               </div>
-              {showCloseButton && (
-                <button
-                  onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-theme-card hover:bg-theme-card-hover flex items-center justify-center text-theme-foreground-muted hover:text-theme-foreground transition-all duration-200 flex-shrink-0 border border-theme-border"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {showMinimizeButton && onMinimize && (
+                  <button
+                    onClick={onMinimize}
+                    className="w-10 h-10 rounded-full bg-theme-card hover:bg-theme-card-hover flex items-center justify-center text-theme-foreground-muted hover:text-theme-foreground transition-all duration-200 flex-shrink-0 border border-theme-border"
+                    title="最小化"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                )}
+                {showCloseButton && (
+                  <button
+                    onClick={onClose}
+                    className="w-10 h-10 rounded-full bg-theme-card hover:bg-theme-card-hover flex items-center justify-center text-theme-foreground-muted hover:text-theme-foreground transition-all duration-200 flex-shrink-0 border border-theme-border"
+                    title="关闭"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

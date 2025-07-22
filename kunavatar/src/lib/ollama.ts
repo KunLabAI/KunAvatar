@@ -124,6 +124,13 @@ export class OllamaClient {
   }
 
   /**
+   * 获取当前配置的 Ollama 基础 URL
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  /**
    * 获取本地可用的模型列表
    */
   async getModels(): Promise<OllamaModel[]> {

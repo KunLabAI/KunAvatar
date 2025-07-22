@@ -618,7 +618,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
             </div>
 
             {/* 底部操作 */}
-            <div className="p-8 flex justify-between items-center border-t border-theme-border bg-theme-background-secondary">
+            <div className="p-8 flex justify-between items-center border-t border-theme-border">
               <button
                 onClick={downloadModelfile}
                 className="btn-base btn-secondary px-6 py-3"

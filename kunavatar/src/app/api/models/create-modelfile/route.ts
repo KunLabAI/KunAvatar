@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { OllamaClient } from '@/lib/ollama';
+import { OllamaClient, getUserOllamaClient } from '@/lib/ollama';
 import { CustomModelService } from '@/lib/database/custom-models';
 import { withAuth, canAccessResource, AuthenticatedRequest } from '@/lib/middleware/auth';
 import { exec } from 'child_process';
@@ -60,8 +60,8 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
-    // 初始化 Ollama 客户端
-    const ollamaClient = new OllamaClient();
+    // 初始化用户特定的 Ollama 客户端
+    const ollamaClient = getUserOllamaClient(request.user!.id);
 
     // 检查基础模型是否存在于 Ollama 中
     try {
@@ -219,8 +219,38 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const licenseMatch = modelfile.match(/LICENSE\s+"""([\s\S]*?)"""/i);
     const license = licenseMatch ? licenseMatch[1].trim() : '';
 
+    // 获取模型的真实大小 - 从Ollama tags接口获取
+    const getModelSize = async (modelName: string): Promise<number> => {
+      try {
+        const ollamaBaseUrl = ollamaClient.getBaseUrl(); // 使用用户特定的 Ollama 地址
+        const tagsResponse = await fetch(`${ollamaBaseUrl}/api/tags`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (tagsResponse.ok) {
+          const tagsData = await tagsResponse.json();
+          const model = tagsData.models?.find((m: any) => m.name === modelName);
+          if (model && typeof model.size === 'number') {
+            console.log(`获取到模型 ${modelName} 的大小: ${model.size} 字节`);
+            return model.size;
+          }
+        }
+        console.warn(`无法从tags接口获取模型 ${modelName} 的大小`);
+        return 0;
+      } catch (error) {
+        console.error(`获取模型 ${modelName} 大小时出错:`, error);
+        return 0;
+      }
+    };
+
     // 生成数据库用的模型哈希
     const dbModelHash = crypto.createHash('sha256').update(ollamaModelName).digest('hex').substring(0, 16);
+
+    // 获取模型的真实大小
+    const modelSize = await getModelSize(ollamaModelName);
 
     // 在数据库中保存模型信息
     const customModel = CustomModelService.create({
@@ -234,7 +264,7 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       template: template,
       license: license,
       tags: metadata.tags || [],
-      size: 0, // 暂时设为0，后续可以通过模型列表更新
+      size: modelSize, // 使用从tags接口获取的真实大小
       digest: '',
       ollama_modified_at: new Date().toISOString(),
       architecture: modelDetails.model_info?.['general.architecture'] || '',

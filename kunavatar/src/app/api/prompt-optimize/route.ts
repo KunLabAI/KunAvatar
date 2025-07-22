@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userSettingOperations, userOperations } from '@/lib/database';
 import { withAuth, canAccessResource, AuthenticatedRequest } from '@/lib/middleware/auth';
+import { getUserOllamaClient } from '@/lib/ollama';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -38,9 +39,12 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
+    // 获取用户特定的 Ollama 客户端
+    const ollamaClient = getUserOllamaClient(request.user!.id);
+    const ollamaBaseUrl = ollamaClient.getBaseUrl();
+
     // 首先检查模型是否可用
     try {
-      const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
       const modelCheckResponse = await fetch(`${ollamaBaseUrl}/api/tags`);
       if (!modelCheckResponse.ok) {
         throw new Error('无法连接到Ollama服务');
@@ -119,7 +123,6 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     });
 
     // 调用Ollama API进行优化
-    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const ollamaResponse = await fetch(`${ollamaBaseUrl}/api/chat`, {
       method: 'POST',
       headers: {

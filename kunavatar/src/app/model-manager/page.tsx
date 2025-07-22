@@ -8,7 +8,8 @@ import ModelForm from './components/ModelForm';
 import ModelDetailsModal from './components/ModelDetailsModal';
 import ModelfileForm, { ModelfileData } from './components/ModelfileForm';
 import FileUploadModelForm, { FileUploadModelData } from './components/FileUploadModelForm';
-import { Loader, Code, Upload, RefreshCw } from 'lucide-react';
+import PullModelModal from './components/PullModelModal';
+import { Loader, Code, Upload, RefreshCw, Download } from 'lucide-react';
 import { useNotification } from '@/components/notification';
 import Modal from '@/components/Modal';
 import { Sidebar } from '../Sidebar';
@@ -23,6 +24,7 @@ function ModelManagerPageContent() {
   const [showForm, setShowForm] = useState(false);
   const [showModelfileForm, setShowModelfileForm] = useState(false);
   const [showFileUploadForm, setShowFileUploadForm] = useState(false);
+  const [showPullModelModal, setShowPullModelModal] = useState(false);
   const [editingModel, setEditingModel] = useState<CustomModel | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -274,6 +276,13 @@ function ModelManagerPageContent() {
     }
   };
 
+  // 处理拉取模型成功
+  const handlePullModelSuccess = async (modelName: string) => {
+    setShowPullModelModal(false);
+    // 拉取成功后刷新模型列表
+    await loadModels(true); // 强制同步以获取新拉取的模型
+  };
+
   // 关闭表单弹窗
   const handleCloseModal = () => {
     setEditingModel(null);
@@ -297,10 +306,7 @@ function ModelManagerPageContent() {
       <ProtectedRoute>
         <div className="flex h-screen bg-theme-background">
           <Sidebar conversations={conversations} />
-          <div className="flex-1 overflow-auto flex items-center justify-center">
-            <div className="text-center max-w-md mx-auto p-8">
               <div className="mb-6">
-                <div className="w-20 h-20 mx-auto bg-theme-warning/10 rounded-full flex items-center justify-center">
                   <svg className="w-10 h-10 text-theme-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
@@ -321,9 +327,6 @@ function ModelManagerPageContent() {
                   返回首页
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
       </ProtectedRoute>
     );
   }
@@ -371,6 +374,13 @@ function ModelManagerPageContent() {
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-3">
                     <button
+                      onClick={() => setShowPullModelModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="hidden sm:inline">拉取模型</span>
+                    </button>
+                    <button
                       onClick={() => setShowFileUploadForm(true)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
@@ -414,6 +424,15 @@ function ModelManagerPageContent() {
                 />
               </div>
             </div>
+
+            {/* 拉取模型弹窗 */}
+            {showPullModelModal && (
+              <PullModelModal
+                isOpen={showPullModelModal}
+                onClose={() => setShowPullModelModal(false)}
+                onSuccess={handlePullModelSuccess}
+              />
+            )}
 
             {/* 模型表单弹窗 */}
             {isModalOpen && (

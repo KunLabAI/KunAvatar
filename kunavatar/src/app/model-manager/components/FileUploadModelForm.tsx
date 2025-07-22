@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { X, Folder, Zap, AlertCircle } from 'lucide-react';
 import ModalWrapper from './ModalWrapper';
 import { useNotification } from '@/components/notification';
@@ -204,17 +204,12 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
           '模型创建成功', 
           `模型 "${formData.display_name}" 已成功创建并添加到列表中`
         );
-        
-        // 调用成功回调（如果有）
         if (onSuccess) {
           onSuccess(`模型 "${formData.display_name}" 创建成功！`);
         }
         
-        // 关闭弹窗
-        onCancel();
         return;
       } else {
-        // 使用统一的错误处理
         const errorInfo = getErrorMessage(result);
         notification.error(errorInfo.title, errorInfo.message);
       }
@@ -232,7 +227,7 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
   };
 
   const modalIcon = (
-    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center">
+    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center">
       <Folder className="w-7 h-7 text-white" />
     </div>
   );
@@ -380,14 +375,8 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
         
 
         {/* 底部操作按钮 - 固定 */}
-        <div className="flex-shrink-0 px-8 py-6 border-t border-theme-border bg-theme-background-secondary">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-theme-foreground-muted">
-              {formData.files.length > 0 && (
-                <span>已选择文件: {formData.files[0].name}</span>
-              )}
-            </div>
-            
+        <div className="flex-shrink-0 px-8 py-6 border-t border-theme-border">
+          <div className="flex justify-end items-center">        
             <div className="flex gap-3">
               <button
                 onClick={onCancel}
