@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthProvider';
 import { useOllamaStatus } from '@/hooks/useOllamaStatus';
 import OllamaNotification from './OllamaNotification';
@@ -25,13 +25,13 @@ export default function OllamaStatusChecker() {
   }, [user, currentSessionId]);
 
   // 检查是否应该显示提示（基于当前登录会话）
-  const shouldShowNotification = () => {
+  const shouldShowNotification = useCallback(() => {
     if (!currentSessionId) return false;
     
     const dismissedSessionId = localStorage.getItem(STORAGE_KEY);
     // 如果没有记录或者记录的会话ID与当前不同，则应该显示提示
     return !dismissedSessionId || dismissedSessionId !== currentSessionId;
-  };
+  }, [currentSessionId]);
 
   useEffect(() => {
     // 只有在用户登录且还没有检查过时才进行检测

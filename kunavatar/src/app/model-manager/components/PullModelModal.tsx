@@ -342,7 +342,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                 className="text-xs mt-2"
                 style={{ color: 'var(--color-foreground-muted)' }}
               >
-                支持直接粘贴 "ollama run model_name" 命令，系统会自动提取模型名称
+                支持直接粘贴 &quot;ollama run model_name&quot; 命令，系统会自动提取模型名称
               </p>
             </div>
 
