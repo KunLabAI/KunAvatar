@@ -79,7 +79,7 @@ function ModelManagerPageContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [notification]);
+  }, []); // 移除notification依赖项，避免重复创建函数
 
   // 创建新模型
   const handleCreateModel = async (id: number, modelData: Omit<CustomModel, 'id' | 'model_hash'>) => {
@@ -295,10 +295,10 @@ function ModelManagerPageContent() {
     setIsDetailsModalOpen(false);
   };
 
-  // 初始加载 - 先从数据库获取数据，不强制同步
+  // 初始加载 - 只在组件挂载时执行一次
   useEffect(() => {
     loadModels(false); // 初始加载时不同步Ollama模型，避免错误循环
-  }, [loadModels]);
+  }, []);
 
   // 如果有权限错误，显示权限不足页面
   if (hasPermissionError) {
@@ -369,7 +369,7 @@ function ModelManagerPageContent() {
                     </h1>          
                     
                     <p className="page-subtitle mt-2">
-                      管理和配置 AI 模型，支持 Modelfile 和文件上传两种创建方式 · 共 {models.length} 个模型
+                      管理和配置 AI 模型 · 共 {models.length} 个模型
                     </p>
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-3">

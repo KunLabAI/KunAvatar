@@ -735,10 +735,6 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   border-radius: 1rem;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.05),
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .steam-card::before {
@@ -757,10 +753,6 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
 .steam-card:hover {
   transform: translateY(-8px) scale(1.02);
   border-color: rgba(var(--color-primary-rgb), 0.3);
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.15),
-    0 8px 16px rgba(var(--color-primary-rgb), 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .steam-card-glow {
@@ -771,9 +763,6 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   transition: opacity 0.3s ease;
   pointer-events: none;
   border: 1px solid rgba(var(--color-primary-rgb), 0.3);
-  box-shadow: 
-    0 0 20px rgba(var(--color-primary-rgb), 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .steam-card:hover .steam-card-glow {
@@ -859,92 +848,6 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   background-color: rgba(var(--color-info), 0.1);
   color: var(--color-info);
   border-color: rgba(var(--color-info), 0.2);
-}
-
-/* Steam风格按钮 */
-.steam-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  border: none;
-  background: transparent;
-  color: var(--color-foreground-muted);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.steam-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  border-radius: inherit;
-}
-
-.steam-button:hover {
-  transform: scale(1.1);
-}
-
-.steam-button:hover::before {
-  opacity: 0.1;
-}
-
-.steam-button-info:hover {
-  color: var(--color-info);
-}
-
-.steam-button-warning:hover {
-  color: var(--color-warning);
-}
-
-.steam-button-error:hover {
-  color: var(--color-error);
-}
-
-/* Steam风格图标容器 */
-.steam-icon-container {
-  position: relative;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  box-shadow: 
-    0 8px 16px rgba(var(--color-primary-rgb), 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-}
-
-.steam-icon-container:hover {
-  box-shadow: 
-    0 12px 24px rgba(var(--color-primary-rgb), 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.steam-icon-badge {
-  position: absolute;
-  top: -0.25rem;
-  right: -0.25rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-  background: var(--color-success);
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  border: 2px solid var(--color-card);
 }
 
 /* Steam风格空状态 */

@@ -128,6 +128,17 @@ export default function MinimizedPullModal({
           </div>
         </div>
 
+        {/* 模型名称 */}
+        <div className="mb-3">
+          <span 
+            className="text-xs truncate block"
+            style={{ color: 'var(--color-foreground-muted)' }}
+            title={modelName}
+          >
+            {modelName}
+          </span>
+        </div>
+
         {/* 进度条 */}
         <div 
           className="w-full rounded-full h-1.5"

@@ -1,7 +1,7 @@
 'use client';
 
 import { CustomModel } from '@/lib/database/custom-models';
-import { Eye, Pencil, Trash2, Tag, ServerOff, AlertCircle, MessageCircle } from 'lucide-react';
+import { SlidersHorizontal, Pencil, Trash2, Tag, ServerOff, AlertCircle, MessageCircle } from 'lucide-react';
 import ModelLogoComponent from '@/app/model-manager/components/ModelLogo';
 
 interface ModelListProps {
@@ -107,12 +107,18 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
           </div>
           
           {/* 卡片底部操作区 - 悬停显示 */}
-          <div className="bg-theme-background-secondary/50 px-3 py-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
+          <div className="bg-theme-background-secondary/50 px-2 pb-5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
             <div className="flex items-center justify-evenly">
               {/* 开始对话按钮 */}
               <button
                 onClick={() => onStartChat(model)}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-theme-success/10 hover:text-theme-success transition-all duration-300 hover:scale-110"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-success transition-all duration-300"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
                 title="开始对话"
               >
                 <MessageCircle className="w-5 h-5" />
@@ -121,16 +127,28 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
               {/* 查看详情按钮 */}
               <button
                 onClick={() => onShowDetails(model)}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-theme-primary/10 hover:text-theme-primary transition-all duration-300 hover:scale-110"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-primary transition-all duration-300"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
                 title="查看详情"
               >
-                <Eye className="w-5 h-5" />
+                <SlidersHorizontal className="w-5 h-5" />
               </button>
               
               {/* 编辑按钮 */}
               <button
                 onClick={() => onEdit(model)}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-theme-warning/10 hover:text-theme-warning transition-all duration-300 hover:scale-110"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-warning transition-all duration-300"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
                 title="编辑"
               >
                 <Pencil className="w-5 h-5" />
@@ -139,7 +157,13 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
               {/* 删除按钮 */}
               <button
                 onClick={() => onDelete(model.id)}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:bg-theme-error/10 hover:text-theme-error transition-all duration-300 hover:scale-110"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-error transition-all duration-300"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
                 title="删除"
               >
                 <Trash2 className="w-5 h-5" />

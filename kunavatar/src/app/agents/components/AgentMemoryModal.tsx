@@ -102,6 +102,30 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
     }
   }, [isOpen]);
 
+  // 键盘ESC退出功能
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        // 如果正在编辑，先取消编辑状态
+        if (editingMemoryId) {
+          setEditingMemoryId(null);
+          setEditingContent('');
+        } else {
+          // 否则关闭弹窗
+          onClose();
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, editingMemoryId, onClose]);
+
   // 选择记忆
   const handleSelectMemory = (memoryId: number) => {
     setSelectedMemoryId(memoryId);
