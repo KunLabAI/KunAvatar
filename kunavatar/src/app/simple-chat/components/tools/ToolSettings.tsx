@@ -2,14 +2,18 @@
 
 import React from 'react';
 import { useToolSettings } from '../../hooks/useToolSettings';
-import { usePanelManager } from '../../hooks/usePanelManager';
 import { MemoryControl } from '../input-controls/MemoryControl';
 import { ToolControl } from '../input-controls/ToolControl';
-import { PromptOptimizeControl } from '../input-controls/PromptOptimizeControl';
 import { PromptOptimizePanel } from './PromptOptimizePanel';
 import { ChatActionsControl } from '../input-controls/ChatActionsControl';
 import { ToolPanel } from './ToolPanel';
 import { MemoryPanel } from './MemoryPanel';
+
+// 导入面板管理器类型
+interface PanelManager {
+  togglePanel: (panel: 'tool-settings' | 'memory' | 'prompt-optimize' | null) => void;
+  isPanelOpen: (panel: 'tool-settings' | 'memory' | 'prompt-optimize' | null) => boolean;
+}
 
 interface ToolSettingsProps {
   selectedModel: string;
@@ -23,6 +27,11 @@ interface ToolSettingsProps {
   // 记忆相关现在由面板管理器统一管理
   conversationId?: string | null;
   selectedAgentId?: number | null;
+  
+  // 接收外部的面板管理器
+  panelManager: PanelManager;
+  promptOptimizeEnabled?: boolean;
+  onPromptOptimizeToggle?: () => void;
 }
 
 export function ToolSettings({
@@ -33,12 +42,14 @@ export function ToolSettings({
   onSelectedToolsChange,
   onInsertText,
   onClearChat,
-  // 移除记忆面板相关属性
   conversationId,
   selectedAgentId,
+  panelManager,
+  promptOptimizeEnabled = false,
+  onPromptOptimizeToggle,
 }: ToolSettingsProps) {
-  // 统一的面板管理器
-  const { togglePanel, isPanelOpen } = usePanelManager();
+  // 使用外部传入的面板管理器
+  const { togglePanel, isPanelOpen } = panelManager;
   
   const {
     modelSupportsTools,
@@ -67,77 +78,85 @@ export function ToolSettings({
   // 处理提示词优化面板切换
   const handlePromptOptimizeToggle = () => {
     togglePanel('prompt-optimize');
+    if (onPromptOptimizeToggle) {
+      onPromptOptimizeToggle();
+    }
   };
 
   return (
     <div className="relative">
       {/* 面板容器 */}
-      <div className="absolute bottom-full left-0 right-0 mb-6 z-50">
+      <div className="absolute bottom-full left-0 right-0 mb-4 z-50">
         {/* 提示词优化面板 */}
         {isPanelOpen('prompt-optimize') && (
-          <PromptOptimizePanel
-            onInsertText={onInsertText}
-            onToggle={handlePromptOptimizeToggle}
-          />
+          <div className="mb-4">
+            <PromptOptimizePanel
+              onInsertText={onInsertText}
+              onToggle={handlePromptOptimizeToggle}
+            />
+          </div>
         )}
         
         {/* 工具设置面板 */}
         {isPanelOpen('tool-settings') && enableTools && (
-          <ToolPanel
-            allTools={allTools}
-            selectedTools={selectedTools}
-            onToolSelection={handleToolSelection}
-            onToggle={handleToolSettingsToggle}
-          />
+          <div className="mb-4">
+            <ToolPanel
+              allTools={allTools}
+              selectedTools={selectedTools}
+              onToolSelection={handleToolSelection}
+              onToggle={handleToolSettingsToggle}
+            />
+          </div>
         )}
         
         {/* 记忆面板 */}
         {isPanelOpen('memory') && (
-          <MemoryPanel 
-            conversationId={conversationId || null}
-            agentId={selectedAgentId}
-            isVisible={true}
-            onToggle={handleMemoryToggle}
-          />
+          <div className="mb-4">
+            <MemoryPanel 
+              conversationId={conversationId || null}
+              agentId={selectedAgentId}
+              isVisible={true}
+              onToggle={handleMemoryToggle}
+            />
+          </div>
         )}
       </div>
       
-      {/* 输入控制按钮组 */}
-      <div className="mb-3">
-        <div className="flex items-center gap-3">
-          {/* 提示词优化控制 */}
-          <PromptOptimizeControl
-            onInsertText={onInsertText}
-            isOpen={isPanelOpen('prompt-optimize')}
-            onToggle={handlePromptOptimizeToggle}
-          />
+      {/* 工具控制按钮组 */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between">
+          {/* 左侧功能按钮组 */}
+          <div className="flex items-center gap-2">
+            {/* 工具控制 */}
+            <ToolControl
+              enableTools={enableTools}
+              isCheckingModel={isCheckingModel}
+              modelSupportsTools={modelSupportsTools}
+              showToolSettings={isPanelOpen('tool-settings')}
+              selectedToolsCount={selectedTools.length}
+              onToolsToggle={handleToolsToggle}
+              onShowToolSettings={handleToolSettingsToggle}
+              isOpen={isPanelOpen('tool-settings')}
+              onToggle={handleToolSettingsToggle}
+            />
+            
+            {/* 记忆控制 */}
+            <MemoryControl
+              isMemoryVisible={isPanelOpen('memory')}
+              onMemoryToggle={handleMemoryToggle}
+              conversationId={conversationId || null}
+              isOpen={isPanelOpen('memory')}
+              onToggle={handleMemoryToggle}
+            />
+          </div>
           
-          {/* 工具控制 */}
-          <ToolControl
-            enableTools={enableTools}
-            isCheckingModel={isCheckingModel}
-            modelSupportsTools={modelSupportsTools}
-            showToolSettings={isPanelOpen('tool-settings')}
-            selectedToolsCount={selectedTools.length}
-            onToolsToggle={handleToolsToggle}
-            onShowToolSettings={handleToolSettingsToggle}
-            isOpen={isPanelOpen('tool-settings')}
-            onToggle={handleToolSettingsToggle}
-          />
-          
-          {/* 记忆控制 */}
-          <MemoryControl
-            isMemoryVisible={isPanelOpen('memory')}
-            onMemoryToggle={handleMemoryToggle}
-            conversationId={conversationId || null}
-            isOpen={isPanelOpen('memory')}
-            onToggle={handleMemoryToggle}
-          />
-          
-          {/* 清除聊天控制 */}
-          {onClearChat && (
-            <ChatActionsControl onClearChat={onClearChat} />
-          )}
+          {/* 右侧操作按钮组 */}
+          <div className="flex items-center gap-2">
+            {/* 清除聊天控制 */}
+            {onClearChat && (
+              <ChatActionsControl onClearChat={onClearChat} />
+            )}
+          </div>
         </div>
       </div>
     </div>

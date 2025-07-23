@@ -51,7 +51,6 @@ export function ThemeToggle({
           bg-theme-background-tertiary hover:bg-theme-card-hover
           text-theme-foreground-muted hover:text-theme-foreground
           transition-all duration-200 ease-in-out
-          transform hover:scale-105 active:scale-95
           focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2
           focus:ring-offset-theme-background
           ${className}
@@ -98,7 +97,6 @@ export function ThemeToggle({
         bg-theme-background-tertiary hover:bg-theme-card-hover
         text-theme-foreground-secondary hover:text-theme-foreground
         transition-all duration-200 ease-in-out
-        transform hover:scale-105 active:scale-95
         focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2
         focus:ring-offset-theme-background
         ${config.text}

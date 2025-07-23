@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, Square } from 'lucide-react';
+import { Send, Square, Sparkles } from 'lucide-react';
 import { Conversation } from '../../../../lib/database';
 
 interface MessageInputProps {
@@ -12,6 +12,11 @@ interface MessageInputProps {
   isStreaming: boolean;
   currentConversation: Conversation | null;
   selectedModel: string;
+  
+  // 新增：提示词优化相关属性
+  onInsertText?: (text: string) => void;
+  promptOptimizeEnabled?: boolean;
+  onPromptOptimizeToggle?: () => void;
 }
 
 export function MessageInput({
@@ -21,7 +26,10 @@ export function MessageInput({
   onStopGeneration,
   isStreaming,
   currentConversation,
-  selectedModel
+  selectedModel,
+  onInsertText,
+  promptOptimizeEnabled = false,
+  onPromptOptimizeToggle
 }: MessageInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -112,46 +120,73 @@ export function MessageInput({
   }, []);
 
   return (
-    <div className="flex gap-3 items-end">
-      <textarea
-        ref={textareaRef}
-        value={inputMessage}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyPress}
-        placeholder="输入消息..."
-        className="flex-1 p-3 border border-theme-input-border rounded-lg resize-none bg-theme-input text-theme-foreground placeholder-theme-foreground-muted focus:ring-2 focus:ring-theme-input-focus focus:border-transparent transition-colors duration-200"
-        style={{ minHeight: '24px', lineHeight: '24px' }}
-        rows={1}
-        disabled={!currentConversation && !selectedModel}
-      />
-      <button
-        onClick={isStreaming ? onStopGeneration : onSendMessage}
-        disabled={!isStreaming && (!inputMessage.trim() || !selectedModel)}
-        className={`relative w-12 h-12 text-white rounded-full flex items-center justify-center transition-all duration-200 ${
-          isStreaming
-            ? 'bg-theme-secondary hover:bg-theme-secondary-hover'
-            : 'bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed'
-        } ${
-          isStreaming ? 'before:content-[""] before:absolute before:inset-0 before:rounded-full before:border-2 before:border-transparent before:border-t-white before:border-r-white before:animate-spin' : ''
-        }`}
-        onMouseEnter={() => {
-          if (!isStreaming) {
-            console.log('🔍 [MessageInput] 发送按钮状态检查:', {
-              hasInput: !!inputMessage.trim(),
-              hasModel: !!selectedModel,
-              hasConversation: !!currentConversation,
-              conversationId: currentConversation?.id,
-              isDisabled: !inputMessage.trim() || !selectedModel
-            });
-          }
-        }}
-      >
-        {isStreaming ? (
-          <Square className="w-4 h-4 relative z-10" />
-        ) : (
-          <Send className="w-5 h-5" />
+    <div className="relative">
+      {/* 集成式输入框容器 */}
+      <div className="relative flex items-end bg-[var(--color-background-secondary)] border border-[var(--color-border)] rounded-xl transition-all duration-200 focus-within:ring-1 focus-within:ring-[var(--color-primary)] focus-within:ring-opacity-20 focus-within:border-[var(--color-primary)]">
+        {/* 左侧：提示词优化按钮 - 统一样式 */}
+        {onPromptOptimizeToggle && (
+          <div className="flex-shrink-0 p-3">
+            <button
+              onClick={onPromptOptimizeToggle}
+              className={`
+                w-8 h-8 rounded-xl transition-all duration-200 flex items-center justify-center
+                ${promptOptimizeEnabled 
+                  ? 'text-[var(--color-primary)]' 
+                  : 'text-[var(--color-foreground-secondary)]'
+                }
+              `}
+              title="提示词优化"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          </div>
         )}
-      </button>
+        
+        {/* 中间：输入框 */}
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
+            value={inputMessage}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder="输入消息..."
+            className="w-full p-3 pr-4 bg-transparent text-[var(--color-foreground)] placeholder-[var(--color-foreground-muted)] border-0 resize-none focus:outline-none scrollbar-thin"
+            style={{ minHeight: '24px', lineHeight: '24px' }}
+            rows={1}
+            disabled={!currentConversation && !selectedModel}
+          />
+          
+          {/* 字符计数指示器（可选） */}
+          {inputMessage.length > 0 && (
+            <div className="absolute bottom-1 right-2 text-xs text-[var(--color-foreground-muted)] pointer-events-none">
+              {inputMessage.length}
+            </div>
+          )}
+        </div>
+        
+        {/* 右侧：发送按钮 */}
+        <div className="flex-shrink-0 p-3">
+          <button
+            onClick={isStreaming ? onStopGeneration : onSendMessage}
+            disabled={!isStreaming && (!inputMessage.trim() || !selectedModel)}
+            className={`
+              w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200
+              ${isStreaming
+                ? 'bg-[var(--color-secondary)] hover:bg-[var(--color-secondary-hover)] text-white'
+                : inputMessage.trim() && selectedModel
+                  ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white'
+                  : 'text-[var(--color-foreground-muted)] cursor-not-allowed'
+              }
+            `}
+          >
+            {isStreaming ? (
+              <Square className="w-4 h-4" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

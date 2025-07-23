@@ -83,9 +83,16 @@ export function useMessageSender(config: MessageSenderConfig): UseMessageSenderR
 
     let activeConversation = currentConversation;
     if (!activeConversation) {
-      const title = inputMessage.trim().substring(0, 30) + (inputMessage.length > 30 ? '...' : '');
+      // 修复：使用默认标题而不是用户输入，让标题总结功能可以正常工作
+      const defaultTitle = `新对话 - ${new Date().toLocaleString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`;
+      
       const conversationId = await createConversation({
-        title,
+        title: defaultTitle, // 使用默认标题，稍后由标题总结功能自动生成标题
         model: selectedModel,
         agentId: selectedAgentId || undefined,
         autoSwitch: true
