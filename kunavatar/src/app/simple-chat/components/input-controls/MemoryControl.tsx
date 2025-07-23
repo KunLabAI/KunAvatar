@@ -30,7 +30,7 @@ export function MemoryControl({
       onClick={handleClick}
       tooltip={
         isDisabled 
-          ? "请先开始对话以查看记忆" 
+          ? "请选择智能体查看记忆" 
           : memoryVisible 
             ? "隐藏对话记忆" 
             : "显示对话记忆"

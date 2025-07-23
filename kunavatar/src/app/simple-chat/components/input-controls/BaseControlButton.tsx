@@ -38,25 +38,25 @@ export function BaseControlButton({
   className = '',
 }: BaseControlButtonProps) {
   
-  // 基础尺寸样式
+  // 现代化尺寸样式
   const sizeClasses = {
-    sm: 'w-8 h-8',
+    sm: 'w-9 h-9',
     md: 'w-10 h-10',
   };
 
-  // 变体样式 - 使用全局CSS变量
+  // 现代化变体样式 - 使用全局CSS变量，去除阴影效果
   const variantClasses = {
     default: disabled
-      ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-secondary)] cursor-not-allowed opacity-60'
+      ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-tertiary)] cursor-not-allowed opacity-50'
       : active
-        ? 'text-[var(--color-primary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)]'
-        : 'text-[var(--color-foreground-secondary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)]',
+        ? 'text-[var(--color-primary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] border border-[var(--color-primary)] border-opacity-20'
+        : 'text-[var(--color-foreground-secondary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)]',
     primary: disabled
-      ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-secondary)] cursor-not-allowed opacity-60'
-      : 'text-[var(--color-primary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)]',
+      ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-tertiary)] cursor-not-allowed opacity-50'
+      : 'text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] border border-transparent',
     danger: disabled
-      ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-secondary)] cursor-not-allowed opacity-60'
-      : 'text-[var(--color-foreground-secondary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-error)]',
+      ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-tertiary)] cursor-not-allowed opacity-50'
+      : 'text-[var(--color-error)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-error)] border border-[var(--color-border)] hover:border-[var(--color-error)] hover:border-opacity-30',
   };
 
   const statusIndicatorColors = {
@@ -87,11 +87,12 @@ export function BaseControlButton({
         onClick={onClick}
         disabled={disabled}
         className={`
-          relative ${sizeClasses[size]} rounded-[var(--radius-lg)] transition-all duration-200 
+          relative ${sizeClasses[size]} rounded-xl transition-all duration-200 
           flex items-center justify-center ${variantClasses[variant]} ${className}
+          ${!disabled && !loading ? 'hover:scale-105 active:scale-95' : ''}
         `}
       >
-        {/* Loading 动画 */}
+        {/* Loading 动画 - 更现代化的样式 */}
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin" />
@@ -99,28 +100,28 @@ export function BaseControlButton({
         )}
         
         {/* 图标内容 */}
-        <div className="relative z-10">
+        <div className={`relative z-10 ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
           {children}
         </div>
         
-        {/* 数量徽章 */}
+        {/* 数量徽章 - 现代化样式 */}
         {badge && badge.count > 0 && (
           <div className={`
             absolute ${badgePositions[badge.position]} min-w-[18px] h-[18px] 
             ${badgeColors[badge.color || 'blue']} text-white text-xs rounded-full 
-            border-2 border-[var(--color-background)] z-20 flex items-center justify-center 
-            px-1
+            border-2 border-[var(--color-card)] z-20 flex items-center justify-center 
+            px-1 font-medium
           `}>
             {badge.count > 99 ? '99+' : badge.count}
           </div>
         )}
         
-        {/* 状态指示器 */}
+        {/* 状态指示器 - 现代化样式 */}
         {statusIndicator && (
           <div 
             className={`
               absolute ${statusPositions[statusIndicator.position]} w-3 h-3 rounded-full 
-              border-2 border-[var(--color-background)] z-20 
+              border-2 border-[var(--color-card)] z-20 
               ${statusIndicatorColors[statusIndicator.status]}
             `}
             title={statusIndicator.tooltip}
@@ -128,10 +129,12 @@ export function BaseControlButton({
         )}
       </button>
       
-      {/* 工具提示 */}
+      {/* 工具提示 - 现代化样式 */}
       {tooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-[var(--color-foreground)] text-[var(--color-background)] text-xs rounded-[var(--radius-md)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-[var(--color-foreground)] text-[var(--color-card)] text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50 font-medium">
           {tooltip}
+          {/* 工具提示箭头 */}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[var(--color-foreground)]"></div>
         </div>
       )}
     </div>

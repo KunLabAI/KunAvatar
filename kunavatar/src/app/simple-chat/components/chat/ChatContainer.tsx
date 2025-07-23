@@ -7,9 +7,8 @@ import { CustomModel } from '@/lib/database/custom-models';
 import { SimpleMessage } from '../../types';
 import { ChatHeader } from '../conversation/ChatHeader';
 import { MessageList } from './MessageList';
-import { MessageInput } from './MessageInput';
+import { UserInputArea } from './UserInputArea';
 import { ErrorDisplay } from '../ui/ErrorDisplay';
-import { ToolSettings } from '../tools/ToolSettings';
 import { useUserSettings } from '@/contexts/UserSettingsContext';
 
 import { AgentWithRelations } from '@/app/agents/types';
@@ -174,26 +173,11 @@ export function ChatContainer({
       )}
 
       {/* 输入区域 - 添加居中和宽度控制 */}
-      <div className="border-t border-theme-border">
         <div className="flex justify-center">
           <div className={`w-full p-4 chat-container-responsive ${currentDisplaySize}`}>
-            {/* 工具设置组件 */}
-            <ToolSettings
-              selectedModel={selectedModel}
-              enableTools={enableTools}
-              selectedTools={selectedTools}
-              onToolsToggle={onToolsToggle}
-              onSelectedToolsChange={onSelectedToolsChange}
-              onInsertText={onInsertText}
-              onClearChat={onClearChat}
-
-              // 记忆面板状态现在由面板管理器处理
-              conversationId={currentConversation?.id}
-              selectedAgentId={selectedAgentId}
-            />
-            
-            {/* 消息输入组件 */}
-            <MessageInput
+            {/* 现代化用户输入区域 */}
+            <UserInputArea
+              // MessageInput props
               inputMessage={inputMessage}
               onInputChange={onInputChange}
               onSendMessage={onSendMessage}
@@ -201,10 +185,19 @@ export function ChatContainer({
               isStreaming={isStreaming}
               currentConversation={currentConversation}
               selectedModel={selectedModel}
+              
+              // ToolSettings props
+              enableTools={enableTools}
+              selectedTools={selectedTools}
+              onToolsToggle={onToolsToggle}
+              onSelectedToolsChange={onSelectedToolsChange}
+              onInsertText={onInsertText}
+              onClearChat={onClearChat}
+              conversationId={currentConversation?.id}
+              selectedAgentId={selectedAgentId}
             />
           </div>
         </div>
       </div>
-    </div>
   );
 }
