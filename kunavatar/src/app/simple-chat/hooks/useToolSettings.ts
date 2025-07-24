@@ -23,6 +23,26 @@ export function useToolSettings({
   const [modelSupportsTools, setModelSupportsTools] = useState<boolean | null>(null);
   const [isCheckingModel, setIsCheckingModel] = useState(false);
   const [allTools, setAllTools] = useState<Tool[]>(availableTools);
+  
+  // Modal状态管理
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    title: string;
+    message: string;
+    type: 'warning' | 'error';
+  } | null>(null);
+
+  // 显示Modal的辅助函数
+  const showModalMessage = (title: string, message: string, type: 'warning' | 'error' = 'warning') => {
+    setModalConfig({ title, message, type });
+    setShowModal(true);
+  };
+
+  // 关闭Modal
+  const closeModal = () => {
+    setShowModal(false);
+    setModalConfig(null);
+  };
 
   // 验证模型是否支持工具调用
   const checkModelToolSupport = async (model: string) => {
@@ -101,7 +121,7 @@ export function useToolSettings({
     if (!enableTools) {
       // 开启工具时，先检查模型支持
       if (!selectedModel) {
-        alert('请先选择一个模型');
+        showModalMessage('提示', '请先选择一个模型');
         return;
       }
       
@@ -110,11 +130,19 @@ export function useToolSettings({
         await checkModelToolSupport(selectedModel);
         // 检测完成后再次检查结果
         if (modelSupportsTools === false) {
-          alert(`模型 ${selectedModel} 不支持工具调用功能，请选择支持工具调用的模型（如 llama3.1、qwen2.5 等）。`);
+          showModalMessage(
+            '模型不支持工具调用', 
+            `模型 ${selectedModel} 不支持工具调用功能，请选择支持工具调用的模型（如 llama3.1、qwen2.5 等）。`,
+            'error'
+          );
           return;
         }
       } else if (modelSupportsTools === false) {
-        alert(`模型 ${selectedModel} 不支持工具调用功能，请选择支持工具调用的模型（如 llama3.1、qwen2.5 等）。`);
+        showModalMessage(
+          '模型不支持工具调用', 
+          `模型 ${selectedModel} 不支持工具调用功能，请选择支持工具调用的模型（如 llama3.1、qwen2.5 等）。`,
+          'error'
+        );
         return;
       }
     }
@@ -143,5 +171,9 @@ export function useToolSettings({
     allTools,
     handleToolsToggle,
     handleToolSelection,
+    // Modal相关
+    showModal,
+    modalConfig,
+    closeModal,
   };
-} 
+}

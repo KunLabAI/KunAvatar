@@ -62,7 +62,7 @@ function AgentsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [notification]);
+  }, []); // 移除notification依赖项，避免重复创建函数
 
   useEffect(() => {
     fetchAgents();

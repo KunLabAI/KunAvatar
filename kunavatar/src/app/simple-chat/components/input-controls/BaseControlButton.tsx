@@ -44,19 +44,19 @@ export function BaseControlButton({
     md: 'w-10 h-10',
   };
 
-  // 现代化变体样式 - 使用全局CSS变量，去除阴影效果
+  // 操作区域图标样式 - 使用全局CSS变量
   const variantClasses = {
     default: disabled
       ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-tertiary)] cursor-not-allowed opacity-50'
       : active
-        ? 'text-[var(--color-primary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] border border-[var(--color-primary)] border-opacity-20'
-        : 'text-[var(--color-foreground-secondary)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] border border-[var(--color-border)]',
+        ? 'text-[var(--color-primary)] bg-[var(--color-card-hover)] hover:bg-[var(--color-background)] '
+        : 'text-[var(--color-foreground-secondary)] bg-[var(--color-background-tertiary)] hover:bg-[var(--color-background)]',
     primary: disabled
       ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-tertiary)] cursor-not-allowed opacity-50'
-      : 'text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] border border-transparent',
+      : 'text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]',
     danger: disabled
       ? 'text-[var(--color-foreground-muted)] bg-[var(--color-background-tertiary)] cursor-not-allowed opacity-50'
-      : 'text-[var(--color-error)] bg-[var(--color-background)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-error)] border border-[var(--color-border)] hover:border-[var(--color-error)] hover:border-opacity-30',
+      : 'text-[var(--color-error)] bg-[var(--color-card-hover)] hover:bg-[var(--color-background)] hover:text-[var(--color-error)]',
   };
 
   const statusIndicatorColors = {
@@ -89,7 +89,6 @@ export function BaseControlButton({
         className={`
           relative ${sizeClasses[size]} rounded-xl transition-all duration-200 
           flex items-center justify-center ${variantClasses[variant]} ${className}
-          ${!disabled && !loading ? 'hover:scale-105 active:scale-95' : ''}
         `}
       >
         {/* Loading 动画 - 更现代化的样式 */}

@@ -59,7 +59,7 @@ export function UserInputArea({
   return (
     <div className="w-full">
       {/* 现代化容器 */}
-      <div className="relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-4 transition-colors duration-200">
+      <div className="relative bg-[var(--color-card)] rounded-2xl p-4 transition-colors duration-200">
         {/* 工具设置区域 - 放在输入框上方 */}
         <ToolSettings
           selectedModel={selectedModel}

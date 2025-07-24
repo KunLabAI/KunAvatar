@@ -8,6 +8,8 @@ import { PromptOptimizePanel } from './PromptOptimizePanel';
 import { ChatActionsControl } from '../input-controls/ChatActionsControl';
 import { ToolPanel } from './ToolPanel';
 import { MemoryPanel } from './MemoryPanel';
+import Modal from '@/components/Modal';
+import { AlertTriangle, XCircle } from 'lucide-react';
 
 // 导入面板管理器类型
 interface PanelManager {
@@ -57,6 +59,10 @@ export function ToolSettings({
     allTools,
     handleToolsToggle,
     handleToolSelection,
+    // Modal相关
+    showModal,
+    modalConfig,
+    closeModal,
   } = useToolSettings({
     selectedModel,
     enableTools,
@@ -159,6 +165,24 @@ export function ToolSettings({
           </div>
         </div>
       </div>
+
+      {/* 提示Modal */}
+      <Modal
+        open={showModal}
+        onClose={closeModal}
+        title={modalConfig?.title}
+        icon={modalConfig?.type === 'error' ? <XCircle className="text-red-500" /> : <AlertTriangle className="text-yellow-500" />}
+        actions={[
+          {
+            label: '确定',
+            onClick: closeModal,
+            variant: 'primary',
+            autoFocus: true,
+          },
+        ]}
+      >
+        {modalConfig?.message}
+      </Modal>
     </div>
   );
 }
