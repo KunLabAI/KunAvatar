@@ -58,7 +58,13 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
     setError(null);
     
     try {
-      const response = await fetch(`/api/agents/${agentId}/memories`);
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`/api/agents/${agentId}/memories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -139,7 +145,13 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
   // 编辑记忆
   const handleEditMemory = async (memoryId: number) => {
     try {
-      const response = await fetch(`/api/memories/${memoryId}`);
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`/api/memories/${memoryId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       if (!response.ok) {
         throw new Error('获取记忆详情失败');
       }
@@ -245,9 +257,11 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
       // 解析格式化文本
       const parsedData = parseFormattedContent(editingContent);
       
+      const token = localStorage.getItem('accessToken');
       const updateResponse = await fetch(`/api/memories/${memoryId}`, {
         method: 'PUT',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -298,8 +312,13 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
     
     try {
       setIsProcessing(true);
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/memories/${memoryToDelete.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {

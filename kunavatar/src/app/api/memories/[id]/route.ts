@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { memoryOperations } from '@/lib/database/memories';
+import { safeGetParams } from '@/lib/middleware/auth';
 
 /**
  * 删除指定ID的记忆
@@ -9,8 +10,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const memoryId = parseInt(id);
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的记忆ID' },
+        { status: 400 }
+      );
+    }
+    
+    const memoryId = parseInt(paramsResult.data.id);
 
     if (isNaN(memoryId)) {
       return NextResponse.json(
@@ -53,8 +62,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const memoryId = parseInt(id);
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的记忆ID' },
+        { status: 400 }
+      );
+    }
+    
+    const memoryId = parseInt(paramsResult.data.id);
 
     if (isNaN(memoryId)) {
       return NextResponse.json(
@@ -106,8 +123,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const memoryId = parseInt(id);
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的记忆ID' },
+        { status: 400 }
+      );
+    }
+    
+    const memoryId = parseInt(paramsResult.data.id);
 
     if (isNaN(memoryId)) {
       return NextResponse.json(

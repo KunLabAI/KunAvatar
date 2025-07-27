@@ -82,7 +82,7 @@ export const conversationQueries = {
     WHERE id = ?
   `),
 
-  // 获取对话统计信息
+  // 获取对话统计信息（普通消息）
   getStats: db.prepare(`
     SELECT 
       conversation_id,
@@ -92,6 +92,20 @@ export const conversationQueries = {
       SUM(COALESCE(eval_count, 0)) as total_completion_tokens,
       SUM(COALESCE(prompt_eval_count, 0) + COALESCE(eval_count, 0)) as total_tokens
     FROM messages 
+    WHERE conversation_id = ?
+    GROUP BY conversation_id
+  `),
+
+  // 获取对话统计信息（智能体消息）
+  getAgentStats: db.prepare(`
+    SELECT 
+      conversation_id,
+      COUNT(*) as message_count,
+      SUM(LENGTH(content)) as total_characters,
+      SUM(COALESCE(prompt_eval_count, 0)) as total_prompt_tokens,
+      SUM(COALESCE(eval_count, 0)) as total_completion_tokens,
+      SUM(COALESCE(prompt_eval_count, 0) + COALESCE(eval_count, 0)) as total_tokens
+    FROM agent_messages 
     WHERE conversation_id = ?
     GROUP BY conversation_id
   `),
@@ -165,7 +179,24 @@ export const conversationOperations = {
     total_completion_tokens: number;
     total_tokens: number;
   } | null {
-    const result = conversationQueries.getStats.get(id) as any;
+    // 先获取对话信息，检查是否有agent_id
+    const conversation = conversationQueries.getById.get(id) as any;
+    
+    if (!conversation) {
+      return {
+        message_count: 0,
+        total_characters: 0,
+        total_prompt_tokens: 0,
+        total_completion_tokens: 0,
+        total_tokens: 0
+      };
+    }
+
+    // 根据是否有agent_id来决定查询哪个表
+    const result = conversation.agent_id 
+      ? conversationQueries.getAgentStats.get(id) as any
+      : conversationQueries.getStats.get(id) as any;
+      
     return result || {
       message_count: 0,
       total_characters: 0,

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Palette, Monitor, Sun, Moon, MessageSquare, Bot, Check, Minimize2 } from 'lucide-react';
 import { useTheme } from '@/theme/contexts/ThemeContext';
-import { ChatStyle, DisplaySize } from '@/app/simple-chat/components/input-controls';
+import { ChatStyle, DisplaySize } from '@/app/chat/components/input-controls';
 import { useUserSettings } from '@/contexts/UserSettingsContext';
 
 interface AppearanceTabProps {
@@ -222,62 +222,6 @@ export function AppearanceTab({}: AppearanceTabProps) {
                   {label}
                 </button>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 显示尺寸设置 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-theme-foreground mb-1">显示尺寸</h3>
-              <p className="text-sm text-theme-foreground-muted">调整聊天界面的显示尺寸</p>
-            </div>
-            <div className="flex gap-2">
-              {[
-                { value: 'fullscreen', label: '全屏模式', icon: Monitor },
-                { value: 'compact', label: '紧凑模式', icon: Minimize2 }
-              ].map(({ value, label, icon: Icon }) => (
-                <button
-                  key={value}
-                  onClick={() => updateDisplaySize(value as DisplaySize)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    displaySize === value
-                      ? 'bg-theme-primary text-white'
-                      : 'bg-theme-background border border-theme-border text-theme-foreground hover:bg-theme-background/80'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 预览区域 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
-          <h3 className="text-lg font-medium text-theme-foreground mb-4">预览</h3>
-          <div className="bg-theme-background rounded-lg p-4 border border-theme-border">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-theme-primary flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-theme-foreground">示例用户</div>
-                <div className="text-xs text-theme-foreground-muted">这是一个预览示例</div>
-              </div>
-            </div>
-            <div className="text-sm text-theme-foreground">
-              这里展示当前主题设置的效果。您可以看到文字大小、颜色搭配和整体风格。
-            </div>
-            <div className="mt-3 flex gap-2">
-              <button className="px-3 py-1 text-xs bg-theme-primary text-white rounded-md">
-                主要按钮
-              </button>
-              <button className="px-3 py-1 text-xs bg-theme-background-secondary text-theme-foreground border border-theme-border rounded-md">
-                次要按钮
-              </button>
             </div>
           </div>
         </div>

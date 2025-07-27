@@ -241,7 +241,7 @@ export function MemorySection({
   if (isLoading) {
     return (
       <PageLoading 
-        text="正在加载记忆设置..." 
+        text="loading..." 
         fullScreen={false}
       />
     );

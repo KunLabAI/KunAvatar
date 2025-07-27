@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { memoryOperations } from '@/lib/database/memories';
 import { conversationOperations } from '@/lib/database/conversations';
+import { safeGetParams } from '@/lib/middleware/auth';
 
 // GET /api/conversations/[id]/memories - 获取对话关联Agent的记忆列表
 export async function GET(
@@ -8,8 +9,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const conversationId = id;
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的对话ID' },
+        { status: 400 }
+      );
+    }
+    
+    const conversationId = paramsResult.data.id;
 
     if (!conversationId || conversationId.trim() === '') {
       return NextResponse.json({ error: 'Invalid conversation ID' }, { status: 400 });

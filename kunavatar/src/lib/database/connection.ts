@@ -35,7 +35,6 @@ const executeInitialization = (db: Database.Database) => {
       content TEXT NOT NULL,
       model TEXT,
       user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
       sequence_number INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
@@ -56,6 +55,35 @@ const executeInitialization = (db: Database.Database) => {
       FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE
     );
 
+    -- 智能体消息表（专门存储与智能体的对话）
+    CREATE TABLE IF NOT EXISTS agent_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      sequence_number INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
+      -- 工具调用相关字段
+      tool_name TEXT, -- 工具名称
+      tool_args TEXT, -- 工具参数 (JSON)
+      tool_result TEXT, -- 工具结果 (JSON)
+      tool_status TEXT CHECK (tool_status IN ('executing', 'completed', 'error')), -- 工具状态
+      tool_execution_time INTEGER, -- 工具执行时间(毫秒)
+      tool_error TEXT, -- 工具错误信息
+      -- Ollama生成统计信息
+      total_duration INTEGER,
+      load_duration INTEGER,
+      prompt_eval_count INTEGER,
+      prompt_eval_duration INTEGER,
+      eval_count INTEGER,
+      eval_duration INTEGER,
+      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE
+    );
+
     -- 智能体表
     CREATE TABLE IF NOT EXISTS agents (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,9 +93,11 @@ const executeInitialization = (db: Database.Database) => {
       system_prompt TEXT, -- 系统提示词
       avatar TEXT, -- 头像URL
       memory_enabled BOOLEAN DEFAULT 0, -- 是否为该智能体启用记忆功能
+      user_id TEXT NOT NULL, -- 智能体创建者的用户ID
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (model_id) REFERENCES custom_models (id) ON DELETE CASCADE
+      FOREIGN KEY (model_id) REFERENCES custom_models (id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
     
     -- 智能体与MCP服务器关联表
@@ -192,6 +222,15 @@ const executeInitialization = (db: Database.Database) => {
     CREATE INDEX IF NOT EXISTS idx_conversations_user_agent ON conversations(user_id, agent_id);
     CREATE INDEX IF NOT EXISTS idx_messages_conv_agent ON messages(conversation_id, agent_id);
     
+    -- 智能体消息表索引
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_conversation_id ON agent_messages(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_agent_id ON agent_messages(agent_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_user_id ON agent_messages(user_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_conv_agent ON agent_messages(conversation_id, agent_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_tool_name ON agent_messages(tool_name);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_tool_status ON agent_messages(tool_status);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_conv_tool ON agent_messages(conversation_id, tool_name);
+    
     -- 自定义模型相关索引
     CREATE INDEX IF NOT EXISTS idx_custom_models_base_model ON custom_models(base_model);
     CREATE INDEX IF NOT EXISTS idx_custom_models_hash ON custom_models(model_hash);
@@ -211,6 +250,7 @@ const executeInitialization = (db: Database.Database) => {
 
     -- 智能体相关索引
     CREATE INDEX IF NOT EXISTS idx_agents_name ON agents(name);
+    CREATE INDEX IF NOT EXISTS idx_agents_user_id ON agents(user_id);
     CREATE INDEX IF NOT EXISTS idx_agent_mcp_servers_agent_id ON agent_mcp_servers(agent_id);
     CREATE INDEX IF NOT EXISTS idx_agent_tools_agent_id ON agent_tools(agent_id);
 

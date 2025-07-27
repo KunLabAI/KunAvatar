@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import BlackHoleAnimation from '@/components/BlackHoleAnimation';
@@ -14,7 +13,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +37,7 @@ export default function LoginPage() {
         // 使用 window.location.href 强制跳转，确保页面完全刷新
         // 这样可以避免React状态不一致的问题
         setTimeout(() => {
-          const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/simple-chat';
+          const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/chat';
           window.location.href = redirectTo;
         }, 300);
       } else {
@@ -78,7 +76,7 @@ export default function LoginPage() {
           {/* 小屏幕背景遮罩 */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden"></div>
           
-          <div className="w-full max-w-md bg-[var(--color-card)]/90 backdrop-blur-sm border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10">
+          <div className="w-full max-w-md bg-[var(--color-foreground)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10">
             <div className="w-full space-y-6">
               {/* 品牌标题 */}
               <div className="text-center mb-6">
@@ -105,6 +103,7 @@ export default function LoginPage() {
                        name="username"
                        type="text"
                        required
+                       autoComplete="username"
                        value={formData.username}
                        onChange={handleChange}
                        className="w-full px-4 py-3 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
@@ -122,6 +121,7 @@ export default function LoginPage() {
                          name="password"
                          type={showPassword ? 'text' : 'password'}
                          required
+                         autoComplete="current-password"
                          value={formData.password}
                          onChange={handleChange}
                          className="w-full px-4 py-3 pr-12 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"

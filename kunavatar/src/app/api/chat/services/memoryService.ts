@@ -40,17 +40,35 @@ export class MemoryService {
    * 检查是否应该触发记忆生成
    */
   static shouldTriggerMemory(conversationId: string, agentId: number | null): boolean {
-    if (!agentId) return false;
+    console.log(`🔍 检查记忆触发条件 - 对话: ${conversationId}, Agent: ${agentId}`);
+    
+    if (!agentId) {
+      console.log(`❌ 记忆触发失败: agentId 为空`);
+      return false;
+    }
 
-    // 1. 检查全局设置
-    const globalSettings = this.getGlobalMemorySettings();
-    if (!globalSettings.memory_enabled) {
+    // 1. 检查智能体创建者的记忆设置（而不是全局设置）
+    const agentMemorySettings = this.getAgentMemorySettings(agentId);
+    console.log(`🔍 智能体创建者记忆设置:`, {
+      memory_enabled: agentMemorySettings.memory_enabled,
+      memory_trigger_rounds: agentMemorySettings.memory_trigger_rounds,
+      memory_model: agentMemorySettings.memory_model
+    });
+    
+    if (!agentMemorySettings.memory_enabled) {
+      console.log(`❌ 记忆触发失败: 智能体创建者记忆功能未启用`);
       return false;
     }
     
     // 2. 检查智能体设置
     const agent = agentOperations.getById(agentId);
+    console.log(`🔍 智能体记忆设置:`, {
+      agent_exists: !!agent,
+      memory_enabled: agent?.memory_enabled
+    });
+    
     if (!agent || !agent.memory_enabled) {
+      console.log(`❌ 记忆触发失败: 智能体不存在或记忆功能未启用`);
       return false;
     }
 
@@ -63,14 +81,39 @@ export class MemoryService {
     const conversationMemories = memoryOperations.getMemoriesByConversation(conversationId);
     const lastMemory = conversationMemories.length > 0 ? conversationMemories[0] : null;
     
+    console.log(`🔍 消息统计:`, {
+      total_messages: allMessages.length,
+      user_assistant_messages: userAssistantMessages.length,
+      existing_memories: conversationMemories.length,
+      last_memory_id: lastMemory?.id,
+      last_memory_range: lastMemory?.source_message_range
+    });
+    
     let newMessagesCount = userAssistantMessages.length;
     if (lastMemory && lastMemory.source_message_range) {
       const lastMemoryMessageCount = parseInt(lastMemory.source_message_range.split('-')[1] || '0');
       newMessagesCount = Math.max(0, userAssistantMessages.length - lastMemoryMessageCount);
+      console.log(`🔍 计算新消息数量: 总消息 ${userAssistantMessages.length} - 上次记忆覆盖 ${lastMemoryMessageCount} = ${newMessagesCount}`);
+    } else {
+      console.log(`🔍 没有历史记忆，新消息数量 = 总消息数量: ${newMessagesCount}`);
     }
     
-    const triggerMessagesCount = globalSettings.memory_trigger_rounds * 2;
-    return newMessagesCount >= triggerMessagesCount;
+    const triggerMessagesCount = agentMemorySettings.memory_trigger_rounds * 2;
+    const shouldTrigger = newMessagesCount >= triggerMessagesCount;
+    
+    console.log(`🔍 触发条件检查:`, {
+      new_messages_count: newMessagesCount,
+      trigger_threshold: triggerMessagesCount,
+      should_trigger: shouldTrigger
+    });
+    
+    if (shouldTrigger) {
+      console.log(`✅ 记忆触发条件满足`);
+    } else {
+      console.log(`❌ 记忆触发条件不满足: 需要 ${triggerMessagesCount} 条新消息，当前只有 ${newMessagesCount} 条`);
+    }
+    
+    return shouldTrigger;
   }
 
   /**
@@ -141,9 +184,9 @@ export class MemoryService {
    * 获取Agent的记忆上下文（简化版）
    */
   static getMemoryContext(conversationId: string, agentId?: number | null): string {
-    const globalSettings = this.getGlobalMemorySettings();
+    const agentSettings = this.getAgentMemorySettings(agentId || null);
     
-    if (!globalSettings.memory_enabled || !agentId) {
+    if (!agentSettings.memory_enabled || !agentId) {
       return '';
     }
 
@@ -302,7 +345,73 @@ ${conversationText}
   }
 
   /**
-   * 获取全局记忆设置
+   * 获取智能体相关的记忆设置
+   * 基于智能体的创建者来获取记忆设置，而不是全局第一个用户
+   */
+  static getAgentMemorySettings(agentId: number | null): GlobalMemorySettings {
+    console.log(`🔍 [MemoryService] 获取智能体记忆设置 - agentId: ${agentId}`);
+    
+    if (!agentId) {
+      console.log(`⚠️ [MemoryService] 没有智能体ID，返回默认设置`);
+      return {
+        memory_enabled: false,
+        memory_model: 'undefined',
+        memory_trigger_rounds: 20,
+        max_memory_entries: 10,
+        summary_style: 'detailed',
+        memory_system_prompt: '',
+      };
+    }
+
+    try {
+      // 获取智能体信息，包括创建者
+      const agent = agentOperations.getById(agentId);
+
+      if (!agent) {
+        console.log(`⚠️ [MemoryService] 未找到智能体 ${agentId}，返回默认设置`);
+        return {
+          memory_enabled: false,
+          memory_model: 'undefined',
+          memory_trigger_rounds: 20,
+          max_memory_entries: 10,
+          summary_style: 'detailed',
+          memory_system_prompt: '',
+        };
+      }
+
+      console.log(`📋 [MemoryService] 智能体信息: ${agent.name} (创建者ID: ${agent.user_id})`);
+
+      // 获取智能体创建者的记忆设置
+      const settings = userSettingOperations.getByUserAndCategory(agent.user_id, 'memory');
+      const settingsMap = new Map(settings.map(s => [s.key, s.value]));
+
+      const memorySettings = {
+        memory_enabled: settingsMap.get('memory_enabled') === '1',
+        memory_model: String(settingsMap.get('memory_model') || 'undefined'),
+        memory_trigger_rounds: parseInt(String(settingsMap.get('memory_trigger_rounds') || '20'), 10),
+        max_memory_entries: parseInt(String(settingsMap.get('max_memory_entries') || '10'), 10),
+        summary_style: (settingsMap.get('summary_style') as any) || 'detailed',
+        memory_system_prompt: String(settingsMap.get('memory_system_prompt') || ''),
+      };
+
+      console.log(`⚙️ [MemoryService] 智能体创建者记忆设置:`, memorySettings);
+      return memorySettings;
+    } catch (error) {
+      console.error(`❌ [MemoryService] 获取智能体记忆设置失败:`, error);
+      return {
+        memory_enabled: false,
+        memory_model: 'undefined',
+        memory_trigger_rounds: 20,
+        max_memory_entries: 10,
+        summary_style: 'detailed',
+        memory_system_prompt: '',
+      };
+    }
+  }
+
+  /**
+   * 获取全局记忆设置（保留向后兼容性）
+   * @deprecated 建议使用 getAgentMemorySettings
    */
   static getGlobalMemorySettings(): GlobalMemorySettings {
     // 获取第一个用户的记忆设置作为全局设置（临时方案）

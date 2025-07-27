@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { agentOperations } from '../../../../../lib/database/agents';
 import { MemoryService } from '../../../chat/services/memoryService';
+import { withAuth, safeGetParams } from '../../../../../lib/middleware/auth';
 
 /**
  * 获取Agent记忆分析报告（简化版）
  */
-export async function GET(
-  request: NextRequest,
+export const GET = withAuth(async (
+  request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { id } = await params;
-    const agentId = parseInt(id);
+    const userId = request.user!.id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的智能体ID' },
+        { status: 400 }
+      );
+    }
+    
+    const agentId = parseInt(paramsResult.data.id);
 
     if (isNaN(agentId)) {
       return NextResponse.json(
@@ -27,6 +38,11 @@ export async function GET(
         { error: 'Agent不存在' },
         { status: 404 }
       );
+    }
+
+    // 检查用户权限
+    if (agent.user_id !== userId) {
+      return NextResponse.json({ error: '无权限访问此智能体的记忆分析' }, { status: 403 });
     }
 
     // 简化的记忆分析报告
@@ -55,18 +71,28 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * 简化的记忆优化（基本功能）
  */
-export async function POST(
-  request: NextRequest,
+export const POST = withAuth(async (
+  request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { id } = await params;
-    const agentId = parseInt(id);
+    const userId = request.user!.id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的智能体ID' },
+        { status: 400 }
+      );
+    }
+    
+    const agentId = parseInt(paramsResult.data.id);
 
     if (isNaN(agentId)) {
       return NextResponse.json(
@@ -82,6 +108,11 @@ export async function POST(
         { error: 'Agent不存在' },
         { status: 404 }
       );
+    }
+
+    // 检查用户权限
+    if (agent.user_id !== userId) {
+      return NextResponse.json({ error: '无权限优化此智能体的记忆' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -147,17 +178,28 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * 批量优化（简化版）
  */
-export async function PUT(
-  request: NextRequest,
+export const PUT = withAuth(async (
+  request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { id } = await params;
+    const userId = request.user!.id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的智能体ID' },
+        { status: 400 }
+      );
+    }
+    
+    const id = paramsResult.data.id;
     
     if (id === 'all') {
       // 批量优化暂不支持
@@ -187,4 +229,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-} 
+});

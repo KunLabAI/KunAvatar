@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AgentWithRelations } from '@/app/agents/types';
 import { Bot, X } from 'lucide-react';
-import { AgentAvatar } from '@/app/simple-chat/components/ui/AgentAvatar';
+import { AgentAvatar } from   '../app/chat/components/ui/AgentAvatar';
 import Modal from '@/components/Modal';
 
 interface AgentSelectorProps {

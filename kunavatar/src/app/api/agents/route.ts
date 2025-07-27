@@ -1,17 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { agentOperations } from '@/lib/database';
+import { withAuth } from '@/lib/middleware/auth';
 import { z } from 'zod';
 
-// GET /api/agents - 获取所有智能体
-export async function GET() {
+// GET /api/agents - 获取当前用户的智能体
+export const GET = withAuth(async (request) => {
   try {
-    const agents = agentOperations.getAll();
+    const userId = request.user!.id;
+    // 获取当前用户的智能体
+    const agents = agentOperations.getAllByUserId(userId);
     return NextResponse.json(agents);
   } catch (error) {
     console.error('Failed to get agents:', error);
     return NextResponse.json({ error: 'Failed to retrieve agents' }, { status: 500 });
   }
-}
+});
 
 // POST /api/agents - 创建新智能体
 const createAgentSchema = z.object({
@@ -25,8 +28,9 @@ const createAgentSchema = z.object({
   tool_ids: z.array(z.number().int().positive()).optional().default([]),
 });
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   try {
+    const userId = request.user!.id;
     const body = await request.json();
     const validation = createAgentSchema.safeParse(body);
 
@@ -34,7 +38,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid input', details: validation.error.format() }, { status: 400 });
     }
     
-    const newAgent = agentOperations.create(validation.data);
+    // 添加用户ID到智能体数据
+    const agentData = {
+      ...validation.data,
+      user_id: userId
+    };
+    
+    const newAgent = agentOperations.create(agentData);
     if (!newAgent) {
       return NextResponse.json({ error: 'Failed to create agent' }, { status: 500 });
     }
@@ -47,4 +57,4 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ error: 'Failed to create agent' }, { status: 500 });
   }
-}
+});

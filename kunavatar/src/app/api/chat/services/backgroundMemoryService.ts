@@ -16,18 +16,23 @@ export class BackgroundMemoryService {
     agentId: number | null,
     assistantMessage: string
   ): void {
-    if (!agentId || !conversationId) return;
+    if (!agentId || !conversationId) {
+      console.log(`🧠 跳过记忆检查: agentId=${agentId}, conversationId=${conversationId}`);
+      return;
+    }
+
+    console.log(`🧠 调度记忆检查 - 对话: ${conversationId}, Agent: ${agentId}, 3秒后执行`);
 
     // 使用setTimeout延迟3秒，确保请求完全完成后再处理
     setTimeout(async () => {
       try {
-        console.log(`🧠 后台检查记忆触发条件 - 对话: ${conversationId}, Agent: ${agentId}`);
+        console.log(`🧠 开始后台记忆检查 - 对话: ${conversationId}, Agent: ${agentId}`);
         
         // 检查是否需要触发记忆
         const shouldTrigger = MemoryService.shouldTriggerMemory(conversationId, agentId);
         
         if (shouldTrigger) {
-          console.log(`🧠 后台生成记忆 - 对话: ${conversationId}, Agent: ${agentId}`);
+          console.log(`🧠 开始后台生成记忆 - 对话: ${conversationId}, Agent: ${agentId}`);
           
           // 获取对话消息
           const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
@@ -36,8 +41,10 @@ export class BackgroundMemoryService {
             content: msg.content
           }));
 
+          console.log(`🧠 准备生成记忆，消息数量: ${messages.length}`);
+
           // 生成记忆
-          const memorySettings = MemoryService.getGlobalMemorySettings();
+          const memorySettings = MemoryService.getAgentMemorySettings(agentId);
           const memory = await MemoryService.generateMemory({
             conversationId,
             agentId,
@@ -50,12 +57,14 @@ export class BackgroundMemoryService {
             
             // 清空相关缓存，确保下次对话能获取到最新记忆
             this.clearMemoryCache(agentId);
+          } else {
+            console.log(`❌ 后台记忆生成失败`);
           }
         } else {
           console.log(`🧠 后台检查完成 - 暂不需要生成记忆`);
         }
       } catch (error) {
-        console.error('后台记忆处理失败:', error);
+        console.error('❌ 后台记忆处理失败:', error);
       }
     }, 3000); // 3秒后执行，确保请求完全完成
   }
@@ -90,7 +99,7 @@ export class BackgroundMemoryService {
       }
 
       // 生成记忆
-      const memorySettings = MemoryService.getGlobalMemorySettings();
+      const memorySettings = MemoryService.getAgentMemorySettings(agentId);
       const memory = await MemoryService.generateMemory({
         conversationId,
         agentId,

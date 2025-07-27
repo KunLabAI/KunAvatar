@@ -4,6 +4,7 @@ import { ollamaClient } from '../../../../lib/ollama';
 export interface TitleSummarySettings {
   enabled: boolean;
   model: string;
+  systemPrompt?: string;
 }
 
 /**
@@ -15,23 +16,36 @@ export class TitleGenerationService {
    */
   static async checkAndGenerateTitle(
     conversationId: string, 
-    titleSummarySettings?: TitleSummarySettings
+    titleSummarySettings?: TitleSummarySettings,
+    forceGenerate: boolean = false
   ): Promise<string | null> {
     try {
+      console.log('🔧 checkAndGenerateTitle 被调用:', { conversationId, titleSummarySettings });
+      
       // 检查是否启用标题总结功能
       if (!titleSummarySettings?.enabled || !titleSummarySettings?.model) {
+        console.log('🔧 标题总结功能未启用或模型未设置:', titleSummarySettings);
         return null;
       }
 
       // 获取对话信息
       const conversation = dbOperations.getConversationById(conversationId);
       if (!conversation) {
+        console.log('🔧 对话不存在:', conversationId);
         return null;
       }
 
-      // 检查是否已经有自定义标题（不是默认的"新对话"或带时间戳的默认标题）
-      const isDefaultTitle = conversation.title === '新对话' || conversation.title.startsWith('新对话 - ');
-      if (!isDefaultTitle) {
+      console.log('🔧 当前对话标题:', conversation.title);
+
+      // 检查是否已经有自定义标题（不是默认的"新对话"、带时间戳的默认标题、或包含模型/智能体名称的默认标题）
+      const isDefaultTitle = conversation.title === '新对话' || 
+                            conversation.title.startsWith('新对话 - ') ||
+                            conversation.title.endsWith('对话') || // 包含模型名称或智能体名称的默认标题
+                            conversation.title === '模型对话' ||
+                            conversation.title === '智能体对话';
+      // 如果不是强制生成，则检查是否为默认标题
+      if (!forceGenerate && !isDefaultTitle) {
+        console.log('🔧 已有自定义标题，跳过生成:', conversation.title);
         return null; // 已经有自定义标题，不需要重新生成
       }
 
@@ -40,13 +54,22 @@ export class TitleGenerationService {
       const userMessages = messages.filter(m => m.role === 'user');
       const assistantMessages = messages.filter(m => m.role === 'assistant');
 
+      console.log('🔧 消息统计:', { 
+        total: messages.length, 
+        user: userMessages.length, 
+        assistant: assistantMessages.length 
+      });
+
       // 检查是否有足够的消息（至少一轮对话）
       if (userMessages.length === 0 || assistantMessages.length === 0) {
+        console.log('🔧 消息不足，无法生成标题');
         return null;
       }
 
+      console.log('🔧 开始生成标题...');
+
       // 同步生成标题
-      const newTitle = await this.generateTitle(conversationId, titleSummarySettings.model);
+      const newTitle = await this.generateTitle(conversationId, titleSummarySettings.model, titleSummarySettings.systemPrompt);
 
       // 如果生成成功，更新数据库
       if (newTitle) {
@@ -56,6 +79,7 @@ export class TitleGenerationService {
         if (conversation) {
           // 直接更新标题，不验证用户权限（因为这是系统自动操作）
           dbOperations.updateConversationTitleInternal(conversationId, newTitle);
+          console.log('🔧 标题已更新到数据库:', newTitle);
         }
       }
 
@@ -69,7 +93,7 @@ export class TitleGenerationService {
   /**
    * 内部标题生成方法（直接调用 ollama，不通过 HTTP）
    */
-  private static async generateTitle(conversationId: string, model: string): Promise<string | null> {
+  private static async generateTitle(conversationId: string, model: string, systemPrompt?: string): Promise<string | null> {
     try {
       // 获取对话消息
       const messages = dbOperations.getMessagesByConversationId(conversationId);
@@ -104,13 +128,25 @@ export class TitleGenerationService {
         return null;
       }
 
+      // 构建完整的提示词
+      let titlePrompt: string;
+      if (systemPrompt) {
+        // 如果用户提供了自定义系统提示词，将其与对话内容结合
+        titlePrompt = `${systemPrompt}\n\n对话内容：\n${conversationContent}`;
+      } else {
+        // 使用默认提示词
+        titlePrompt = `请根据以下对话内容，生成一个简洁、准确的对话标题。\n\n要求：\n- 长度控制在10-20个字符\n- 体现对话的核心主题\n- 使用中文\n- 不要包含标点符号\n- 直接返回标题，不要其他内容\n\n对话内容：\n${conversationContent}`;
+      }
+
+      console.log('🔧 使用的提示词:', titlePrompt);
+
       // 调用模型生成标题
       const response = await ollamaClient.chat({
         model,
         messages: [
           {
             role: 'user',
-            content: `请根据以下对话内容，生成一个简洁、准确的对话标题。\n\n要求：\n- 长度控制在10-20个字符\n- 体现对话的核心主题\n- 使用中文\n- 不要包含标点符号\n- 直接返回标题，不要其他内容\n\n对话内容：\n${conversationContent}`
+            content: titlePrompt
           }
         ],
         stream: false,

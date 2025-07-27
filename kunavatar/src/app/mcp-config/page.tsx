@@ -136,7 +136,7 @@ function McpConfigPageContent() {
           />
           <div className="flex-1 overflow-auto">
             <PageLoading 
-              text="正在加载MCP服务器配置..." 
+              text="loading..." 
               fullScreen={true}
             />
           </div>

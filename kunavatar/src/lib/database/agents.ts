@@ -11,6 +11,7 @@ export interface Agent {
   system_prompt: string | null;
   avatar: string | null;
   memory_enabled: boolean;
+  user_id: string; // 智能体创建者的用户ID
   created_at: string;
   updated_at: string;
   // 关联数据
@@ -20,8 +21,8 @@ export interface Agent {
 }
 
 export type AgentCreate = Omit<Agent, 'id' | 'created_at' | 'updated_at' | 'model' | 'servers' | 'tools'> & {
-  server_ids: number[];
-  tool_ids: number[];
+  server_ids?: number[];
+  tool_ids?: number[];
   description?: string | null;
   system_prompt?: string | null;
   memory_enabled?: boolean;
@@ -66,14 +67,14 @@ function mapRowToAgent(row: any): Agent {
 export const agentOperations = {
   create(data: AgentCreate): Agent | null {
     const createAgentStmt = db.prepare(
-      'INSERT INTO agents (name, description, model_id, system_prompt, avatar, memory_enabled) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO agents (name, description, model_id, system_prompt, avatar, memory_enabled, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
     const linkServerStmt = db.prepare('INSERT INTO agent_mcp_servers (agent_id, server_id) VALUES (?, ?)');
     const linkToolStmt = db.prepare('INSERT INTO agent_tools (agent_id, tool_id) VALUES (?, ?)');
 
     const transaction = db.transaction((agentData: AgentCreate) => {
-      const { name, description, model_id, system_prompt, avatar, memory_enabled, server_ids, tool_ids } = agentData;
-      const result = createAgentStmt.run(name, description || null, model_id, system_prompt || null, avatar || null, memory_enabled ? 1 : 0);
+      const { name, description, model_id, system_prompt, avatar, memory_enabled, user_id, server_ids, tool_ids } = agentData;
+      const result = createAgentStmt.run(name, description || null, model_id, system_prompt || null, avatar || null, memory_enabled ? 1 : 0, user_id);
       const agentId = result.lastInsertRowid as number;
 
       if (server_ids) {
@@ -105,6 +106,11 @@ export const agentOperations = {
 
   getAll(): Agent[] {
     const rows = db.prepare(`${agentWithRelationsQuery} ORDER BY a.created_at DESC`).all();
+    return rows.map(mapRowToAgent);
+  },
+
+  getAllByUserId(userId: string): Agent[] {
+    const rows = db.prepare(`${agentWithRelationsQuery} WHERE a.user_id = ? ORDER BY a.created_at DESC`).all(userId);
     return rows.map(mapRowToAgent);
   },
   

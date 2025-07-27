@@ -62,14 +62,16 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
   };
 
   // 防抖的状态更新函数
-  const debouncedUpdateStatus = (status: string) => {
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-    updateTimeoutRef.current = setTimeout(() => {
-      updateStatus(status);
-    }, 50); // 50ms 防抖
-  };
+  const debouncedUpdateStatus = useMemo(() => {
+    return (status: string) => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      updateTimeoutRef.current = setTimeout(() => {
+        updateStatus(status);
+      }, 50); // 50ms 防抖
+    };
+  }, [updateStatus]);
 
   // 处理输入变化，自动屏蔽 "ollama run" 前缀
   const handleModelNameChange = (value: string) => {

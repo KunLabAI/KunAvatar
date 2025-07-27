@@ -8,13 +8,16 @@ import { useNotification } from '@/components/notification';
 import Modal from '@/components/Modal';
 import { Sidebar } from '../Sidebar';
 import { Conversation } from '@/lib/database';
+import { Agent } from '@/lib/database/agents';
 import { DateGroupedConversationList, SearchBar } from './components';
 import { Button } from '@/app/model-manager/components/FormComponents';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { authenticatedFetch, useAuthErrorHandler } from '@/lib/utils/auth-utils';
 
 function ConversationsPageContent() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -30,23 +33,52 @@ function ConversationsPageContent() {
   // 侧边栏相关状态
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
 
-  // 使用新的通知系统
+  // 使用新的通知系统和认证错误处理
   const notification = useNotification();
+  const { handleAuthError } = useAuthErrorHandler();
+
+  // 加载智能体列表
+  const fetchAgents = useCallback(async () => {
+    try {
+      const response = await authenticatedFetch('/api/agents');
+      
+      if (response.status === 401) {
+        handleAuthError();
+        return;
+      }
+      
+      if (!response.ok) {
+        throw new Error('加载智能体列表失败');
+      }
+      
+      const agentList = await response.json();
+      setAgents(agentList);
+    } catch (err) {
+      console.error('Failed to fetch agents:', err);
+      
+      // 如果是认证相关错误，触发认证错误处理
+      if (err instanceof Error && err.message.includes('访问令牌')) {
+        handleAuthError();
+      }
+      // 不显示错误，因为这不是关键功能
+    }
+  }, [handleAuthError]);
 
   // 加载对话列表
   const fetchConversations = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/conversations', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await authenticatedFetch('/api/conversations');
+      
       if (!response.ok) {
+        if (response.status === 401) {
+          handleAuthError();
+          return;
+        }
         throw new Error('加载对话列表失败');
       }
+      
       const data = await response.json();
       const conversationList = data.conversations || [];
       setConversations(conversationList);
@@ -55,14 +87,19 @@ function ConversationsPageContent() {
       const message = err instanceof Error ? err.message : '加载对话时发生未知错误';
       setError(message);
       notification.error('加载失败', message);
+      
+      // 如果是token相关错误，触发认证错误处理
+      if (message.includes('访问令牌')) {
+        handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
-  }, [notification]);
+  }, [notification, handleAuthError]);
 
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    Promise.all([fetchConversations(), fetchAgents()]);
+  }, [fetchConversations, fetchAgents]);
 
   // 搜索过滤
   useEffect(() => {
@@ -79,22 +116,24 @@ function ConversationsPageContent() {
 
   // 侧边栏事件处理
   const handleCreateConversation = () => {
-    window.location.href = '/simple-chat?new=true';
+    window.location.href = '/chat?new=true';
   };
 
   const handleLoadConversation = (conversationId: string) => {
-    window.location.href = `/simple-chat?id=${conversationId}`;
+    window.location.href = `/chat?id=${conversationId}`;
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/conversations/${conversationId}`, {
+      const response = await authenticatedFetch(`/api/conversations/${conversationId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
+      
+      if (response.status === 401) {
+        handleAuthError();
+        return;
+      }
+      
       if (response.ok) {
         setConversations(prev => prev.filter(conv => conv.id !== conversationId));
         if (currentConversation?.id === conversationId) {
@@ -103,6 +142,9 @@ function ConversationsPageContent() {
       }
     } catch (error) {
       console.error('Failed to delete conversation:', error);
+      if (error instanceof Error && error.message.includes('访问令牌')) {
+        handleAuthError();
+      }
     }
   };
 
@@ -118,13 +160,14 @@ function ConversationsPageContent() {
     
     try {
       setIsProcessing(true);
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/conversations/${conversationToDelete.id}`, { 
+      const response = await authenticatedFetch(`/api/conversations/${conversationToDelete.id}`, { 
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
+      
+      if (response.status === 401) {
+        handleAuthError();
+        return;
+      }
       
       if (!response.ok) {
         throw new Error('删除对话失败');
@@ -136,6 +179,11 @@ function ConversationsPageContent() {
       const message = err instanceof Error ? err.message : '删除对话失败';
       setError(message);
       notification.error('删除失败', message);
+      
+      // 如果是token相关错误，触发认证错误处理
+      if (message.includes('访问令牌')) {
+        handleAuthError();
+      }
     } finally {
       setIsProcessing(false);
       setDeleteModalOpen(false);
@@ -150,7 +198,7 @@ function ConversationsPageContent() {
       toggleConversationSelection(conversationId);
     } else {
       // 正常模式下进入对话
-      window.location.href = `/simple-chat?id=${conversationId}`;
+      window.location.href = `/chat?id=${conversationId}`;
     }
   };
 
@@ -194,14 +242,15 @@ function ConversationsPageContent() {
       setIsProcessing(true);
       
       // 并行删除所有选中的对话
-      const token = localStorage.getItem('accessToken');
       const deletePromises = Array.from(selectedConversations).map(async (conversationId) => {
-        const response = await fetch(`/api/conversations/${conversationId}`, { 
+        const response = await authenticatedFetch(`/api/conversations/${conversationId}`, { 
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
         });
+        
+        if (response.status === 401) {
+          throw new Error('认证失败，请重新登录');
+        }
+        
         if (!response.ok) {
           throw new Error(`删除对话 ${conversationId} 失败`);
         }
@@ -220,6 +269,11 @@ function ConversationsPageContent() {
       const message = err instanceof Error ? err.message : '批量删除失败';
       setError(message);
       notification.error('批量删除失败', message);
+      
+      // 如果是认证相关错误，触发认证错误处理
+      if (message.includes('认证失败') || message.includes('访问令牌')) {
+        handleAuthError();
+      }
     } finally {
       setIsProcessing(false);
       setBatchDeleteModalOpen(false);
@@ -233,7 +287,7 @@ function ConversationsPageContent() {
           conversations={conversations}
         />
         <div className="flex-1">
-          <PageLoading text="正在加载对话历史..." fullScreen={true} />
+          <PageLoading text="loading..." fullScreen={true} />
         </div>
       </div>
     );
@@ -376,16 +430,12 @@ function ConversationsPageContent() {
                         <p style={{ color: 'var(--color-foreground-muted)', marginBottom: 'var(--spacing-md)' }}>
                           {searchQuery ? '未找到匹配的对话' : '暂无对话历史'}
                         </p>
-                        {!searchQuery && (
-                          <Button onClick={handleCreateConversation} variant="primary">
-                            开始新对话
-                          </Button>
-                        )}
                       </div>
                     </div>
                   ) : (
                     <DateGroupedConversationList
                       conversations={filteredConversations}
+                      agents={agents}
                       onEnterConversation={handleEnterConversation}
                       onDeleteConversation={handleDeleteClick}
                       isSelectionMode={isSelectionMode}

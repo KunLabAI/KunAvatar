@@ -116,7 +116,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
     } finally {
       setLoading(false);
     }
-  }, [notification]); // 添加 notification 依赖项
+  }, []);
 
   useEffect(() => {
     fetchUserInfo();
@@ -252,7 +252,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
   if (loading) {
     return (
       <PageLoading 
-        text="正在加载账户信息..." 
+        text="loading..." 
         fullScreen={false}
       />
     );

@@ -79,7 +79,7 @@ function ModelManagerPageContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []); // 移除notification依赖项，避免重复创建函数
+  }, [notification]);
 
   // 创建新模型
   const handleCreateModel = async (id: number, modelData: Omit<CustomModel, 'id' | 'model_hash'>) => {
@@ -200,7 +200,7 @@ function ModelManagerPageContent() {
   const handleStartChat = (model: CustomModel) => {
     // 使用客户端路由跳转到聊天页面，避免页面重新加载导致的身份验证问题
     const modelName = model.base_model; // 使用base_model作为模型标识
-    router.push(`/simple-chat?new=true&model=${encodeURIComponent(modelName)}`);
+    router.push(`/chat?new=true&model=${encodeURIComponent(modelName)}`);
   };
 
   // 处理 Modelfile 创建
@@ -298,7 +298,7 @@ function ModelManagerPageContent() {
   // 初始加载 - 只在组件挂载时执行一次
   useEffect(() => {
     loadModels(false); // 初始加载时不同步Ollama模型，避免错误循环
-  }, []);
+  }, [loadModels]);
 
   // 如果有权限错误，显示权限不足页面
   if (hasPermissionError) {
@@ -337,9 +337,9 @@ function ModelManagerPageContent() {
         <Sidebar
           conversations={conversations}
         />
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto scrollbar-thin">
           <PageLoading 
-            text="正在加载模型列表..." 
+            text="loading..." 
             fullScreen={true}
           />
         </div>

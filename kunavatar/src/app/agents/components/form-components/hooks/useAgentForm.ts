@@ -112,10 +112,21 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
   const loadMemorySettings = async (agentId: number) => {
     setMemoryLoading(true);
     try {
-      const response = await fetch(`/api/agents/${agentId}/memory`);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('访问令牌不存在');
+        return;
+      }
+
+      const response = await fetch(`/api/agents/${agentId}/memory`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (response.ok) {
         const { memorySettings: settings } = await response.json();
-        setMemoryEnabled(settings.memory_enabled);
+        // 确保 memory_enabled 是布尔类型
+        setMemoryEnabled(Boolean(settings.memory_enabled));
       }
     } catch (error) {
       console.error('加载记忆设置失败:', error);
@@ -150,10 +161,19 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
     setIsSaving(true);
     
     try {
+      // 获取访问令牌
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('访问令牌不存在，请重新登录');
+      }
+
       // 保存智能体基本信息
       const response = await fetch(isEditMode ? `/api/agents/${agent!.id}` : '/api/agents', {
         method: isEditMode ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(result.data),
       });
 
@@ -168,7 +188,10 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
       // 保存记忆设置
       const memoryResponse = await fetch(`/api/agents/${agentId}/memory`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ memory_enabled: memoryEnabled }),
       });
 

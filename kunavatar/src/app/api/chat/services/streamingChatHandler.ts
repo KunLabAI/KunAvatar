@@ -80,7 +80,7 @@ export class StreamingChatHandler {
                  assistantMessage = '';
                } else {
                  // 处理普通消息块
-                 const result = StreamingChatHandler.processMessageChunk(
+                 const result = await StreamingChatHandler.processMessageChunk(
                    chunk,
                    assistantMessage,
                    assistantStats,
@@ -266,12 +266,16 @@ export class StreamingChatHandler {
 
     const lastUserMessage = MessageStorageService.extractLastUserMessage(chatRequest.messages);
     if (lastUserMessage) {
+      // 🎯 根据是否有agentId判断是否为智能体模式
+      const isAgentMode = !!chatRequest.agentId;
+      
       MessageStorageService.saveUserMessage(
         chatRequest.conversationId,
         lastUserMessage.content,
         chatRequest.model,
         chatRequest.userId,
-        chatRequest.agentId
+        chatRequest.agentId,
+        isAgentMode
       );
     }
   }
@@ -288,11 +292,17 @@ export class StreamingChatHandler {
     // 先保存AI决定调用工具前的回复内容（如果有）
     if (chatRequest.conversationId && assistantMessage.trim()) {
       try {
+        // 🎯 根据是否有agentId判断是否为智能体模式
+        const isAgentMode = !!chatRequest.agentId;
+        
         MessageStorageService.saveAssistantMessage(
           chatRequest.conversationId,
           assistantMessage,
           chatRequest.model,
-          chatRequest.userId
+          chatRequest.userId,
+          chatRequest.agentId,
+          undefined,
+          isAgentMode
         );
       } catch (dbError) {
         console.error('保存AI工具调用前回复失败:', dbError);
@@ -380,13 +390,17 @@ export class StreamingChatHandler {
 
       if (followUpChunk.done && chatRequest.conversationId && followUpMessage.trim()) {
         // 立即保存工具调用后的助手回复
+        // 🎯 根据是否有agentId判断是否为智能体模式
+        const isAgentMode = !!chatRequest.agentId;
+        
         MessageStorageService.saveAssistantMessage(
           chatRequest.conversationId,
           followUpMessage,
           chatRequest.model,
           chatRequest.userId,
           chatRequest.agentId,
-          MessageStorageService.extractStatsFromChunk(followUpChunk) || undefined
+          MessageStorageService.extractStatsFromChunk(followUpChunk) || undefined,
+          isAgentMode
         );
 
         // 检查是否需要生成标题
@@ -403,13 +417,13 @@ export class StreamingChatHandler {
   /**
    * 处理消息块
    */
-  private static processMessageChunk(
+  private static async processMessageChunk(
     chunk: any,
     assistantMessage: string,
     assistantStats: MessageStats | null,
     chatRequest: StreamingChatRequest,
     streamController: StreamController
-  ): { assistantMessage: string; assistantStats: MessageStats | null } {
+  ): Promise<{ assistantMessage: string; assistantStats: MessageStats | null }> {
     // 累积助手的回复内容
     if (chunk.message?.content) {
       assistantMessage += chunk.message.content;
@@ -432,13 +446,17 @@ export class StreamingChatHandler {
         const statsToSave = MessageStorageService.extractStatsFromChunk(chunk) || assistantStats;
         console.log('🔧 保存助手消息，统计信息:', statsToSave);
 
+        // 🎯 根据是否有agentId判断是否为智能体模式
+        const isAgentMode = !!chatRequest.agentId;
+
         MessageStorageService.saveAssistantMessage(
           chatRequest.conversationId,
           assistantMessage,
           chatRequest.model,
           chatRequest.userId,
           chatRequest.agentId,
-          statsToSave || undefined
+          statsToSave || undefined,
+          isAgentMode
         );
 
         // 🚀 异步记忆生成：完全不阻塞对话响应
@@ -450,8 +468,8 @@ export class StreamingChatHandler {
           );
         }
         
-        // 检查是否需要生成标题
-        StreamingChatHandler.checkAndGenerateTitle(
+        // 检查是否需要生成标题（等待完成以确保在流关闭前发送事件）
+        await StreamingChatHandler.checkAndGenerateTitle(
           chatRequest.conversationId,
           chatRequest.titleSummarySettings,
           streamController
@@ -467,25 +485,30 @@ export class StreamingChatHandler {
   /**
    * 检查并生成标题
    */
-  private static checkAndGenerateTitle(
+  private static async checkAndGenerateTitle(
     conversationId: string,
     titleSummarySettings: TitleSummarySettings | undefined,
     streamController: StreamController
-  ): void {
-    TitleGenerationService.checkAndGenerateTitle(conversationId, titleSummarySettings)
-      .then(newTitle => {
-        if (newTitle) {
+  ): Promise<void> {
+    try {
+      const newTitle = await TitleGenerationService.checkAndGenerateTitle(conversationId, titleSummarySettings);
+      if (newTitle) {
+        // 确保在流关闭前发送标题更新事件
+        try {
           TitleGenerationService.sendTitleUpdateEvent(
             streamController.controller,
             streamController.encoder,
             conversationId,
             newTitle
           );
+          console.log('📝 标题更新事件已发送:', newTitle);
+        } catch (streamError) {
+          console.log('流已关闭，无法发送标题更新事件，但标题已保存到数据库:', newTitle);
         }
-      })
-      .catch(error => {
-        console.error('生成标题时出错:', error);
-      });
+      }
+    } catch (error) {
+      console.error('生成标题时出错:', error);
+    }
   }
 
   /**
@@ -535,7 +558,7 @@ export class StreamingChatHandler {
 
     // 重新尝试流式API
     for await (const chunk of ollamaClient.chatStream(retryRequest)) {
-      const result = StreamingChatHandler.processMessageChunk(
+      const result = await StreamingChatHandler.processMessageChunk(
         chunk,
         assistantMessage,
         assistantStats,
@@ -566,13 +589,17 @@ export class StreamingChatHandler {
     console.log('🛑 检测到请求中断，保存已生成的内容');
 
     if (conversationId) {
+      // 🎯 根据是否有agentId判断是否为智能体模式
+      const isAgentMode = !!agentId;
+      
       MessageStorageService.saveAbortedAssistantMessage(
         conversationId,
         assistantMessage,
         model,
         userId,
         agentId,
-        assistantStats || undefined
+        assistantStats || undefined,
+        isAgentMode
       );
     }
 

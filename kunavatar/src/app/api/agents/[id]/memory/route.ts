@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { agentOperations } from '../../../../../lib/database/agents';
+import { withAuth, safeGetParams } from '../../../../../lib/middleware/auth';
 import { z } from 'zod';
 
 // 验证记忆设置的Schema
@@ -7,13 +8,23 @@ const memorySettingsSchema = z.object({
   memory_enabled: z.boolean()
 });
 
-export async function GET(
-  request: NextRequest,
+export const GET = withAuth(async (
+  request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { id } = await params;
-    const agentId = parseInt(id);
+    const userId = request.user!.id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的智能体ID' },
+        { status: 400 }
+      );
+    }
+    
+    const agentId = parseInt(paramsResult.data.id);
     if (isNaN(agentId)) {
       return NextResponse.json({ error: '无效的智能体ID' }, { status: 400 });
     }
@@ -21,6 +32,11 @@ export async function GET(
     const agent = agentOperations.getById(agentId);
     if (!agent) {
       return NextResponse.json({ error: '智能体不存在' }, { status: 404 });
+    }
+
+    // 检查用户权限
+    if (agent.user_id !== userId) {
+      return NextResponse.json({ error: '无权限访问此智能体' }, { status: 403 });
     }
 
     return NextResponse.json({
@@ -36,15 +52,25 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
-export async function PUT(
-  request: NextRequest,
+export const PUT = withAuth(async (
+  request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { id } = await params;
-    const agentId = parseInt(id);
+    const userId = request.user!.id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的智能体ID' },
+        { status: 400 }
+      );
+    }
+    
+    const agentId = parseInt(paramsResult.data.id);
     if (isNaN(agentId)) {
       return NextResponse.json({ error: '无效的智能体ID' }, { status: 400 });
     }
@@ -52,6 +78,11 @@ export async function PUT(
     const agent = agentOperations.getById(agentId);
     if (!agent) {
       return NextResponse.json({ error: '智能体不存在' }, { status: 404 });
+    }
+
+    // 检查用户权限
+    if (agent.user_id !== userId) {
+      return NextResponse.json({ error: '无权限修改此智能体' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -90,4 +121,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-} 
+});
