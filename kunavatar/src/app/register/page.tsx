@@ -288,7 +288,7 @@ export default function RegisterPage() {
           {/* 小屏幕背景遮罩 */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden"></div>
           
-          <div className="w-full max-w-md bg-[var(--color-card)]/90 backdrop-blur-sm border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-[var(--color-foreground)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10 max-h-[90vh] overflow-y-auto">
             {/* 品牌标题 */}
             <div className="text-center mb-6 lg:mb-8">
               <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">

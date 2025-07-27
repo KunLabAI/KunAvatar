@@ -1,15 +1,26 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { memoryOperations } from '@/lib/database/memories';
 import { agentOperations } from '@/lib/database/agents';
+import { withAuth, safeGetParams } from '@/lib/middleware/auth';
 
 // GET /api/agents/[id]/memories - 获取指定Agent的所有记忆
-export async function GET(
-  request: Request,
+export const GET = withAuth(async (
+  request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
-    const { id } = await params;
-    const agentId = parseInt(id);
+    const userId = request.user!.id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的智能体ID' },
+        { status: 400 }
+      );
+    }
+    
+    const agentId = parseInt(paramsResult.data.id);
 
     if (!agentId || isNaN(agentId)) {
       return NextResponse.json({ error: 'Invalid agent ID' }, { status: 400 });
@@ -19,6 +30,11 @@ export async function GET(
     const agent = agentOperations.getById(agentId);
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+    }
+
+    // 检查用户权限
+    if (agent.user_id !== userId) {
+      return NextResponse.json({ error: '无权限访问此智能体的记忆' }, { status: 403 });
     }
 
     // 获取Agent的所有记忆（跨对话）
@@ -72,4 +88,4 @@ export async function GET(
     console.error('Failed to get agent memories:', error);
     return NextResponse.json({ error: 'Failed to get agent memories' }, { status: 500 });
   }
-}
+});

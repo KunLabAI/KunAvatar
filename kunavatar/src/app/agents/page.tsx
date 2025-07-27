@@ -49,7 +49,18 @@ function AgentsPageContent() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/agents');
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到访问令牌，请重新登录');
+      }
+
+      const response = await fetch('/api/agents', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('加载智能体失败');
       }
@@ -62,7 +73,7 @@ function AgentsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [notification]);
+  }, [notification]); // 添加notification依赖项
 
   useEffect(() => {
     fetchAgents();
@@ -129,8 +140,17 @@ function AgentsPageContent() {
     
     try {
       setIsProcessing(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到访问令牌，请重新登录');
+      }
+
       const response = await fetch(`/api/agents/${agentToDelete.id}`, { 
-        method: 'DELETE' 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
@@ -165,8 +185,8 @@ function AgentsPageContent() {
   };
 
   const handleStartChat = (agent: AgentWithRelations) => {
-    // 简化跳转逻辑：只传递智能体ID，让聊天页面自动处理模型选择
-    router.push(`/simple-chat?new=true&agent=${agent.id}`);
+    // 跳转到chat页面，传递智能体ID参数
+    router.push(`/chat?new=true&agent=${agent.id}`);
   };
 
   const handleShowMemory = (agent: AgentWithRelations) => {
@@ -185,9 +205,9 @@ function AgentsPageContent() {
         <Sidebar
           conversations={conversations}
         />
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto scrollbar-thin">
           <PageLoading 
-            text="正在加载智能体..." 
+            text="loading..." 
             fullScreen={true}
           />
         </div>

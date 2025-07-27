@@ -59,7 +59,6 @@ export interface CreateMessageData {
   content: string;
   model?: string;
   user_id: string;
-  agent_id?: number | null;
   sequence_number?: number;
   // 工具调用相关字段
   tool_name?: string;

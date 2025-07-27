@@ -210,6 +210,9 @@ async function handleNonStreamingChat({
   // 保存消息到数据库
   if (conversationId) {
     try {
+      // 🎯 根据是否有agentId判断是否为智能体模式
+      const isAgentMode = !!agentId;
+      
       // 保存用户消息
       const lastUserMessage = MessageStorageService.extractLastUserMessage(messages);
       if (lastUserMessage) {
@@ -218,7 +221,8 @@ async function handleNonStreamingChat({
           lastUserMessage.content,
           model,
           userId,
-          agentId
+          agentId,
+          isAgentMode
         );
       }
 
@@ -229,7 +233,9 @@ async function handleNonStreamingChat({
           response.message.content,
           model,
           userId,
-          agentId
+          agentId,
+          undefined,
+          isAgentMode
         );
       }
 

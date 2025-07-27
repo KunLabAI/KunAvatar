@@ -91,6 +91,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showActivateModal, setShowActivateModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // 表单状态
@@ -208,10 +209,10 @@ export function UserManagementTab({}: UserManagementTabProps) {
   }, [handleAuthError]);
 
   useEffect(() => {
-    fetchRoles();
-    fetchCurrentUser();
     fetchUsers();
-  }, [fetchRoles, fetchCurrentUser, fetchUsers]);
+    fetchCurrentUser();
+    fetchRoles();
+  }, [fetchUsers, fetchCurrentUser, fetchRoles]);
 
   // 创建用户
   const handleCreateUser = async () => {
@@ -229,6 +230,8 @@ export function UserManagementTab({}: UserManagementTabProps) {
       const data = await response.json();
       if (data.success) {
         setShowCreateModal(false);
+        // 重置表单，保持默认角色选择
+        const defaultUserRole = roles.find(role => role.name === 'user');
         setUserForm({
           username: '',
           email: '',
@@ -237,7 +240,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
           status: 'pending',
           password: '',
           email_verified: false,
-          roles: [],
+          roles: defaultUserRole ? [defaultUserRole.id] : [],
         });
         fetchUsers();
         success('创建成功', '用户创建成功');
@@ -312,13 +315,27 @@ export function UserManagementTab({}: UserManagementTabProps) {
     }
   };
 
-  // 激活用户
-  const handleActivateUser = async (userId: number) => {
-    if (!confirm('确定要激活这个用户吗？激活后用户将可以正常登录系统。')) return;
+  // 激活用户 - 打开角色选择模态框
+  const handleActivateUser = async (user: User) => {
+    setSelectedUser(user);
+    // 默认选择普通用户角色
+    const defaultUserRole = roles.find(role => role.name === 'user');
+    setUserForm({
+      ...userForm,
+      roles: defaultUserRole ? [defaultUserRole.id] : [],
+    });
+    setShowActivateModal(true);
+  };
+
+  // 确认激活用户并分配角色
+  const handleConfirmActivateUser = async () => {
+    if (!selectedUser) return;
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/users/${userId}`, {
+      
+      // 同时激活用户并分配角色
+      const activateResponse = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -327,13 +344,32 @@ export function UserManagementTab({}: UserManagementTabProps) {
         body: JSON.stringify({ status: 'active' }),
       });
 
-      const data = await response.json();
-      if (data.success) {
-        fetchUsers(); // 重新获取用户列表
-        success('激活成功', '用户已成功激活，现在可以正常登录系统');
-      } else {
+      if (!activateResponse.ok) {
+        const data = await activateResponse.json();
         notifyError('激活失败', data.error || '激活用户失败');
+        return;
       }
+
+      // 分配角色
+      const roleResponse = await fetch(`/api/users/${selectedUser.id}/roles`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ roles: userForm.roles }),
+      });
+
+      if (!roleResponse.ok) {
+        const data = await roleResponse.json();
+        notifyError('角色分配失败', data.error || '分配用户角色失败');
+        return;
+      }
+
+      setShowActivateModal(false);
+      setSelectedUser(null);
+      fetchUsers(); // 重新获取用户列表
+      success('激活成功', '用户已成功激活并分配角色，现在可以正常登录系统');
     } catch (error) {
       console.error('激活用户失败:', error);
       notifyError('激活失败', '激活用户失败');
@@ -378,6 +414,8 @@ export function UserManagementTab({}: UserManagementTabProps) {
 
   // 打开创建用户模态框
   const openCreateModal = () => {
+    // 默认选择普通用户角色
+    const defaultUserRole = roles.find(role => role.name === 'user');
     setUserForm({
       username: '',
       email: '',
@@ -386,7 +424,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
       status: 'pending',
       password: '',
       email_verified: false,
-      roles: [],
+      roles: defaultUserRole ? [defaultUserRole.id] : [],
     });
     setShowCreateModal(true);
   };
@@ -446,7 +484,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
   if (loading) {
     return (
       <PageLoading 
-        text="正在加载用户列表..." 
+        text="loading..." 
         fullScreen={false}
       />
     );
@@ -575,7 +613,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                         </button>
                         {user.status === 'pending' && (
                           <button 
-                            onClick={() => handleActivateUser(user.id)}
+                            onClick={() => handleActivateUser(user)}
                             className="text-green-600 hover:text-green-700 transition-colors"
                             title="激活用户"
                           >
@@ -1067,6 +1105,81 @@ export function UserManagementTab({}: UserManagementTabProps) {
               取消
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* 激活用户模态框 */}
+      <Modal
+        isOpen={showActivateModal}
+        onClose={() => setShowActivateModal(false)}
+        title="激活用户"
+      >
+        <div className="space-y-4">
+          {selectedUser && (
+            <>
+              <div className="text-center">
+                <div className="h-12 w-12 rounded-full bg-theme-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <span className="text-lg font-medium text-theme-primary">
+                    {selectedUser.username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <h3 className="text-lg font-semibold text-theme-foreground">{selectedUser.username}</h3>
+                <p className="text-theme-foreground-muted">{selectedUser.email}</p>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-700">
+                  激活用户后，用户将可以正常登录系统。请为用户选择一个角色以确保其拥有适当的权限。
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-theme-foreground-muted mb-2">
+                  选择角色 <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {roles.map((role) => (
+                    <div key={role.id} className="flex items-center">
+                      <input
+                        type="radio"
+                        id={`activate-role-${role.id}`}
+                        name="activate-user-role"
+                        checked={userForm.roles.includes(role.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            updateUserForm({ roles: [role.id] });
+                          }
+                        }}
+                        className="rounded border-theme-border"
+                      />
+                      <label htmlFor={`activate-role-${role.id}`} className="ml-2 text-sm text-theme-foreground">
+                        <span className="font-medium">{role.display_name}</span>
+                        {role.description && (
+                          <span className="text-theme-foreground-muted ml-1">- {role.description}</span>
+                        )}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  onClick={handleConfirmActivateUser}
+                  disabled={userForm.roles.length === 0}
+                  className="btn-base btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  激活用户
+                </button>
+                <button
+                  onClick={() => setShowActivateModal(false)}
+                  className="btn-base btn-secondary flex-1"
+                >
+                  取消
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </section>

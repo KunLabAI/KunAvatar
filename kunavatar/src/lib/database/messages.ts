@@ -7,10 +7,10 @@ export const messageQueries = {
   // 创建新消息
   create: db.prepare(`
     INSERT INTO messages (
-      conversation_id, role, content, model, user_id, agent_id, sequence_number, timestamp,
+      conversation_id, role, content, model, user_id, sequence_number, timestamp,
       total_duration, load_duration, prompt_eval_count, prompt_eval_duration,
       eval_count, eval_duration
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
 
   // 获取对话的所有消息（需要用户权限验证）
@@ -30,6 +30,11 @@ export const messageQueries = {
   // 删除对话的所有消息（内部使用）
   deleteByConversationId: db.prepare(`
     DELETE FROM messages WHERE conversation_id = ?
+  `),
+
+  // 删除单个消息（需要用户权限验证）
+  deleteByIdAndUserId: db.prepare(`
+    DELETE FROM messages WHERE id = ? AND user_id = ?
   `),
 
   // 获取对话的工具调用记录（需要用户权限验证）
@@ -98,7 +103,6 @@ export const messageOperations = {
       data.content,
       data.model || null,
       data.user_id,
-      data.agent_id || null,
       0, // sequence_number 设为0，不再使用
       timestamp,
       data.total_duration || null,
@@ -128,6 +132,12 @@ export const messageOperations = {
     messageQueries.deleteByConversationId.run(conversationId);
   },
 
+  // 删除单个消息（需要用户权限验证）
+  deleteByIdAndUserId(messageId: string, userId: string): boolean {
+    const result = messageQueries.deleteByIdAndUserId.run(messageId, userId);
+    return result.changes > 0;
+  },
+
   // 获取对话的工具调用记录（需要用户权限验证）
   getToolCallsByConversationIdAndUserId(conversationId: string, userId: string): any[] {
     return messageQueries.getToolCallsByConversationIdAndUserId.all(conversationId, userId);
@@ -154,7 +164,6 @@ export const messageOperations = {
   createToolCall(data: {
     conversation_id: string;
     user_id: string;
-    agent_id?: number;
     tool_name: string;
     tool_args: any;
     tool_status: 'executing' | 'completed' | 'error';
@@ -170,7 +179,6 @@ export const messageOperations = {
       `工具调用: ${data.tool_name}`, // 基本内容描述
       null, // model
       data.user_id,
-      data.agent_id || null, // agent_id
       0, // sequence_number
       timestamp,
       null, null, null, null, null, null // 统计信息字段

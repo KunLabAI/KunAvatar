@@ -138,9 +138,42 @@ export function canAccessResource(userPermissions: string[], resource: string, a
   return userPermissions.includes(permission) || userPermissions.includes(managePermission);
 }
 
+// 安全处理 API 路由参数
+export async function safeGetParams<T = Record<string, string>>(
+  params: Promise<T> | undefined
+): Promise<{ success: boolean; data?: T; error?: string }> {
+  try {
+    if (!params) {
+      return {
+        success: false,
+        error: '无效的请求参数'
+      };
+    }
+    
+    const resolvedParams = await params;
+    
+    if (!resolvedParams) {
+      return {
+        success: false,
+        error: '无效的请求参数'
+      };
+    }
+    
+    return {
+      success: true,
+      data: resolvedParams
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: '参数解析失败'
+    };
+  }
+}
+
 // 创建受保护的API处理器
 export function withAuth(
-  handler: (request: AuthenticatedRequest, context?: any) => Promise<NextResponse>,
+  handler: (request: AuthenticatedRequest, context: any) => Promise<NextResponse>,
   options: AuthMiddlewareOptions = { required: true }
 ) {
   return async (request: NextRequest, context?: any) => {

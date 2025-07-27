@@ -1,9 +1,11 @@
-import { MessageSquare, Trash2, Calendar, Clock, Bot, CheckSquare, Square, Hash, Type } from 'lucide-react';
+import { MessageSquare, Trash2, Calendar, Clock, Bot, CheckSquare, Square, Hash, Type, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Conversation } from '@/lib/database';
+import { Agent } from '@/lib/database/agents';
 
 interface DateGroupedConversationListProps {
   conversations: Conversation[];
+  agents: Agent[];
   onEnterConversation: (conversationId: string) => void;
   onDeleteConversation: (conversation: Conversation) => void;
   isSelectionMode?: boolean;
@@ -19,12 +21,18 @@ interface DateGroup {
 
 export function DateGroupedConversationList({
   conversations,
+  agents,
   onEnterConversation,
   onDeleteConversation,
   isSelectionMode = false,
   selectedConversations = new Set(),
   onToggleSelection,
 }: DateGroupedConversationListProps) {
+  // 根据agent_id查找agent信息
+  const getAgentById = (agentId: number | null | undefined): Agent | null => {
+    if (!agentId) return null;
+    return agents.find(agent => agent.id === agentId) || null;
+  };
   const formatDate = (dateString: string) => {
     // SQLite DATETIME 是 UTC 时间，需要正确解析
     const date = new Date(dateString + 'Z'); // 添加 Z 表示 UTC 时间
@@ -228,32 +236,50 @@ export function DateGroupedConversationList({
                     )}
                     
                     <div className="flex-1 min-w-0">
-                      {/* 对话标题和图标 */}
+                      {/* 对话标题 - 移除图标 */}
                       <div className="flex items-center" style={{ gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-xs)' }}>
-                        <div style={{
-                          padding: 'var(--spacing-xs)',
-                          backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
-                          borderRadius: 'var(--radius-lg)'
-                        }}>
-                          <MessageSquare className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                        </div>
                         <h3 className="card-title truncate">
                           {conversation.title}
                         </h3>
                       </div>
 
-                      {/* 模型信息 */}
-                      <div className="flex items-center" style={{ gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-sm)' }}>
-                        <Bot className="w-4 h-4" style={{ color: 'var(--color-foreground-muted)' }} />
-                        <span style={{
-                          fontSize: 'var(--font-size-sm)',
-                          color: 'var(--color-foreground-muted)',
-                          backgroundColor: 'var(--color-background)',
-                          padding: `var(--spacing-xs) var(--spacing-xs)`,
-                          borderRadius: 'var(--radius-md)'
-                        }}>
-                          {conversation.model}
-                        </span>
+                      {/* 模型和智能体信息 */}
+                      <div className="flex items-center flex-wrap" style={{ gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+                        {/* 模型信息 */}
+                        {conversation.model && (
+                          <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
+                            <Bot className="w-4 h-4" style={{ color: 'var(--color-foreground-muted)' }} />
+                            <span style={{
+                              fontSize: 'var(--font-size-sm)',
+                              color: 'var(--color-foreground-muted)',
+                              backgroundColor: 'var(--color-background)',
+                              padding: `var(--spacing-xs) var(--spacing-xs)`,
+                              borderRadius: 'var(--radius-md)'
+                            }}>
+                              {conversation.model}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* 智能体信息 */}
+                        {(() => {
+                          const agent = getAgentById(conversation.agent_id);
+                          return agent ? (
+                            <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
+                              <User className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                              <span style={{
+                                fontSize: 'var(--font-size-sm)',
+                                color: 'var(--color-primary)',
+                                backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                                padding: `var(--spacing-xs) var(--spacing-xs)`,
+                                borderRadius: 'var(--radius-md)',
+                                fontWeight: '500'
+                              }}>
+                                {agent.name}
+                              </span>
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
 
                       {/* 统计信息 */}

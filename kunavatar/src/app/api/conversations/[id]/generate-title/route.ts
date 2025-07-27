@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOperations } from '../../../../../lib/database';
-import { ollamaClient } from '../../../../../lib/ollama';
 import { withAuth } from '../../../../../lib/middleware/auth';
+import { TitleGenerationService, type TitleSummarySettings } from '../../../chat/services/titleGenerationService';
 
 export const POST = withAuth(async (
   request,
@@ -20,7 +20,7 @@ export const POST = withAuth(async (
     }
 
     const body = await request.json();
-    const { model }: { model: string } = body;
+    const { model, systemPrompt }: { model: string; systemPrompt?: string } = body;
 
     if (!model) {
       return NextResponse.json(
@@ -38,7 +38,7 @@ export const POST = withAuth(async (
       );
     }
 
-    // 获取对话的前两轮消息（验证用户权限）
+    // 获取对话的消息（验证用户权限）
     const messages = dbOperations.getMessagesByConversationIdAndUserId(conversationId, userId);
     if (messages.length < 2) {
       return NextResponse.json(
@@ -47,7 +47,7 @@ export const POST = withAuth(async (
       );
     }
 
-    // 筛选出前两轮对话（用户问题 + 助手回答）
+    // 筛选出有效的对话内容
     const userMessages = messages.filter(m => m.role === 'user');
     const assistantMessages = messages.filter(m => m.role === 'assistant');
     
@@ -58,71 +58,26 @@ export const POST = withAuth(async (
       );
     }
 
-    // 构建对话内容
-    const firstUserMessage = userMessages[0];
-    const firstAssistantMessage = assistantMessages[0];
-    
-    // 清理助手消息中的思考标签
-    const cleanAssistantContent = firstAssistantMessage.content
-      .replace(/<think>[\s\S]*?<\/think>/g, '') // 移除<think>标签及其内容
-      .replace(/<think>[\s\S]*$/g, '') // 移除未闭合的<think>标签
-      .trim();
-    
-    const conversationContent = `用户: ${firstUserMessage.content}\n\n助手: ${cleanAssistantContent}`;
-
-    // 检查Ollama服务是否可用
-    const isAvailable = await ollamaClient.isAvailable();
-    if (!isAvailable) {
-      const ollamaHost = process.env.OLLAMA_HOST || 'localhost';
-      const ollamaPort = process.env.OLLAMA_PORT || '11434';
-      return NextResponse.json(
-        { 
-          error: 'Ollama服务不可用',
-          message: `请确保Ollama正在运行并监听在${ollamaHost}:${ollamaPort}端口`
-        },
-        { status: 503 }
-      );
-    }
-
     try {
-      // 调用模型生成标题
-      const response = await ollamaClient.chat({
-        model,
-        messages: [
-          {
-            role: 'user',
-            content: `请根据以下对话内容，生成一个简洁、准确的对话标题。\n\n要求：\n- 长度控制在10-20个字符\n- 体现对话的核心主题\n- 使用中文\n- 不要包含标点符号\n- 直接返回标题，不要其他内容\n\n对话内容：\n${conversationContent}`
-          }
-        ],
-        stream: false,
-        options: {
-        }
-      });
+      // 构建标题总结设置
+      const titleSummarySettings: TitleSummarySettings = {
+        enabled: true,
+        model: model,
+        systemPrompt: systemPrompt
+      };
 
-      let generatedTitle = response.message?.content?.trim() || '';
-      
-      // 清理生成的标题
-      generatedTitle = generatedTitle
-        .replace(/<think>[\s\S]*?<\/think>/g, '') // 移除<think>标签及其内容
-        .replace(/<think>[\s\S]*$/g, '') // 移除未闭合的<think>标签
-        .replace(/["'`]/g, '') // 移除引号
-        .replace(/[。！？：；，]/g, '') // 移除中文标点
-        .replace(/[.!?:;,]/g, '') // 移除英文标点
-        .trim();
+      // 使用统一的标题生成服务，强制生成
+      const generatedTitle = await TitleGenerationService.checkAndGenerateTitle(
+        conversationId, 
+        titleSummarySettings,
+        true // 强制生成，不检查是否为默认标题
+      );
 
-      // 限制标题长度
-      if (generatedTitle.length > 20) {
-        generatedTitle = generatedTitle.substring(0, 20);
-      }
-
-      // 如果生成的标题为空或过短，使用默认标题
-      if (!generatedTitle || generatedTitle.length < 2) {
-        generatedTitle = `对话 - ${new Date().toLocaleString('zh-CN', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}`;
+      if (!generatedTitle) {
+        return NextResponse.json(
+          { error: '标题生成失败，请稍后重试' },
+          { status: 500 }
+        );
       }
 
       // 更新数据库中的对话标题（验证用户权限）

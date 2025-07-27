@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ModelLogo from '@/app/model-manager/components/ModelLogo';
-import { OllamaModel } from '@/app/simple-chat/types';
+import { OllamaModel } from '@/lib/ollama';
 import { Brain } from 'lucide-react';
 
 export interface CustomModel {
@@ -148,4 +148,4 @@ export function ModelSelector({
       )}
     </div>
   );
-} 
+}

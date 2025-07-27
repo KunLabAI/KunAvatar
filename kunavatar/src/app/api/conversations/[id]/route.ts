@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbOperations } from '../../../../lib/database';
-import { withAuth } from '../../../../lib/middleware/auth';
+import { dbOperations, agentMessageOperations } from '../../../../lib/database';
+import { withAuth, safeGetParams } from '../../../../lib/middleware/auth';
 
 // 获取单个对话及其消息
 export const GET = withAuth(async (
@@ -9,8 +9,18 @@ export const GET = withAuth(async (
 ) => {
   try {
     const userId = request.user!.id;
-    const { id } = await params;
-    const conversationId = id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的对话ID' },
+        { status: 400 }
+      );
+    }
+    
+    const conversationId = paramsResult.data.id;
 
     if (!conversationId) {
       return NextResponse.json(
@@ -28,8 +38,17 @@ export const GET = withAuth(async (
       );
     }
 
-    // 获取对话的所有消息（验证用户权限）
-    const messages = dbOperations.getMessagesByConversationIdAndUserId(conversationId, userId);
+    // 获取对话的所有消息（根据智能体ID决定从哪个表加载）
+    let messages;
+    if (conversation.agent_id) {
+      // 智能体模式：从 agent_messages 表加载
+      console.log(`🎯 从智能体消息表加载对话 ${conversationId} 的消息 (Agent ID: ${conversation.agent_id})`);
+      messages = agentMessageOperations.getByConversationIdAndUserId(conversationId, userId);
+    } else {
+      // 模型模式：从 messages 表加载
+      console.log(`🎯 从普通消息表加载对话 ${conversationId} 的消息`);
+      messages = dbOperations.getMessagesByConversationIdAndUserId(conversationId, userId);
+    }
 
     // 获取对话的工具调用记录（验证用户权限）
     const toolCallRecords = await dbOperations.getToolCallsByConversationIdAndUserId(conversationId, userId);
@@ -64,8 +83,17 @@ export const PATCH = withAuth(async (
 ) => {
   try {
     const userId = request.user!.id;
-    const { id } = await params;
-    const conversationId = id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的对话ID' },
+        { status: 400 }
+      );
+    }
+    
+    const conversationId = paramsResult.data.id;
 
     if (!conversationId) {
       return NextResponse.json(
@@ -144,8 +172,17 @@ export const DELETE = withAuth(async (
 ) => {
   try {
     const userId = request.user!.id;
-    const { id } = await params;
-    const conversationId = id;
+    
+    // 安全地处理 params
+    const paramsResult = await safeGetParams(params);
+    if (!paramsResult.success || !paramsResult.data?.id) {
+      return NextResponse.json(
+        { error: paramsResult.error || '无效的对话ID' },
+        { status: 400 }
+      );
+    }
+    
+    const conversationId = paramsResult.data.id;
 
     if (!conversationId) {
       return NextResponse.json(

@@ -1,5 +1,5 @@
 import { ChatMessage } from '../../../../lib/ollama';
-import { dbOperations } from '../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../lib/database';
 
 export interface MessageStats {
   total_duration?: number;
@@ -32,17 +32,30 @@ export class MessageStorageService {
     content: string,
     model: string,
     userId: string,
-    agentId?: number
+    agentId?: number,
+    isAgentMode: boolean = false
   ): number {
     try {
-      return dbOperations.createMessage({
-        conversation_id: conversationId,
-        role: 'user' as const,
-        content: content,
-        model: model,
-        user_id: userId,
-        agent_id: agentId
-      });
+      // 🎯 根据模式选择不同的表
+      if (isAgentMode && agentId) {
+        // 智能体模式：使用 agent_messages 表
+        return agentMessageOperations.create({
+          conversation_id: conversationId,
+          role: 'user' as const,
+          content: content,
+          agent_id: agentId,
+          user_id: userId
+        });
+      } else {
+        // 模型模式：使用 messages 表
+        return dbOperations.createMessage({
+          conversation_id: conversationId,
+          role: 'user' as const,
+          content: content,
+          model: model,
+          user_id: userId
+        });
+      }
     } catch (error) {
       console.error('保存用户消息失败:', error);
       throw error;
@@ -58,28 +71,52 @@ export class MessageStorageService {
     model: string,
     userId: string,
     agentId?: number,
-    stats?: MessageStats
+    stats?: MessageStats,
+    isAgentMode: boolean = false
   ): number {
     try {
-      const messageData = {
-        conversation_id: conversationId,
-        role: 'assistant' as const,
-        content: content,
-        model: model,
-        user_id: userId,
-        agent_id: agentId,
-        ...(stats && {
-          total_duration: stats.total_duration,
-          load_duration: stats.load_duration,
-          prompt_eval_count: stats.prompt_eval_count,
-          prompt_eval_duration: stats.prompt_eval_duration,
-          eval_count: stats.eval_count,
-          eval_duration: stats.eval_duration,
-        })
-      };
+      // 🎯 根据模式选择不同的表
+      if (isAgentMode && agentId) {
+        // 智能体模式：使用 agent_messages 表
+        const messageData = {
+          conversation_id: conversationId,
+          role: 'assistant' as const,
+          content: content,
+          agent_id: agentId,
+          user_id: userId,
+          ...(stats && {
+            total_duration: stats.total_duration,
+            load_duration: stats.load_duration,
+            prompt_eval_count: stats.prompt_eval_count,
+            prompt_eval_duration: stats.prompt_eval_duration,
+            eval_count: stats.eval_count,
+            eval_duration: stats.eval_duration,
+          })
+        };
 
-      console.log('🔧 保存助手消息，统计信息:', stats);
-      return dbOperations.createMessage(messageData);
+        console.log('🔧 保存智能体助手消息，统计信息:', stats);
+        return agentMessageOperations.create(messageData);
+      } else {
+        // 模型模式：使用 messages 表
+        const messageData = {
+          conversation_id: conversationId,
+          role: 'assistant' as const,
+          content: content,
+          model: model,
+          user_id: userId,
+          ...(stats && {
+            total_duration: stats.total_duration,
+            load_duration: stats.load_duration,
+            prompt_eval_count: stats.prompt_eval_count,
+            prompt_eval_duration: stats.prompt_eval_duration,
+            eval_count: stats.eval_count,
+            eval_duration: stats.eval_duration,
+          })
+        };
+
+        console.log('🔧 保存模型助手消息，统计信息:', stats);
+        return dbOperations.createMessage(messageData);
+      }
     } catch (error) {
       console.error('保存助手消息失败:', error);
       throw error;
@@ -87,26 +124,47 @@ export class MessageStorageService {
   }
 
   /**
-   * 保存工具结果消息
+   * 保存工具消息
    */
   static saveToolMessage(
     conversationId: string,
-    content: string,
+    toolName: string,
+    toolInput: any,
+    toolOutput: any,
     model: string,
     userId: string,
     agentId?: number,
-    toolName?: string
+    isAgentMode: boolean = false
   ): number {
     try {
-      return dbOperations.createMessage({
-        conversation_id: conversationId,
-        role: 'tool' as const,
-        content: content,
-        model: model,
-        user_id: userId,
-        agent_id: agentId,
-        ...(toolName && { tool_name: toolName })
-      });
+      // 🎯 根据模式选择不同的表
+      if (isAgentMode && agentId) {
+        // 智能体模式：使用 agent_messages 表
+        return agentMessageOperations.create({
+          conversation_id: conversationId,
+          role: 'tool' as const,
+          content: JSON.stringify({ input: toolInput, output: toolOutput }),
+          agent_id: agentId,
+          user_id: userId,
+          tool_name: toolName,
+          tool_args: JSON.stringify(toolInput),
+          tool_result: JSON.stringify(toolOutput),
+          tool_status: 'completed'
+        });
+      } else {
+        // 模型模式：使用 messages 表
+        return dbOperations.createMessage({
+          conversation_id: conversationId,
+          role: 'tool' as const,
+          content: JSON.stringify({ input: toolInput, output: toolOutput }),
+          model: model,
+          user_id: userId,
+          tool_name: toolName,
+          tool_args: JSON.stringify(toolInput),
+          tool_result: JSON.stringify(toolOutput),
+          tool_status: 'completed'
+        });
+      }
     } catch (error) {
       console.error('保存工具消息失败:', error);
       throw error;
@@ -116,36 +174,26 @@ export class MessageStorageService {
   /**
    * 批量保存消息
    */
-  static saveMessages(messages: SaveMessageRequest[]): number[] {
-    const messageIds: number[] = [];
-
-    for (const messageRequest of messages) {
-      try {
-        const messageId = dbOperations.createMessage({
-          conversation_id: messageRequest.conversationId,
-          role: messageRequest.role,
-          content: messageRequest.content,
-          model: messageRequest.model,
-          user_id: messageRequest.userId,
-          agent_id: messageRequest.agentId,
-          ...(messageRequest.stats && {
-            total_duration: messageRequest.stats.total_duration,
-            load_duration: messageRequest.stats.load_duration,
-            prompt_eval_count: messageRequest.stats.prompt_eval_count,
-            prompt_eval_duration: messageRequest.stats.prompt_eval_duration,
-            eval_count: messageRequest.stats.eval_count,
-            eval_duration: messageRequest.stats.eval_duration,
-          })
-        });
-
-        messageIds.push(messageId);
-      } catch (error) {
-        console.error(`保存消息失败 (${messageRequest.role}):`, error);
-        // 继续处理其他消息，但记录错误
+  static saveMessages(
+    conversationId: string,
+    messages: ChatMessage[],
+    model: string,
+    userId: string,
+    agentId?: number,
+    isAgentMode: boolean = false
+  ): void {
+    try {
+      for (const message of messages) {
+        if (message.role === 'user') {
+          this.saveUserMessage(conversationId, message.content, model, userId, agentId, isAgentMode);
+        } else if (message.role === 'assistant') {
+          this.saveAssistantMessage(conversationId, message.content, model, userId, agentId, undefined, isAgentMode);
+        }
       }
+    } catch (error) {
+      console.error('批量保存消息失败:', error);
+      throw error;
     }
-
-    return messageIds;
   }
 
   /**
@@ -182,30 +230,55 @@ export class MessageStorageService {
     model: string,
     userId: string,
     agentId?: number,
-    assistantStats?: MessageStats
+    assistantStats?: MessageStats,
+    isAgentMode: boolean = false
   ): number | null {
     if (!assistantMessage.trim()) {
       return null;
     }
 
     try {
-      const messageId = dbOperations.createMessage({
-        conversation_id: conversationId,
-        role: 'assistant' as const,
-        content: assistantMessage,
-        model: model,
-        user_id: userId,
-        agent_id: agentId,
-        // 如果有统计信息也一并保存
-        ...(assistantStats && {
-          total_duration: assistantStats.total_duration,
-          load_duration: assistantStats.load_duration,
-          prompt_eval_count: assistantStats.prompt_eval_count,
-          prompt_eval_duration: assistantStats.prompt_eval_duration,
-          eval_count: assistantStats.eval_count,
-          eval_duration: assistantStats.eval_duration,
-        })
-      });
+      let messageId: number;
+      
+      // 🎯 根据模式选择不同的表
+      if (isAgentMode && agentId) {
+        // 智能体模式：使用 agent_messages 表
+        const messageData = {
+          conversation_id: conversationId,
+          role: 'assistant' as const,
+          content: assistantMessage,
+          agent_id: agentId,
+          user_id: userId,
+          ...(assistantStats && {
+            total_duration: assistantStats.total_duration,
+            load_duration: assistantStats.load_duration,
+            prompt_eval_count: assistantStats.prompt_eval_count,
+            prompt_eval_duration: assistantStats.prompt_eval_duration,
+            eval_count: assistantStats.eval_count,
+            eval_duration: assistantStats.eval_duration,
+          })
+        };
+        messageId = agentMessageOperations.create(messageData);
+      } else {
+        // 模型模式：使用 messages 表
+        const messageData = {
+          conversation_id: conversationId,
+          role: 'assistant' as const,
+          content: assistantMessage,
+          model: model,
+          user_id: userId,
+          // 如果有统计信息也一并保存
+          ...(assistantStats && {
+            total_duration: assistantStats.total_duration,
+            load_duration: assistantStats.load_duration,
+            prompt_eval_count: assistantStats.prompt_eval_count,
+            prompt_eval_duration: assistantStats.prompt_eval_duration,
+            eval_count: assistantStats.eval_count,
+            eval_duration: assistantStats.eval_duration,
+          })
+        };
+        messageId = dbOperations.createMessage(messageData);
+      }
 
       console.log('🛑 已保存中断时的助手消息，ID:', messageId);
       return messageId;

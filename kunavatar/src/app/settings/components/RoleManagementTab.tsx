@@ -308,7 +308,7 @@ export function RoleManagementTab() {
   if (loading) {
     return (
       <PageLoading 
-        text="正在加载角色列表..." 
+        text="loading..." 
         fullScreen={false}
       />
     );

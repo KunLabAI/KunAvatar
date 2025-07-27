@@ -7,6 +7,7 @@ export * from './types';
 // 导出各模块的操作函数
 export { conversationQueries, conversationOperations } from './conversations';
 export { messageQueries, messageOperations } from './messages';
+export { agentMessageQueries, agentMessageOperations } from './agent-messages';
 export { memoryQueries, memoryOperations } from './memories';
 export { mcpServerQueries, mcpServerOperations } from './mcp-servers';
 export { mcpToolQueries, mcpToolOperations } from './mcp-tools';
@@ -56,6 +57,7 @@ export const dbOperations = {
   getMessagesByConversationIdAndUserId: messageOperations.getByConversationIdAndUserId,
   getMessagesByConversationId: messageOperations.getByConversationId, // 内部使用
   deleteMessagesByConversationId: messageOperations.deleteByConversationId,
+  deleteMessageByIdAndUserId: messageOperations.deleteByIdAndUserId,
   getLastModelByConversationId: messageOperations.getLastModelByConversationId,
 
   // MCP工具调用相关操作
