@@ -73,6 +73,12 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       return null; // 已经加载过了，不重复加载
     }
 
+    // 🔥 关键修复：如果正在流式生成，不要加载历史消息，避免清空正在生成的内容
+    if (isStreaming) {
+      console.log('🚫 正在流式生成消息，跳过历史消息加载，避免清空当前内容');
+      return null;
+    }
+
     try {
       setIsLoadingHistory(true);
       setError(null);
@@ -98,91 +104,108 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       const data = await response.json();
       
       if (data.success) {
-        if (data.messages && data.messages.length > 0) {
-          console.log('原始消息数据:', data.messages);
-          
-          // 过滤和转换消息
-          const regularMessages = data.messages.filter((msg: any) => 
-            msg.role !== 'tool' && msg.role !== 'tool_call'
-          );
-          
-          const toolMessages = data.messages.filter((msg: any) => 
-            msg.role === 'tool' || msg.role === 'tool_call'
-          );
-          
-          console.log('普通消息数量:', regularMessages.length);
-          console.log('工具消息数量:', toolMessages.length);
+        if (data.messages && data.messages.length > 0) {          
+          // 处理工具调用记录，按消息ID分组
+          const toolCallsByMessageId = new Map<string, any[]>();
+          if (data.toolCallRecords && data.toolCallRecords.length > 0) {
+            console.log('处理工具调用记录:', data.toolCallRecords);
+            
+            // 按时间排序消息和工具调用记录
+            const sortedMessages = data.messages
+              .filter((msg: any) => msg.role === 'assistant')
+              .sort((a: any, b: any) => {
+                const timeA = a.timestamp || new Date(a.created_at).getTime();
+                const timeB = b.timestamp || new Date(b.created_at).getTime();
+                return timeA - timeB;
+              });
+            
+            const sortedToolRecords = data.toolCallRecords.sort((a: any, b: any) => {
+              const timeA = a.timestamp || new Date(a.created_at).getTime();
+              const timeB = b.timestamp || new Date(b.created_at).getTime();
+              return timeA - timeB;
+            });
+            
+            // 为每个工具调用记录找到对应的助手消息
+            sortedToolRecords.forEach((toolRecord: any) => {
+              const toolTime = toolRecord.timestamp || new Date(toolRecord.created_at).getTime();
+              
+              // 找到工具调用时间之前最近的助手消息
+              let targetMessage: any = null;
+              for (let i = sortedMessages.length - 1; i >= 0; i--) {
+                const msg = sortedMessages[i];
+                const msgTime = msg.timestamp || new Date(msg.created_at).getTime();
+                
+                // 工具调用应该属于它之前最近的助手消息
+                if (msgTime <= toolTime) {
+                  targetMessage = msg;
+                  break;
+                }
+              }
+              
+              // 如果没找到合适的消息，使用最后一个助手消息
+              if (!targetMessage && sortedMessages.length > 0) {
+                targetMessage = sortedMessages[sortedMessages.length - 1];
+              }
+              
+              if (targetMessage) {
+                const messageId = targetMessage.id?.toString();
+                if (!toolCallsByMessageId.has(messageId)) {
+                  toolCallsByMessageId.set(messageId, []);
+                }
+                
+                // 转换工具调用记录为前端格式
+                const toolCall = {
+                  id: `tool_${toolRecord.id}`,
+                  toolName: toolRecord.tool_name,
+                  name: toolRecord.tool_name,
+                  function: {
+                    name: toolRecord.tool_name,
+                    arguments: toolRecord.tool_args ? JSON.parse(toolRecord.tool_args) : {}
+                  },
+                  args: toolRecord.tool_args ? JSON.parse(toolRecord.tool_args) : {},
+                  result: toolRecord.tool_result ? JSON.parse(toolRecord.tool_result) : undefined,
+                  status: toolRecord.tool_status || 'completed',
+                  startTime: toolRecord.timestamp || new Date(toolRecord.created_at).getTime(),
+                  executionTime: toolRecord.tool_execution_time,
+                  error: toolRecord.tool_error
+                };
+                
+                toolCallsByMessageId.get(messageId)!.push(toolCall);
+              }
+            });
+          }
           
           // 转换数据库消息格式为前端消息格式
-          const historyMessages: Message[] = [];
-          
-          for (let i = 0; i < regularMessages.length; i++) {
-            const msg = regularMessages[i];
-            
-            // 如果是assistant消息且内容为空，可能是工具调用消息
-            if (msg.role === 'assistant' && !msg.content) {
-              // 查找该assistant消息之后的工具消息
-              const relatedToolMessages = toolMessages.filter((toolMsg: any) => {
-                const msgTime = msg.timestamp || new Date(msg.created_at).getTime();
-                const toolTime = toolMsg.timestamp || new Date(toolMsg.created_at).getTime();
-                return toolTime > msgTime && (toolTime - msgTime) < 60000; // 1分钟内
-              });
+          const historyMessages: Message[] = data.messages
+            .filter((msg: any) => msg.role !== 'tool') // 过滤掉工具消息
+            .map((msg: any) => {
+              const messageId = msg.id?.toString();
+              const toolCalls = toolCallsByMessageId.get(messageId) || [];
               
-              if (relatedToolMessages.length > 0) {
-                console.log(`为assistant消息 ${msg.id} 关联了 ${relatedToolMessages.length} 个工具调用`);
-                
-                const toolCalls = relatedToolMessages.map((toolMsg: any) => ({
-                  id: toolMsg.id?.toString(),
-                  name: toolMsg.tool_name,
-                  function: {
-                    name: toolMsg.tool_name,
-                    arguments: toolMsg.tool_args ? JSON.parse(toolMsg.tool_args) : {}
-                  },
-                  args: toolMsg.tool_args ? JSON.parse(toolMsg.tool_args) : {},
-                  result: toolMsg.tool_result ? JSON.parse(toolMsg.tool_result) : null,
-                  status: toolMsg.tool_status || 'completed',
-                  startTime: toolMsg.timestamp || new Date(toolMsg.created_at).getTime(),
-                  executionTime: toolMsg.tool_execution_time
-                }));
-                
-                // 查找工具调用之后的assistant消息（包含结果总结）
-                const nextAssistantMsg = regularMessages[i + 1];
-                if (nextAssistantMsg && nextAssistantMsg.role === 'assistant' && nextAssistantMsg.content) {
-                  console.log(`合并工具调用消息和结果消息: ${msg.id} + ${nextAssistantMsg.id}`);
-                  
-                  // 合并成一个包含内容和工具调用的消息
-                  historyMessages.push({
-                    id: nextAssistantMsg.id?.toString() || generateMessageId(),
-                    role: nextAssistantMsg.role,
-                    content: nextAssistantMsg.content,
-                    timestamp: nextAssistantMsg.timestamp || new Date(nextAssistantMsg.created_at).getTime(),
-                    model: nextAssistantMsg.model,
-                    toolCalls // 包含工具调用信息
-                  });
-                  
-                  i++; // 跳过下一个消息，因为已经处理了
-                } else {
-                  // 如果没有找到后续消息，只保存工具调用消息（但不应该出现这种情况）
-                  console.warn(`没有找到工具调用 ${msg.id} 的后续AI回复消息`);
-                }
-                continue;
-              }
-            }
-            
-            // 普通消息直接添加
-            const baseMessage = {
-              id: msg.id?.toString() || generateMessageId(),
-              role: msg.role,
-              content: msg.content || '',
-              timestamp: msg.timestamp || new Date(msg.created_at).getTime(),
-              model: msg.model,
-            };
-            
-            historyMessages.push(baseMessage);
-          }
+              return {
+                id: messageId || generateMessageId(),
+                role: msg.role,
+                content: msg.content || '',
+                timestamp: msg.timestamp || new Date(msg.created_at).getTime(),
+                model: msg.model,
+                toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+              };
+            });
 
           console.log('处理后的消息:', historyMessages);
-          setMessages(historyMessages);
+          console.log('工具调用映射:', toolCallsByMessageId);
+          
+          // 🔥 关键修复：再次检查是否正在流式生成，如果是则不覆盖当前消息
+          if (!isStreaming) {
+            setMessages(historyMessages);
+          } else {
+            console.log('🚫 检测到正在流式生成，不覆盖当前消息');
+            return null;
+          }
+        } else {
+          // 🔥 关键修复：对于新对话（没有历史消息），不清空当前消息
+          // 新对话可能正在进行首次对话，不应该清空任何消息
+          console.log('📝 新对话没有历史消息，保持当前消息状态');
         }
         // 即使没有历史消息，也要标记为已加载此对话，避免重复加载
         currentConversationIdRef.current = conversationId;

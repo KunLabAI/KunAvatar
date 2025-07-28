@@ -205,18 +205,41 @@ export const memoryOperations = {
     const triggerRounds = parseInt(String(settingsMap.get('memory_trigger_rounds') || '20'), 10);
     const triggerMessagesCount = triggerRounds * 2; // 修复：1轮 = 2条消息
     
-    const messageQueries = db.prepare(`
-      SELECT COUNT(*) as count FROM messages
-      WHERE conversation_id = ? AND role IN ('user', 'assistant')
-    `);
-    const result = messageQueries.get(conversationId) as { count: number };
+    // 根据对话类型查询不同的消息表
+    const { conversationOperations } = require('./conversations');
+    const conversation = conversationOperations.getById(conversationId);
+    if (!conversation) {
+      console.log(`🧠 对话不存在: ${conversationId}`);
+      return false;
+    }
+
+    let messageCount = 0;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      const agentMessageQueries = db.prepare(`
+        SELECT COUNT(*) as count FROM agent_messages
+        WHERE conversation_id = ? AND role IN ('user', 'assistant')
+      `);
+      const result = agentMessageQueries.get(conversationId) as { count: number };
+      messageCount = result.count;
+      console.log(`🤖 记忆系统数据库层检测到智能体对话，从 agent_messages 表查询消息数量: ${messageCount}`);
+    } else {
+      // 模型对话：从 messages 表查询
+      const messageQueries = db.prepare(`
+        SELECT COUNT(*) as count FROM messages
+        WHERE conversation_id = ? AND role IN ('user', 'assistant')
+      `);
+      const result = messageQueries.get(conversationId) as { count: number };
+      messageCount = result.count;
+      console.log(`🔧 记忆系统数据库层检测到模型对话，从 messages 表查询消息数量: ${messageCount}`);
+    }
 
     // 检查已有记忆，避免重复触发（确保按时间倒序获取最新记忆）
     const existingMemories = this.getMemoriesByConversation(conversationId);
     const lastMemoryMessageCount = existingMemories.length > 0 ?
       parseInt(existingMemories[0].source_message_range?.split('-')[1] || '0') : 0;
 
-    const currentMessageCount = result.count;
+    const currentMessageCount = messageCount;
     const newMessages = Math.max(0, currentMessageCount - lastMemoryMessageCount); // 修复：确保不为负数
 
     console.log(`🧠 数据库层记忆触发检查：对话 ${conversationId}, Agent ${agentId}`);

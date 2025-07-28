@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbOperations } from '../../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../../lib/database';
 import { MemoryService } from '../../../chat/services/memoryService';
 import { withAuth } from '../../../../../lib/middleware/auth';
 
@@ -112,7 +112,18 @@ export const POST = withAuth(async (
     // 异步生成记忆，不阻塞响应
     (async () => {
       try {
-        const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+        // 根据对话类型查询不同的表
+        let rawMessages;
+        if (conversation.agent_id) {
+          // 智能体对话：从 agent_messages 表查询
+          console.log('🤖 记忆状态API检测到智能体对话，从 agent_messages 表查询消息');
+          rawMessages = agentMessageOperations.getByConversationId(conversationId);
+        } else {
+          // 模型对话：从 messages 表查询
+          console.log('🔧 记忆状态API检测到模型对话，从 messages 表查询消息');
+          rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+        }
+
         const messages = rawMessages.map(msg => ({
           role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
           content: msg.content

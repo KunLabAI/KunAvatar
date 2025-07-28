@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../lib/middleware/auth';
 import { MemoryService } from '../chat/services/memoryService';
-import { dbOperations } from '../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../lib/database';
 
 /**
  * 独立的记忆检查和生成API
@@ -32,8 +32,28 @@ export const POST = withAuth(async (request: NextRequest) => {
       });
     }
 
-    // 获取对话消息
-    const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+    // 获取对话信息以判断对话类型
+    const conversation = dbOperations.getConversationById(conversationId);
+    if (!conversation) {
+      return NextResponse.json({
+        success: false,
+        error: '对话不存在',
+        triggered: false
+      }, { status: 404 });
+    }
+
+    // 根据对话类型查询不同的表
+    let rawMessages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      console.log('🤖 记忆检查API检测到智能体对话，从 agent_messages 表查询消息');
+      rawMessages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      console.log('🔧 记忆检查API检测到模型对话，从 messages 表查询消息');
+      rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+    }
+
     const messages = rawMessages.map(msg => ({
       role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
       content: msg.content
@@ -108,7 +128,25 @@ export const GET = withAuth(async (request: NextRequest) => {
       parseInt(agentId)
     );
 
-    const allMessages = dbOperations.getMessagesByConversationId(conversationId);
+    // 获取对话信息以判断对话类型
+    const conversation = dbOperations.getConversationById(conversationId);
+    if (!conversation) {
+      return NextResponse.json({
+        success: false,
+        error: '对话不存在'
+      }, { status: 404 });
+    }
+
+    // 根据对话类型查询不同的表
+    let allMessages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      allMessages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      allMessages = dbOperations.getMessagesByConversationId(conversationId);
+    }
+
     const userAssistantMessages = allMessages.filter(msg => 
       msg.role === 'user' || msg.role === 'assistant'
     );

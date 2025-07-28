@@ -310,13 +310,16 @@ export class StreamingChatHandler {
     }
 
     // 执行工具调用并获取结果
+    const isAgentMode = !!chatRequest.agentId;
     const toolResults = await ToolExecutionService.handleToolCallsStream(
       toolCalls,
       chatRequest.userSelectedTools,
       chatRequest.conversationId,
       chatRequest.model,
       chatRequest.userId,
-      streamController
+      streamController,
+      chatRequest.agentId,
+      isAgentMode
     );
 
     // 继续对话以获取基于工具结果的回复

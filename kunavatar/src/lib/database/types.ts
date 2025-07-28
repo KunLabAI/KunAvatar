@@ -21,28 +21,29 @@ export interface Conversation {
 export interface Message {
   id: number;
   conversation_id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool' | 'tool_call' | 'tool_result';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   model?: string;
-  user_id?: string;
-  agent_id?: number;
-  sequence_number?: number;
+  user_id: string;
+  sequence_number: number;
   created_at: string;
-  timestamp?: number; // 用于消息排序的时间戳
-  // 工具调用相关字段
-  tool_name?: string;
-  tool_args?: string; // JSON字符串
-  tool_result?: string; // JSON字符串
-  tool_status?: 'executing' | 'completed' | 'error';
-  tool_execution_time?: number; // 毫秒
-  tool_error?: string;
-  // Ollama生成统计信息
+  timestamp: number;
+  
+  // 性能指标
   total_duration?: number;
   load_duration?: number;
   prompt_eval_count?: number;
   prompt_eval_duration?: number;
   eval_count?: number;
   eval_duration?: number;
+  
+  // 工具调用相关字段
+  tool_name?: string;
+  tool_args?: string;
+  tool_result?: string;
+  tool_status?: 'executing' | 'completed' | 'error';
+  tool_execution_time?: number;
+  tool_error?: string;
 }
 
 export interface CreateConversationData {
@@ -55,7 +56,7 @@ export interface CreateConversationData {
 
 export interface CreateMessageData {
   conversation_id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool' | 'tool_call' | 'tool_result';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   model?: string;
   user_id: string;

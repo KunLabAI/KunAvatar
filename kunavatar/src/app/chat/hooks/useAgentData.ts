@@ -1,23 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authenticatedFetch, useAuthErrorHandler } from '../../../lib/utils/auth-utils';
-
-// 暂时定义Agent类型，稍后会替换为正确的导入
-interface Agent {
-  id: number;
-  name: string;
-  description: string | null;
-  model_id: number;
-  system_prompt: string | null;
-  avatar: string | null;
-  memory_enabled: boolean;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  // 关联数据
-  model: any; // CustomModel类型
-  servers: any[];
-  tools: any[];
-}
+import { Agent } from '../types';
 
 interface UseAgentDataReturn {
   agents: Agent[];

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbOperations } from '../../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../../lib/database';
 import { MemoryService } from '../../../chat/services/memoryService';
 import { ContextManagerService } from '../../../chat/services/contextManagerService';
 import { MessageStorageService } from '../../../chat/services/messageStorageService';
@@ -19,8 +19,23 @@ export async function POST(
 
     console.log(`🧠 强制清理对话 ${conversationId} 的记忆和上下文...`);
 
-    // 获取对话的所有消息
-    const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+    // 获取对话信息以判断对话类型
+    const conversation = dbOperations.getConversationById(conversationId);
+    if (!conversation) {
+      return NextResponse.json({ error: '对话不存在' }, { status: 404 });
+    }
+
+    // 根据对话类型查询不同的表
+    let rawMessages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      console.log('🤖 强制清理API检测到智能体对话，从 agent_messages 表查询消息');
+      rawMessages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      console.log('🔧 强制清理API检测到模型对话，从 messages 表查询消息');
+      rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+    }
     
     if (rawMessages.length === 0) {
       return NextResponse.json({ error: '对话不存在或没有消息' }, { status: 404 });
@@ -129,8 +144,21 @@ export async function GET(
     const model = url.searchParams.get('model');
     const strategy = url.searchParams.get('strategy') || 'balanced';
 
-    // 获取对话的所有消息
-    const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+    // 获取对话信息以判断对话类型
+    const conversation = dbOperations.getConversationById(conversationId);
+    if (!conversation) {
+      return NextResponse.json({ error: '对话不存在' }, { status: 404 });
+    }
+
+    // 根据对话类型查询不同的表
+    let rawMessages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      rawMessages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+    }
     
     if (rawMessages.length === 0) {
       return NextResponse.json({ error: '对话不存在或没有消息' }, { status: 404 });

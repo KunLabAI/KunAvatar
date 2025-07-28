@@ -1,4 +1,4 @@
-import { dbOperations } from '../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../lib/database';
 import { ollamaClient } from '../../../../lib/ollama';
 
 export interface TitleSummarySettings {
@@ -49,8 +49,17 @@ export class TitleGenerationService {
         return null; // 已经有自定义标题，不需要重新生成
       }
 
-      // 获取对话消息
-      const messages = dbOperations.getMessagesByConversationId(conversationId);
+      // 获取对话消息 - 根据对话类型查询不同的表
+      let messages;
+      if (conversation.agent_id) {
+        // 智能体对话：从 agent_messages 表查询
+        console.log('🤖 检测到智能体对话，从 agent_messages 表查询消息');
+        messages = agentMessageOperations.getByConversationId(conversationId);
+      } else {
+        // 模型对话：从 messages 表查询
+        console.log('🔧 检测到模型对话，从 messages 表查询消息');
+        messages = dbOperations.getMessagesByConversationId(conversationId);
+      }
       const userMessages = messages.filter(m => m.role === 'user');
       const assistantMessages = messages.filter(m => m.role === 'assistant');
 
@@ -79,7 +88,6 @@ export class TitleGenerationService {
         if (conversation) {
           // 直接更新标题，不验证用户权限（因为这是系统自动操作）
           dbOperations.updateConversationTitleInternal(conversationId, newTitle);
-          console.log('🔧 标题已更新到数据库:', newTitle);
         }
       }
 
@@ -95,8 +103,24 @@ export class TitleGenerationService {
    */
   private static async generateTitle(conversationId: string, model: string, systemPrompt?: string): Promise<string | null> {
     try {
-      // 获取对话消息
-      const messages = dbOperations.getMessagesByConversationId(conversationId);
+      // 获取对话信息
+      const conversation = dbOperations.getConversationById(conversationId);
+      if (!conversation) {
+        console.log('❌ 对话不存在，无法生成标题');
+        return null;
+      }
+
+      // 获取对话消息 - 根据对话类型查询不同的表
+      let messages;
+      if (conversation.agent_id) {
+        // 智能体对话：从 agent_messages 表查询
+        console.log('🤖 智能体对话标题生成，从 agent_messages 表查询消息');
+        messages = agentMessageOperations.getByConversationId(conversationId);
+      } else {
+        // 模型对话：从 messages 表查询
+        console.log('🔧 模型对话标题生成，从 messages 表查询消息');
+        messages = dbOperations.getMessagesByConversationId(conversationId);
+      }
       if (messages.length < 2) {
         return null;
       }
@@ -206,7 +230,6 @@ export class TitleGenerationService {
     try {
       controller.enqueue(encoder.encode(`data: ${titleUpdateData}\n\n`));
     } catch (e) {
-      console.log('流已关闭，无法发送标题更新事件');
     }
   }
 }

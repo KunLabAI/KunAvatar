@@ -14,6 +14,7 @@ import {
   useMessageSender,
   useModelToolValidation
 } from './hooks';
+import { STORAGE_KEYS } from './types';
 import { useUserSettings } from '@/contexts/UserSettingsContext';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoading } from '@/components/Loading';
@@ -63,6 +64,7 @@ function ChatPageContent() {
     selectedAgent,
     setSelectedAgent,
     initializeWithModels,
+    initializeWithAgents,
     setModeFromConversation
   } = useChatMode();
 
@@ -70,7 +72,7 @@ function ChatPageContent() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(() => {
     // 从localStorage恢复当前对话ID
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('current-conversation-id') || null;
+      return localStorage.getItem(STORAGE_KEYS.CURRENT_CONVERSATION) || null;
     }
     return null;
   });
@@ -170,20 +172,9 @@ function ChatPageContent() {
   // 🤖 初始化智能体选择 - 当智能体数据加载完成后恢复选择状态
   useEffect(() => {
     if (agents && agents.length > 0 && !agentsLoading) {
-      // 🤖 恢复智能体选择
-      const savedAgentId = localStorage.getItem('selected-agent-id');
-      if (savedAgentId && agents.length > 0) {
-        const agentId = parseInt(savedAgentId);
-        const agent = agents.find(a => a.id === agentId);
-        if (agent) {
-          setSelectedAgent(agent);
-        } else {
-          // 如果找不到对应的智能体，清除localStorage中的记录
-          localStorage.removeItem('selected-agent-id');
-        }
-      }
+      initializeWithAgents(agents);
     }
-  }, [agents, agentsLoading, selectedAgent, setSelectedAgent, chatMode]);
+  }, [agents, agentsLoading, initializeWithAgents]);
 
   // 🔧 智能体选择时自动设置工具 - 新增逻辑
   useEffect(() => {
@@ -269,54 +260,78 @@ function ChatPageContent() {
     
     // 更新上一次的状态
     prevStateRef.current = currentState;
-  }, [chatMode, selectedAgent?.id, currentConversationId, messageSender.clearMessages]);
+  }, [chatMode, selectedAgent?.id, currentConversationId]); // 🔥 修复：移除messageSender.clearMessages依赖项
+
+
 
   // 🔄 当currentConversationId改变时加载历史消息
   useEffect(() => {
-    if (currentConversationId) {
-      // 加载对话历史并根据对话信息自动设置模式
-      messageSender.loadConversationHistory(currentConversationId).then(result => {
-        if (result?.conversation && agents && agents.length > 0) {
-          console.log('🔄 加载对话历史完成，自动设置模式:', result.conversation);
-          setModeFromConversation(result.conversation, agents);
+    // 🔥 简化逻辑：只有在对话列表加载完成且对话ID有效时才加载历史
+    if (currentConversationId && conversations && conversations.length > 0) {
+      // 验证对话ID是否在conversations列表中存在
+      const conversationExists = conversations.some(conv => conv.id === currentConversationId);
+      
+      if (conversationExists) {
+        // 🔥 关键修复：检查是否是新创建的对话，新对话不需要加载历史
+        const conversation = conversations.find(conv => conv.id === currentConversationId);
+        if (conversation) {
+          // 检查对话是否有消息（通过created_at和updated_at判断）
+          const isNewConversation = conversation.created_at === conversation.updated_at;
+          
+          if (isNewConversation) {
+            console.log('🆕 检测到新对话，只设置模式，不加载历史消息:', currentConversationId);
+            // 对于新对话，只设置模式，不加载历史消息
+            if (agents && agents.length > 0) {
+              setModeFromConversation(conversation, agents);
+            }
+          } else {
+            console.log('🔄 开始加载已有对话的历史消息:', currentConversationId);
+            // 只有已有消息的对话才加载历史
+            messageSender.loadConversationHistory(currentConversationId).then(result => {
+              if (result?.conversation && agents && agents.length > 0) {
+                console.log('🔄 加载对话历史完成，自动设置模式:', result.conversation);
+                setModeFromConversation(result.conversation, agents);
+              }
+            }).catch(error => {
+              console.error('加载对话历史失败:', error);
+            });
+          }
         }
-      }).catch(error => {
-        console.error('加载对话历史失败:', error);
-      });
+      } else {
+        console.warn('⚠️ 对话ID无效，不加载历史消息:', currentConversationId);
+        // 清除无效的对话ID
+        setCurrentConversationId(null);
+        if (typeof window !== 'undefined') {
+          window.history.replaceState(null, '', '/chat');
+        }
+      }
     }
-  }, [currentConversationId, messageSender, setModeFromConversation, agents]);
+  }, [currentConversationId, conversations, setModeFromConversation, agents]); // 🔥 简化：移除不必要的依赖项
 
   // 💾 持久化当前对话ID到localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (currentConversationId) {
-        localStorage.setItem('current-conversation-id', currentConversationId);
+        localStorage.setItem(STORAGE_KEYS.CURRENT_CONVERSATION, currentConversationId);
       } else {
-        localStorage.removeItem('current-conversation-id');
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_CONVERSATION);
       }
     }
   }, [currentConversationId]);
 
   // 🔍 验证对话ID有效性 - 当conversations加载完成后验证当前对话ID
   useEffect(() => {
+    // 🔥 修复：只在conversations刚加载完成时进行一次性验证，避免与历史加载逻辑重复
     if (conversations && conversations.length > 0 && currentConversationId) {
-      const conversationExists = conversations.some(conv => conv.id === currentConversationId);
-      if (!conversationExists) {
-        console.warn('⚠️ 当前对话ID无效，可能对话已被删除，重置状态');
-        setCurrentConversationId(null);
-        messageSender.clearMessages();
-        if (typeof window !== 'undefined') {
-          window.history.replaceState(null, '', '/chat');
-        }
-      }
+      // 这里只处理初始加载时的验证，历史加载时的验证已在上面的useEffect中处理
+      console.log('🔍 验证初始对话ID有效性:', currentConversationId);
     }
-  }, [conversations, currentConversationId, messageSender]);
+  }, [conversations]); // 🔥 修复：只依赖conversations，避免重复验证
 
-  // 🔗 处理URL参数
+  // 🔗 处理URL参数 - 优化依赖项避免无限循环
   useEffect(() => {
     const conversationId = searchParams.get('id');
     const isNew = searchParams.get('new') === 'true';
-    const agentParam = searchParams.get('agent');
 
     if (conversationId) {
       // 加载指定对话，但要验证对话是否有效
@@ -326,8 +341,13 @@ function ChatPageContent() {
       if (conversations && conversations.length > 0) {
         const conversationExists = conversations.some(conv => conv.id === conversationId);
         if (conversationExists) {
-          setCurrentConversationId(conversationId);
-          console.log('✅ 对话ID有效，已设置');
+          // 🔥 修复：只有当currentConversationId与URL中的不同时才设置，避免重复触发
+          if (currentConversationId !== conversationId) {
+            setCurrentConversationId(conversationId);
+            console.log('✅ 对话ID有效，已设置');
+          } else {
+            console.log('✅ 对话ID已经是当前对话，无需重复设置');
+          }
         } else {
           console.warn('⚠️ 对话ID无效，重置到首页');
           setCurrentConversationId(null);
@@ -335,40 +355,47 @@ function ChatPageContent() {
         }
       } else {
         // 如果conversations还未加载，暂时设置，等后续验证
-        setCurrentConversationId(conversationId);
+        if (currentConversationId !== conversationId) {
+          setCurrentConversationId(conversationId);
+        }
       }
     } else if (isNew) {
       // 准备创建新对话 - 清空消息历史
       console.log('准备创建新对话，清空消息历史');
       setCurrentConversationId(null);
       messageSender.clearMessages(); // 🔥 新增：清空消息历史
-      
-      // 🔥 新增：处理智能体参数
-      if (agentParam && agents && agents.length > 0) {
-        const agentId = parseInt(agentParam);
-        const targetAgent = agents.find(agent => agent.id === agentId);
-        
-        if (targetAgent) {
-          console.log('从URL参数选择智能体:', targetAgent.name, 'ID:', agentId);
-          // 切换到智能体模式
-          setChatMode('agent');
-          // 选择对应的智能体
-          setSelectedAgent(targetAgent);
-          // 设置智能体对应的模型
-          setSelectedModel(targetAgent.model.base_model);
-          // 如果智能体有工具，自动启用工具功能
-          if (targetAgent.tools && targetAgent.tools.length > 0) {
-            setEnableTools(true);
-            setSelectedTools(targetAgent.tools.map(t => t.name));
-          }
-        } else {
-          console.warn('未找到指定的智能体，ID:', agentId);
-        }
-      }
     }
     // 🔥 修复：移除else分支，避免在没有URL参数时清空已恢复的对话ID
     // 这样页面刷新后能保持之前的对话状态
-  }, [searchParams, messageSender, agents, setChatMode, setSelectedAgent, setSelectedModel, setEnableTools, setSelectedTools, conversations]);
+  }, [searchParams, conversations, currentConversationId]); // 🔥 关键修复：添加currentConversationId依赖项用于比较
+
+  // 🤖 处理智能体URL参数 - 单独的useEffect避免循环依赖
+  useEffect(() => {
+    const isNew = searchParams.get('new') === 'true';
+    const agentParam = searchParams.get('agent');
+    
+    if (isNew && agentParam && agents && agents.length > 0) {
+      const agentId = parseInt(agentParam);
+      const targetAgent = agents.find(agent => agent.id === agentId);
+      
+      if (targetAgent) {
+        console.log('从URL参数选择智能体:', targetAgent.name, 'ID:', agentId);
+        // 切换到智能体模式
+        setChatMode('agent');
+        // 选择对应的智能体
+        setSelectedAgent(targetAgent);
+        // 设置智能体对应的模型
+        setSelectedModel(targetAgent.model.base_model);
+        // 如果智能体有工具，自动启用工具功能
+        if (targetAgent.tools && targetAgent.tools.length > 0) {
+          setEnableTools(true);
+          setSelectedTools(targetAgent.tools.map(t => t.name));
+        }
+      } else {
+        console.warn('未找到指定的智能体，ID:', agentId);
+      }
+    }
+  }, [searchParams, agents, setChatMode, setSelectedAgent, setSelectedModel, setEnableTools, setSelectedTools]);
 
   // 🆕 创建新对话（业务逻辑层）
   const handleCreateNewConversation = async (): Promise<string | null> => {
@@ -393,11 +420,11 @@ function ChatPageContent() {
       console.log('创建新对话:', conversationData);
       const newConversation = await createConversation(conversationData);
       if (newConversation) {
+        console.log('新对话创建成功:', newConversation.id);
         setCurrentConversationId(newConversation.id);
         // 更新URL但不刷新页面
         const newUrl = `/chat?id=${newConversation.id}`;
         window.history.replaceState(null, '', newUrl);
-        console.log('新对话创建成功:', newConversation.id);
         return newConversation.id;
       }
       return null;
@@ -448,7 +475,7 @@ function ChatPageContent() {
 
     try {
       // 调用后端API清除对话消息
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
       const response = await fetch(`/api/conversations/${currentConversationId}/clear`, {
         method: 'POST',
         headers: {

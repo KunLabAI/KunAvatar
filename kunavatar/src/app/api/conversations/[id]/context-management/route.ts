@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ContextManagerService, TokenEstimationService } from '@/app/api/chat/services';
-import { dbOperations } from '@/lib/database';
+import { dbOperations, agentMessageOperations } from '@/lib/database';
 import { MemoryService } from '@/app/api/chat/services/memoryService';
 
 /**
@@ -34,7 +34,15 @@ export async function GET(
     }
 
     // 获取对话消息
-    const messages = dbOperations.getMessagesByConversationId(conversationId);
+    let messages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      messages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      messages = dbOperations.getMessagesByConversationId(conversationId);
+    }
+    
     const chatMessages = messages.map(msg => ({
       role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
       content: msg.content
@@ -118,7 +126,15 @@ export async function POST(
     const { model = 'qwen2.5:7b', strategy = 'balanced', preview = false } = body;
 
     // 获取对话消息
-    const messages = dbOperations.getMessagesByConversationId(conversationId);
+    let messages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      messages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      messages = dbOperations.getMessagesByConversationId(conversationId);
+    }
+    
     const chatMessages = messages.map(msg => ({
       role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
       content: msg.content
