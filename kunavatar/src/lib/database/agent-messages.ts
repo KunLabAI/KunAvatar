@@ -52,7 +52,7 @@ export const agentMessageQueries = {
       created_at,
       timestamp
     FROM agent_messages
-    WHERE conversation_id = ? AND user_id = ? AND tool_name IS NOT NULL
+    WHERE conversation_id = ? AND user_id = ? AND tool_name IS NOT NULL AND tool_result IS NOT NULL
     ORDER BY id ASC
   `),
 
@@ -71,7 +71,7 @@ export const agentMessageQueries = {
       created_at,
       timestamp
     FROM agent_messages
-    WHERE conversation_id = ? AND tool_name IS NOT NULL
+    WHERE conversation_id = ? AND tool_name IS NOT NULL AND tool_result IS NOT NULL
     ORDER BY id ASC
   `),
 
@@ -164,7 +164,7 @@ export class AgentMessageOperations {
     
     const result = agentMessageQueries.createToolCall.run(
       data.conversation_id,
-      'tool_call', // role
+      'tool', // role - 统一使用 'tool'
       data.tool_result || '', // content
       data.agent_id,
       data.user_id,

@@ -176,12 +176,15 @@ async function handleNonStreamingChat({
   
   // 处理工具调用
   if (response.message?.tool_calls && response.message.tool_calls.length > 0) {
+    const isAgentMode = !!agentId;
     const toolResult = await ToolExecutionService.handleToolCallsNonStream(
       response.message.tool_calls,
       userSelectedTools,
       conversationId,
       model,
-      userId
+      userId,
+      agentId,
+      isAgentMode
     );
     
     finalMessages.push(...toolResult.messages);

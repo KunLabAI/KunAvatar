@@ -15,7 +15,7 @@ import { useChatStyle } from '../hooks/useChatStyle';
 // 消息类型定义
 interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool' | 'tool_call' | 'tool_result';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
   model?: string;
@@ -409,9 +409,9 @@ function MessageItem({
 
         {/* 操作区域 - 统一的时间戳和操作按钮 */}
         <div className="flex items-center justify-between mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* 左侧：时间戳 */}
+          {/* 左侧：时间戳（只在助手消息显示） */}
           <div className="text-xs text-theme-foreground-muted opacity-60">
-            {new Date(message.timestamp).toLocaleTimeString()}
+            {isAssistant ? new Date(message.timestamp).toLocaleTimeString() : ''}
           </div>
           
           {/* 右侧：操作按钮 */}

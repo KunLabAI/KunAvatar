@@ -6,7 +6,7 @@ import { ToolCallMessage } from './ToolCallMessage';
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool' | 'tool_call' | 'tool_result';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
   model?: string;
@@ -290,4 +290,4 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
       </div>
     </div>
   );
-} 
+}

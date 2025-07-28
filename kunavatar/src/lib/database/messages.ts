@@ -51,7 +51,7 @@ export const messageQueries = {
       created_at,
       timestamp
     FROM messages
-    WHERE conversation_id = ? AND user_id = ? AND tool_name IS NOT NULL
+    WHERE conversation_id = ? AND user_id = ? AND tool_name IS NOT NULL AND tool_result IS NOT NULL
     ORDER BY id ASC
   `),
 
@@ -69,7 +69,7 @@ export const messageQueries = {
       created_at,
       timestamp
     FROM messages
-    WHERE conversation_id = ? AND tool_name IS NOT NULL
+    WHERE conversation_id = ? AND tool_name IS NOT NULL AND tool_result IS NOT NULL
     ORDER BY id ASC
   `),
 
@@ -175,7 +175,7 @@ export const messageOperations = {
 
     const result = messageQueries.create.run(
       data.conversation_id,
-      'tool_call', // 使用新的role类型
+      'tool', // 统一使用 'tool' 作为 role
       `工具调用: ${data.tool_name}`, // 基本内容描述
       null, // model
       data.user_id,

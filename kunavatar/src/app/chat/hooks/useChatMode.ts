@@ -1,22 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-
-export type ChatMode = 'model' | 'agent';
-
-interface Agent {
-  id: number;
-  name: string;
-  description: string | null;
-  model_id: number;
-  system_prompt: string | null;
-  avatar: string | null;
-  memory_enabled: boolean;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  model: any; 
-  servers: any[];
-  tools: any[];
-}
+import { ChatMode, Agent, STORAGE_KEYS } from '../types';
 
 interface UseChatModeReturn {
   chatMode: ChatMode;
@@ -26,15 +9,9 @@ interface UseChatModeReturn {
   selectedAgent: Agent | null;
   setSelectedAgent: (agent: Agent | null) => void;
   initializeWithModels: (models: any[]) => void;
+  initializeWithAgents: (agents: Agent[]) => void; // 新增：智能体初始化方法
   setModeFromConversation: (conversation: any, agents: Agent[]) => void;
 }
-
-const STORAGE_KEYS = {
-  CHAT_MODE: 'chat-mode',
-  SELECTED_MODEL: 'selected-model',
-  SELECTED_AGENT: 'selected-agent-id',
-  LAST_USED_MODEL: 'last-used-model', // 新增：记录最后使用的模型
-};
 
 export function useChatMode(): UseChatModeReturn {
   // 🎯 聊天模式状态
@@ -139,26 +116,19 @@ export function useChatMode(): UseChatModeReturn {
   // 🔧 模式切换时的逻辑处理
   useEffect(() => {
     if (chatMode === 'model') {
-      // 🔥 修复：只有在明确切换到模型模式时才清除Agent选择
-      // 避免在页面初始化时误清除已恢复的智能体状态
       const savedChatMode = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.CHAT_MODE) : null;
       
-      // 如果当前是模型模式，但localStorage中保存的是智能体模式，说明是页面刷新后的初始化
-      // 这种情况下不应该清除智能体选择
       if (savedChatMode === 'agent') {
         console.log('检测到页面刷新后的模式恢复，保持智能体选择状态');
         return;
       }
       
-      // 只有在真正切换到模型模式时才清除Agent选择
       if (selectedAgent) {
         console.log('切换到模型模式，清除智能体选择');
         setSelectedAgent(null);
       }
     } else if (chatMode === 'agent') {
-      // 🔥 切换到智能体模式时，不再依赖模型选择
-      // 智能体模式下完全基于 agent_id 作为优先级
-      // 模型信息由智能体关联的模型提供，不需要单独的模型选择
+
       console.log('切换到智能体模式，优先级基于 agent_id');
     }
   }, [chatMode, selectedAgent, setSelectedAgent]);
@@ -210,6 +180,23 @@ export function useChatMode(): UseChatModeReturn {
     }
   }, [setChatMode, setSelectedAgent, setSelectedModel]);
 
+  // 🤖 智能体初始化方法 - 当智能体数据加载完成后恢复选择状态
+  const initializeWithAgents = useCallback((agents: Agent[]) => {
+    if (agents && agents.length > 0) {
+      const savedAgentId = localStorage.getItem(STORAGE_KEYS.SELECTED_AGENT);
+      if (savedAgentId) {
+        const agentId = parseInt(savedAgentId);
+        const agent = agents.find(a => a.id === agentId);
+        if (agent) {
+          setSelectedAgent(agent);
+        } else {
+          // 如果找不到对应的智能体，清除localStorage中的记录
+          localStorage.removeItem(STORAGE_KEYS.SELECTED_AGENT);
+        }
+      }
+    }
+  }, []);
+
   return {
     chatMode,
     setChatMode,
@@ -218,6 +205,7 @@ export function useChatMode(): UseChatModeReturn {
     selectedAgent,
     setSelectedAgent,
     initializeWithModels,
+    initializeWithAgents, // 新增：返回智能体初始化方法
     setModeFromConversation,
   };
 }

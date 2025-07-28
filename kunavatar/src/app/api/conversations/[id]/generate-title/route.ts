@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbOperations } from '../../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../../lib/database';
 import { withAuth } from '../../../../../lib/middleware/auth';
 import { TitleGenerationService, type TitleSummarySettings } from '../../../chat/services/titleGenerationService';
 
@@ -39,7 +39,17 @@ export const POST = withAuth(async (
     }
 
     // 获取对话的消息（验证用户权限）
-    const messages = dbOperations.getMessagesByConversationIdAndUserId(conversationId, userId);
+    let messages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      console.log('🤖 标题生成API检测到智能体对话，从 agent_messages 表查询消息');
+      messages = agentMessageOperations.getByConversationIdAndUserId(conversationId, userId);
+    } else {
+      // 模型对话：从 messages 表查询
+      console.log('🔧 标题生成API检测到模型对话，从 messages 表查询消息');
+      messages = dbOperations.getMessagesByConversationIdAndUserId(conversationId, userId);
+    }
+    
     if (messages.length < 2) {
       return NextResponse.json(
         { error: '消息数量不足，无法生成标题' },

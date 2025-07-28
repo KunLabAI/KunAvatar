@@ -50,8 +50,17 @@ export const GET = withAuth(async (
       messages = dbOperations.getMessagesByConversationIdAndUserId(conversationId, userId);
     }
 
-    // 获取对话的工具调用记录（验证用户权限）
-    const toolCallRecords = await dbOperations.getToolCallsByConversationIdAndUserId(conversationId, userId);
+    // 获取对话的工具调用记录（根据智能体ID决定从哪个表加载）
+    let toolCallRecords;
+    if (conversation.agent_id) {
+      // 智能体模式：从 agent_messages 表获取工具调用记录
+      console.log(`🎯 从智能体消息表获取对话 ${conversationId} 的工具调用记录 (Agent ID: ${conversation.agent_id})`);
+      toolCallRecords = agentMessageOperations.getToolCallsByConversationIdAndUserId(conversationId, userId);
+    } else {
+      // 模型模式：从 messages 表获取工具调用记录
+      console.log(`🎯 从普通消息表获取对话 ${conversationId} 的工具调用记录`);
+      toolCallRecords = await dbOperations.getToolCallsByConversationIdAndUserId(conversationId, userId);
+    }
 
     // 获取对话中最后使用的模型
     const lastModel = await dbOperations.getLastModelByConversationId(conversationId);

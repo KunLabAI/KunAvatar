@@ -1,5 +1,5 @@
 import { MemoryService } from './memoryService';
-import { dbOperations } from '../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../lib/database';
 import { StreamingChatHandler } from './streamingChatHandler';
 
 /**
@@ -34,8 +34,23 @@ export class BackgroundMemoryService {
         if (shouldTrigger) {
           console.log(`🧠 开始后台生成记忆 - 对话: ${conversationId}, Agent: ${agentId}`);
           
-          // 获取对话消息
-          const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+          // 获取对话消息 - 根据对话类型查询不同的表
+          const conversation = dbOperations.getConversationById(conversationId);
+          if (!conversation) {
+            console.log(`❌ 对话不存在: ${conversationId}`);
+            return;
+          }
+
+          let rawMessages;
+          if (conversation.agent_id) {
+            // 智能体对话：从 agent_messages 表查询
+            console.log('🤖 后台记忆服务检测到智能体对话，从 agent_messages 表查询消息');
+            rawMessages = agentMessageOperations.getByConversationId(conversationId);
+          } else {
+            // 模型对话：从 messages 表查询
+            console.log('🔧 后台记忆服务检测到模型对话，从 messages 表查询消息');
+            rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+          }
           const messages = rawMessages.map(msg => ({
             role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
             content: msg.content
@@ -86,8 +101,23 @@ export class BackgroundMemoryService {
     try {
       console.log(`🧠 强制生成记忆 - 对话: ${conversationId}, Agent: ${agentId}`);
       
-      // 获取对话消息
-      const rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+      // 获取对话消息 - 根据对话类型查询不同的表
+      const conversation = dbOperations.getConversationById(conversationId);
+      if (!conversation) {
+        console.log(`❌ 对话不存在: ${conversationId}`);
+        return false;
+      }
+
+      let rawMessages;
+      if (conversation.agent_id) {
+        // 智能体对话：从 agent_messages 表查询
+        console.log('🤖 强制记忆生成检测到智能体对话，从 agent_messages 表查询消息');
+        rawMessages = agentMessageOperations.getByConversationId(conversationId);
+      } else {
+        // 模型对话：从 messages 表查询
+        console.log('🔧 强制记忆生成检测到模型对话，从 messages 表查询消息');
+        rawMessages = dbOperations.getMessagesByConversationId(conversationId);
+      }
       const messages = rawMessages.map(msg => ({
         role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
         content: msg.content

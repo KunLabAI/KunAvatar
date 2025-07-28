@@ -1,5 +1,5 @@
 import { ollamaClient, ChatMessage } from '../../../../lib/ollama';
-import { dbOperations } from '../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../lib/database';
 import { memoryOperations } from '../../../../lib/database/memories';
 import { agentOperations } from '../../../../lib/database/agents';
 import { userSettingOperations } from '../../../../lib/database/user-settings';
@@ -72,8 +72,24 @@ export class MemoryService {
       return false;
     }
 
-    // 3. 检查触发条件
-    const allMessages = dbOperations.getMessagesByConversationId(conversationId);
+    // 3. 检查触发条件 - 根据对话类型查询不同的表
+    const conversation = dbOperations.getConversationById(conversationId);
+    if (!conversation) {
+      console.log(`❌ 对话不存在: ${conversationId}`);
+      return false;
+    }
+
+    let allMessages;
+    if (conversation.agent_id) {
+      // 智能体对话：从 agent_messages 表查询
+      console.log('🤖 记忆系统检测到智能体对话，从 agent_messages 表查询消息');
+      allMessages = agentMessageOperations.getByConversationId(conversationId);
+    } else {
+      // 模型对话：从 messages 表查询
+      console.log('🔧 记忆系统检测到模型对话，从 messages 表查询消息');
+      allMessages = dbOperations.getMessagesByConversationId(conversationId);
+    }
+
     const userAssistantMessages = allMessages.filter(msg => 
       msg.role === 'user' || msg.role === 'assistant'
     );

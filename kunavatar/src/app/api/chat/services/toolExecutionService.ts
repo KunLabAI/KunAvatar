@@ -46,7 +46,9 @@ export class ToolExecutionService {
     conversationId: string | undefined,
     model: string,
     userId: string,
-    streamController: StreamController
+    streamController: StreamController,
+    agentId?: number,
+    isAgentMode: boolean = false
   ): Promise<ToolCallResult[]> {
     const results: ToolCallResult[] = [];
 
@@ -67,7 +69,7 @@ export class ToolExecutionService {
         
         // 创建工具调用消息记录
         if (conversationId) {
-          currentToolCallMessageId = this.createToolCallMessage(conversationId, toolCall.function.name, args, userId);
+          currentToolCallMessageId = this.createToolCallMessage(conversationId, toolCall.function.name, args, userId, agentId, isAgentMode);
         }
 
         // 执行工具调用
@@ -80,7 +82,7 @@ export class ToolExecutionService {
 
         // 更新工具调用消息状态
         if (conversationId && currentToolCallMessageId) {
-          this.updateToolCallMessage(currentToolCallMessageId, result, executionTime);
+          this.updateToolCallMessage(currentToolCallMessageId, result, executionTime, isAgentMode);
         }
         
         // 发送工具调用完成状态
@@ -103,7 +105,7 @@ export class ToolExecutionService {
 
         // 更新工具调用消息状态为错误
         if (conversationId && currentToolCallMessageId) {
-          this.updateToolCallMessageError(currentToolCallMessageId, executionTime, errorMessage);
+          this.updateToolCallMessageError(currentToolCallMessageId, executionTime, errorMessage, isAgentMode);
         }
         
         // 发送工具调用错误状态
@@ -132,7 +134,9 @@ export class ToolExecutionService {
     userSelectedTools: Tool[],
     conversationId: string | undefined,
     model: string,
-    userId: string
+    userId: string,
+    agentId?: number,
+    isAgentMode: boolean = false
   ): Promise<{ messages: ChatMessage[], results: ToolCallResult[] }> {
     const results: ToolCallResult[] = [];
     const newMessages: ChatMessage[] = [];
@@ -146,13 +150,29 @@ export class ToolExecutionService {
         
         // 保存工具调用消息到数据库
         if (conversationId) {
-          toolCallMessageId = dbOperations.createMessage({
-            conversation_id: conversationId,
-            role: 'assistant' as const,
-            content: `调用工具: ${toolCall.function.name}\n参数: ${JSON.stringify(args, null, 2)}`,
-            model: model,
-            user_id: userId
-          });
+          if (isAgentMode && agentId) {
+            // 智能体模式：使用 agent_messages 表
+            const { agentMessageOperations } = require('../../../../lib/database');
+            toolCallMessageId = agentMessageOperations.create({
+              conversation_id: conversationId,
+              role: 'assistant' as const,
+              content: `调用工具: ${toolCall.function.name}\n参数: ${JSON.stringify(args, null, 2)}`,
+              agent_id: agentId,
+              user_id: userId,
+              tool_name: toolCall.function.name,
+              tool_args: JSON.stringify(args),
+              tool_status: 'executing'
+            });
+          } else {
+            // 模型模式：使用 messages 表
+            toolCallMessageId = dbOperations.createMessage({
+              conversation_id: conversationId,
+              role: 'assistant' as const,
+              content: `调用工具: ${toolCall.function.name}\n参数: ${JSON.stringify(args, null, 2)}`,
+              model: model,
+              user_id: userId
+            });
+          }
         }
         
         // 执行工具调用
@@ -165,14 +185,31 @@ export class ToolExecutionService {
         
         // 保存工具结果消息到数据库
         if (conversationId) {
-          dbOperations.createMessage({
-            conversation_id: conversationId,
-            role: 'tool' as const,
-            content: result,
-            model: model,
-            user_id: userId,
-            tool_name: toolCall.function.name
-          });
+          if (isAgentMode && agentId) {
+            // 智能体模式：使用 agent_messages 表
+            const { agentMessageOperations } = require('../../../../lib/database');
+            agentMessageOperations.create({
+              conversation_id: conversationId,
+              role: 'tool' as const,
+              content: result,
+              agent_id: agentId,
+              user_id: userId,
+              tool_name: toolCall.function.name,
+              tool_result: result,
+              tool_status: 'completed',
+              tool_execution_time: executionTime
+            });
+          } else {
+            // 模型模式：使用 messages 表
+            dbOperations.createMessage({
+              conversation_id: conversationId,
+              role: 'tool' as const,
+              content: result,
+              model: model,
+              user_id: userId,
+              tool_name: toolCall.function.name
+            });
+          }
         }
         
         // 添加工具调用和结果到消息历史
@@ -208,14 +245,31 @@ export class ToolExecutionService {
           const args = this.parseToolArguments(toolCall.function.arguments);
           
           // 保存错误结果消息
-          dbOperations.createMessage({
-            conversation_id: conversationId,
-            role: 'tool' as const,
-            content: `工具执行失败: ${errorMessage}`,
-            model: model,
-            user_id: userId,
-            tool_name: toolCall.function.name
-          });
+          if (isAgentMode && agentId) {
+            // 智能体模式：使用 agent_messages 表
+            const { agentMessageOperations } = require('../../../../lib/database');
+            agentMessageOperations.create({
+              conversation_id: conversationId,
+              role: 'tool' as const,
+              content: `工具执行失败: ${errorMessage}`,
+              agent_id: agentId,
+              user_id: userId,
+              tool_name: toolCall.function.name,
+              tool_result: JSON.stringify({ error: errorMessage }),
+              tool_status: 'error',
+              tool_execution_time: executionTime
+            });
+          } else {
+            // 模型模式：使用 messages 表
+            dbOperations.createMessage({
+              conversation_id: conversationId,
+              role: 'tool' as const,
+              content: `工具执行失败: ${errorMessage}`,
+              model: model,
+              user_id: userId,
+              tool_name: toolCall.function.name
+            });
+          }
         }
         
         results.push({
@@ -255,15 +309,38 @@ export class ToolExecutionService {
   /**
    * 创建工具调用消息记录
    */
-  private static createToolCallMessage(conversationId: string, toolName: string, args: any, userId: string): number | null {
+  private static createToolCallMessage(
+    conversationId: string, 
+    toolName: string, 
+    args: any, 
+    userId: string,
+    agentId?: number,
+    isAgentMode: boolean = false
+  ): number | null {
     try {
-      return messageOperations.createToolCall({
-        conversation_id: conversationId,
-        user_id: userId,
-        tool_name: toolName,
-        tool_args: args,
-        tool_status: 'executing'
-      });
+      if (isAgentMode && agentId) {
+        // 智能体模式：使用 agent_messages 表
+        const { agentMessageOperations } = require('../../../../lib/database');
+        return agentMessageOperations.create({
+          conversation_id: conversationId,
+          role: 'tool' as const,
+          content: `调用工具: ${toolName}`,
+          agent_id: agentId,
+          user_id: userId,
+          tool_name: toolName,
+          tool_args: JSON.stringify(args),
+          tool_status: 'executing'
+        });
+      } else {
+        // 模型模式：使用 messages 表
+        return messageOperations.createToolCall({
+          conversation_id: conversationId,
+          user_id: userId,
+          tool_name: toolName,
+          tool_args: args,
+          tool_status: 'executing'
+        });
+      }
     } catch (dbError) {
       console.error('创建工具调用消息失败:', dbError);
       return null;
@@ -273,16 +350,33 @@ export class ToolExecutionService {
   /**
    * 更新工具调用消息状态（成功）
    */
-  private static updateToolCallMessage(messageId: number, result: string, executionTime: number): void {
+  private static updateToolCallMessage(
+    messageId: number, 
+    result: string, 
+    executionTime: number,
+    isAgentMode: boolean = false
+  ): void {
     try {
-      const updateToolCall = db.prepare(`
-        UPDATE messages SET
-          tool_result = ?,
-          tool_status = 'completed',
-          tool_execution_time = ?
-        WHERE id = ?
-      `);
-      updateToolCall.run(JSON.stringify(result), executionTime, messageId);
+      if (isAgentMode) {
+        // 智能体模式：使用 agent_messages 表
+        const { agentMessageOperations } = require('../../../../lib/database');
+        agentMessageOperations.update(messageId, {
+          content: `工具执行完成: ${JSON.stringify(result)}`,
+          tool_result: JSON.stringify(result),
+          tool_status: 'completed',
+          tool_execution_time: executionTime
+        });
+      } else {
+        // 模型模式：使用 messages 表
+        const updateToolCall = db.prepare(`
+          UPDATE messages SET
+            tool_result = ?,
+            tool_status = 'completed',
+            tool_execution_time = ?
+          WHERE id = ?
+        `);
+        updateToolCall.run(JSON.stringify(result), executionTime, messageId);
+      }
     } catch (dbError) {
       console.error('更新工具调用状态失败:', dbError);
     }
@@ -291,16 +385,33 @@ export class ToolExecutionService {
   /**
    * 更新工具调用消息状态（错误）
    */
-  private static updateToolCallMessageError(messageId: number, executionTime: number, errorMessage: string): void {
+  private static updateToolCallMessageError(
+    messageId: number, 
+    executionTime: number, 
+    errorMessage: string,
+    isAgentMode: boolean = false
+  ): void {
     try {
-      const updateToolCall = db.prepare(`
-        UPDATE messages SET
-          tool_status = 'error',
-          tool_execution_time = ?,
-          tool_error = ?
-        WHERE id = ?
-      `);
-      updateToolCall.run(executionTime, errorMessage, messageId);
+      if (isAgentMode) {
+        // 智能体模式：使用 agent_messages 表
+        const { agentMessageOperations } = require('../../../../lib/database');
+        agentMessageOperations.update(messageId, {
+          content: `工具执行失败: ${errorMessage}`,
+          tool_result: JSON.stringify({ error: errorMessage }),
+          tool_status: 'error',
+          tool_execution_time: executionTime
+        });
+      } else {
+        // 模型模式：使用 messages 表
+        const updateToolCall = db.prepare(`
+          UPDATE messages SET
+            tool_status = 'error',
+            tool_execution_time = ?,
+            tool_error = ?
+          WHERE id = ?
+        `);
+        updateToolCall.run(executionTime, errorMessage, messageId);
+      }
     } catch (dbError) {
       console.error('更新工具调用错误状态失败:', dbError);
     }
