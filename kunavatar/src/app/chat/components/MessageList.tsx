@@ -374,7 +374,7 @@ function MessageItem({
               </div>
             ) : (isStreaming ? (
               <div className="flex items-center space-x-1">
-                <div className="animate-pulse">思考中</div>
+                <div className="animate-pulse">loading</div>
                 <div className="flex space-x-1">
                   <div className="w-1 h-1 bg-current rounded-full animate-bounce"></div>
                   <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>

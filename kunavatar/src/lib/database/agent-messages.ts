@@ -37,6 +37,11 @@ export const agentMessageQueries = {
     DELETE FROM agent_messages WHERE id = ?
   `),
 
+  // 删除单个智能体消息（需要用户权限验证）
+  deleteByIdAndUserId: db.prepare(`
+    DELETE FROM agent_messages WHERE id = ? AND user_id = ?
+  `),
+
   // 获取智能体消息的工具调用记录（需要用户权限验证）
   getToolCallsByConversationIdAndUserId: db.prepare(`
     SELECT
@@ -146,6 +151,12 @@ export class AgentMessageOperations {
   // 删除单个智能体消息
   deleteById(messageId: number): void {
     agentMessageQueries.deleteById.run(messageId);
+  }
+
+  // 删除单个智能体消息（需要用户权限验证）
+  deleteByIdAndUserId(messageId: string, userId: string): boolean {
+    const result = agentMessageQueries.deleteByIdAndUserId.run(messageId, userId);
+    return result.changes > 0;
   }
 
   // 创建工具调用消息

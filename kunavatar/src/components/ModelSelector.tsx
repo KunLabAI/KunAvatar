@@ -107,6 +107,36 @@ export function ModelSelector({
 
       {isDropdownOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card border border-theme-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto scrollbar-thin">
+          {/* 请选择模型选项 */}
+          <button
+            onClick={() => {
+              onModelChange('');
+              setIsDropdownOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-theme-card-hover transition-colors duration-200 ${
+              !selectedModel ? 'bg-theme-background-secondary' : ''
+            }`}
+          >
+            <div className="w-5 h-5 bg-theme-background-secondary rounded-md border border-theme-border flex-shrink-0 flex items-center justify-center">
+              <Brain className="w-4 h-4 text-theme-foreground-muted" />
+            </div>
+            
+            <span className="flex-1 truncate text-theme-foreground-muted">
+              请选择模型
+            </span>
+            
+            {!selectedModel && (
+              <svg className="w-4 h-4 text-theme-primary" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+          
+          {/* 分隔线 */}
+          {models.length > 0 && (
+            <div className="border-t border-theme-border my-1"></div>
+          )}
+          
           {models.length > 0 ? models.map((model) => {
             const displayInfo = getModelDisplayInfo(model);
             const isSelected = model.name === selectedModel;

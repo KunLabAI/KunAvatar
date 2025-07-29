@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
-import { PromptOptimizePanel } from './PromptOptimizePanel';
 import { ToolPanel } from './ToolPanel';
 import { MemoryPanel } from './MemoryPanel';
 import { Tool } from '@/lib/ollama';
@@ -16,10 +15,8 @@ interface ToolSettingsProps {
   // 面板状态
   showToolPanel?: boolean;
   showMemoryPanel?: boolean;
-  showPromptOptimizePanel?: boolean;
   onToggleToolPanel?: () => void;
   onToggleMemoryPanel?: () => void;
-  onTogglePromptOptimizePanel?: () => void;
   
   // 其他功能
   onInsertText: (text: string) => void;
@@ -34,10 +31,8 @@ export function ToolSettings({
   onToolSelection,
   showToolPanel = false,
   showMemoryPanel = false,
-  showPromptOptimizePanel = false,
   onToggleToolPanel,
   onToggleMemoryPanel,
-  onTogglePromptOptimizePanel,
   onInsertText,
   conversationId,
   selectedAgentId,
@@ -51,13 +46,10 @@ export function ToolSettings({
     if (showMemoryPanel && onToggleMemoryPanel) {
       onToggleMemoryPanel();
     }
-    if (showPromptOptimizePanel && onTogglePromptOptimizePanel) {
-      onTogglePromptOptimizePanel();
-    }
-  }, [showToolPanel, showMemoryPanel, showPromptOptimizePanel, onToggleToolPanel, onToggleMemoryPanel, onTogglePromptOptimizePanel]);
+  }, [showToolPanel, showMemoryPanel, onToggleToolPanel, onToggleMemoryPanel]);
 
   useEffect(() => {
-    const hasOpenPanel = showToolPanel || showMemoryPanel || showPromptOptimizePanel;
+    const hasOpenPanel = showToolPanel || showMemoryPanel;
     if (!hasOpenPanel) return;
     
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -74,10 +66,10 @@ export function ToolSettings({
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [showToolPanel, showMemoryPanel, showPromptOptimizePanel, handleEscClose]);
+  }, [showToolPanel, showMemoryPanel, handleEscClose]);
 
   // 检查是否有面板打开
-  const hasOpenPanel = showToolPanel || showMemoryPanel || showPromptOptimizePanel;
+  const hasOpenPanel = showToolPanel || showMemoryPanel;
 
   if (!hasOpenPanel) {
     return null;
@@ -88,16 +80,6 @@ export function ToolSettings({
       <div className="max-w-4xl mx-auto px-4 pb-4">
         {/* 面板容器 - 统一布局在输入组件上方，适配输入组件宽度 */}
         <div className="space-y-4">
-          {/* 提示词优化面板 */}
-          {showPromptOptimizePanel && (
-            <div className="w-full">
-              <PromptOptimizePanel
-                onInsertText={onInsertText}
-                onToggle={onTogglePromptOptimizePanel || (() => {})}
-              />
-            </div>
-          )}
-          
           {/* 工具设置面板 */}
           {showToolPanel && enableTools && (
             <div className="w-full">
