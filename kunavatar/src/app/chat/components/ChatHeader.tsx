@@ -52,7 +52,7 @@ interface Model {
 interface ChatHeaderProps {
   currentConversation?: any;
   chatMode: ChatMode;
-  onModeChange: (mode: ChatMode) => void;
+  onModeChange: (mode: ChatMode, isUserAction?: boolean) => void;
   models: Model[];
   selectedModel: string;
   onModelChange: (model: string) => void;
@@ -160,7 +160,8 @@ export function ChatHeader({
       console.log('🚫 当前处于智能体模式，无法切换到模型模式');
       return;
     }
-    onModeChange(mode);
+    // 传递 isUserAction=true 表示这是用户手动切换
+    onModeChange(mode, true);
   };
 
   return (

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbOperations } from '../../../../lib/database';
+import { dbOperations, agentMessageOperations } from '../../../../lib/database';
 import { withAuth } from '../../../../lib/middleware/auth';
 
 // 删除单个消息
@@ -32,8 +32,16 @@ export const DELETE = withAuth(async (request, { params }) => {
       );
     }
 
-    // 删除消息（只能删除自己的消息）
-    const deleted = dbOperations.deleteMessageByIdAndUserId(numericMessageId.toString(), userId);
+    // 尝试从两个表中删除消息（只能删除自己的消息）
+    // 先尝试从普通消息表删除
+    let deleted = dbOperations.deleteMessageByIdAndUserId(numericMessageId.toString(), userId);
+    let messageType = 'normal';
+
+    // 如果普通消息表中没有找到，尝试从智能体消息表删除
+    if (!deleted) {
+      deleted = agentMessageOperations.deleteByIdAndUserId(numericMessageId.toString(), userId);
+      messageType = 'agent';
+    }
 
     if (!deleted) {
       return NextResponse.json(
@@ -42,9 +50,12 @@ export const DELETE = withAuth(async (request, { params }) => {
       );
     }
 
+    console.log(`成功删除${messageType === 'agent' ? '智能体' : '普通'}消息，ID: ${messageId}`);
+
     return NextResponse.json({
       success: true,
-      message: '消息删除成功'
+      message: '消息删除成功',
+      messageType
     });
 
   } catch (error) {

@@ -48,13 +48,11 @@ interface MessageInputProps {
   onClearChat?: () => void;
   onInsertText?: (text: string) => void;
   
-  // 面板状态管理
+  // 面板状态管理（移除提示词优化面板相关）
   showToolPanel?: boolean;
   showMemoryPanel?: boolean;  
-  showPromptOptimizePanel?: boolean;
   onToggleToolPanel?: () => void;
   onToggleMemoryPanel?: () => void;
-  onTogglePromptOptimizePanel?: () => void;
   
   // 模型工具支持检测
   isCheckingModel?: boolean;
@@ -80,13 +78,11 @@ export function MessageInput({
   onClearChat,
   onInsertText,
   
-  // 面板状态管理
+  // 面板状态管理（移除提示词优化面板相关）
   showToolPanel = false,
   showMemoryPanel = false,
-  showPromptOptimizePanel = false,
   onToggleToolPanel,
   onToggleMemoryPanel,
-  onTogglePromptOptimizePanel,
   
   // 模型工具支持检测
   isCheckingModel = false,
@@ -289,9 +285,9 @@ export function MessageInput({
             {/* 左侧：提示词优化控件 */}
             <div className="flex-shrink-0 p-3 overflow-visible">
               <PromptOptimizeControl
-                onInsertText={handleInsertText}
-                isOpen={showPromptOptimizePanel}
-                onToggle={onTogglePromptOptimizePanel}
+                currentText={message}
+                onTextChange={setMessage}
+                disabled={disabled || !hasSelection}
               />
             </div>
             

@@ -56,16 +56,16 @@ function ChatPageContent() {
   } = useConversations();
   
   // 🔄 模式管理
-  const {
-    chatMode,
-    setChatMode,
-    selectedModel,
-    setSelectedModel,
-    selectedAgent,
+  const { 
+    chatMode, 
+    setChatMode, 
+    selectedModel, 
+    setSelectedModel, 
+    selectedAgent, 
     setSelectedAgent,
-    initializeWithModels,
-    initializeWithAgents,
-    setModeFromConversation
+    restoreModeFromConversation,
+    isRestoringFromHistory,
+    isUserModeChange,
   } = useChatMode();
 
   // 🗨️ 当前对话状态
@@ -81,7 +81,6 @@ function ChatPageContent() {
   // 🎛️ 面板状态管理
   const [showToolPanel, setShowToolPanel] = useState(false);
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
-  const [showPromptOptimizePanel, setShowPromptOptimizePanel] = useState(false);
 
   // 🔧 工具状态管理
   const [enableTools, setEnableTools] = useState(false);
@@ -161,42 +160,12 @@ function ChatPageContent() {
     }
   }, [shouldResetTools, enableTools, clearResetFlag]);
 
-  // 🚀 初始化模型选择 - 当模型数据加载完成后自动选择
+  // 🚀 模型数据加载完成后的处理
   useEffect(() => {
     if (models && models.length > 0 && !modelsLoading) {
-      console.log('模型数据已加载，开始初始化模型选择:', models.length, '个模型');
-      initializeWithModels(models);
+      console.log('✅ 模型数据加载完成，等待用户手动选择模型');
     }
-  }, [models, modelsLoading, initializeWithModels]);
-
-  // 🤖 初始化智能体选择 - 当智能体数据加载完成后恢复选择状态
-  useEffect(() => {
-    if (agents && agents.length > 0 && !agentsLoading) {
-      initializeWithAgents(agents);
-    }
-  }, [agents, agentsLoading, initializeWithAgents]);
-
-  // 🔧 智能体选择时自动设置工具 - 新增逻辑
-  useEffect(() => {
-    if (selectedAgent && chatMode === 'agent') {
-      console.log(`🤖 智能体 "${selectedAgent.name}" 已选择，自动设置工具:`, selectedAgent.tools);
-      
-      // 如果智能体有工具，自动启用工具功能并设置工具列表
-      if (selectedAgent.tools && selectedAgent.tools.length > 0) {
-        setEnableTools(true);
-        setSelectedTools(selectedAgent.tools.map(t => t.name));
-        console.log(`✅ 已为智能体 "${selectedAgent.name}" 启用 ${selectedAgent.tools.length} 个工具:`, selectedAgent.tools.map(t => t.name));
-      } else {
-        // 如果智能体没有工具，禁用工具功能
-        setEnableTools(false);
-        setSelectedTools([]);
-        console.log(`ℹ️ 智能体 "${selectedAgent.name}" 没有配置工具，已禁用工具功能`);
-      }
-    } else if (chatMode === 'model') {
-      // 切换到模型模式时，保持当前的工具设置不变
-      console.log('🔄 切换到模型模式，保持当前工具设置');
-    }
-  }, [selectedAgent, chatMode]);
+  }, [models, modelsLoading]);
 
   // 🔄 智能模式切换时清空消息 - 精确逻辑
   useEffect(() => {
@@ -215,6 +184,12 @@ function ChatPageContent() {
     
     // 判断是否需要清空消息和重置对话
     const shouldResetConversation = (() => {
+      // 如果是从历史恢复模式，不进行重置
+      if (isRestoringFromHistory) {
+        console.log('检测到从历史恢复模式，跳过对话重置');
+        return false;
+      }
+      
       // 如果是初始加载状态，不进行重置
       if (isInitialLoad) {
         console.log('检测到初始加载状态，跳过对话重置');
@@ -256,11 +231,18 @@ function ChatPageContent() {
       const newUrl = '/chat';
       window.history.replaceState(null, '', newUrl);
       console.log('已重置对话状态，下次发送消息时将创建新对话');
+      
+      // 🔥 新增：清除URL参数，防止重新加载历史
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('id');
+        window.history.replaceState(null, '', url.pathname);
+      }
     }
     
     // 更新上一次的状态
     prevStateRef.current = currentState;
-  }, [chatMode, selectedAgent?.id, currentConversationId]); // 🔥 修复：移除messageSender.clearMessages依赖项
+  }, [chatMode, selectedAgent?.id, currentConversationId, isRestoringFromHistory, isUserModeChange]); // 添加isUserModeChange依赖
 
 
 
@@ -279,18 +261,20 @@ function ChatPageContent() {
           const isNewConversation = conversation.created_at === conversation.updated_at;
           
           if (isNewConversation) {
-            console.log('🆕 检测到新对话，只设置模式，不加载历史消息:', currentConversationId);
-            // 对于新对话，只设置模式，不加载历史消息
-            if (agents && agents.length > 0) {
-              setModeFromConversation(conversation, agents);
-            }
+            console.log('🆕 检测到新对话，不自动设置模式，保持用户选择:', currentConversationId);
+            // 对于新对话，不再自动设置模式，保持用户的选择
           } else {
             console.log('🔄 开始加载已有对话的历史消息:', currentConversationId);
             // 只有已有消息的对话才加载历史
             messageSender.loadConversationHistory(currentConversationId).then(result => {
-              if (result?.conversation && agents && agents.length > 0) {
-                console.log('🔄 加载对话历史完成，自动设置模式:', result.conversation);
-                setModeFromConversation(result.conversation, agents);
+              if (result?.conversation) {
+                console.log('🔄 加载对话历史完成，恢复对话模式:', result.conversation);
+                // 从对话历史恢复模式和选择
+                if (agents && agents.length > 0) {
+                  restoreModeFromConversation(result.conversation, agents);
+                } else {
+                  console.warn('⚠️ 智能体数据未加载，无法恢复智能体模式');
+                }
               }
             }).catch(error => {
               console.error('加载对话历史失败:', error);
@@ -306,7 +290,7 @@ function ChatPageContent() {
         }
       }
     }
-  }, [currentConversationId, conversations, setModeFromConversation, agents]); // 🔥 简化：移除不必要的依赖项
+  }, [currentConversationId, conversations, restoreModeFromConversation, agents]); // 添加restoreModeFromConversation和agents依赖
 
   // 💾 持久化当前对话ID到localStorage
   useEffect(() => {
@@ -330,8 +314,15 @@ function ChatPageContent() {
 
   // 🔗 处理URL参数 - 优化依赖项避免无限循环
   useEffect(() => {
+    // 🔥 新增：如果用户刚刚手动切换了模式，跳过URL参数处理，避免重新加载对话
+    if (isUserModeChange) {
+      console.log('🔒 用户刚刚手动切换模式，跳过URL参数处理');
+      return;
+    }
+    
     const conversationId = searchParams.get('id');
     const isNew = searchParams.get('new') === 'true';
+    const modelParam = searchParams.get('model');
 
     if (conversationId) {
       // 加载指定对话，但要验证对话是否有效
@@ -364,10 +355,30 @@ function ChatPageContent() {
       console.log('准备创建新对话，清空消息历史');
       setCurrentConversationId(null);
       messageSender.clearMessages(); // 🔥 新增：清空消息历史
+      
+      // 🔥 新增：处理URL中的model参数
+      if (modelParam && models && models.length > 0) {
+        const decodedModel = decodeURIComponent(modelParam);
+        console.log('从URL参数指定模型:', decodedModel);
+        
+        // 验证模型是否存在
+        const modelExists = models.some(m => m.base_model === decodedModel);
+        if (modelExists) {
+          console.log('✅ 模型有效，切换到模型模式并选择模型:', decodedModel);
+          // 强制切换到模型模式
+          setChatMode('model', true); // 标记为用户操作，避免被自动逻辑覆盖
+          // 选择指定的模型
+          setSelectedModel(decodedModel);
+          // 清除智能体选择
+          setSelectedAgent(null);
+        } else {
+          console.warn('⚠️ URL中指定的模型不存在:', decodedModel);
+        }
+      }
     }
     // 🔥 修复：移除else分支，避免在没有URL参数时清空已恢复的对话ID
     // 这样页面刷新后能保持之前的对话状态
-  }, [searchParams, conversations, currentConversationId]); // 🔥 关键修复：添加currentConversationId依赖项用于比较
+  }, [searchParams, conversations, currentConversationId, models, setChatMode, setSelectedModel, setSelectedAgent, isUserModeChange]); // 🔥 关键修复：添加isUserModeChange依赖项
 
   // 🤖 处理智能体URL参数 - 单独的useEffect避免循环依赖
   useEffect(() => {
@@ -386,16 +397,11 @@ function ChatPageContent() {
         setSelectedAgent(targetAgent);
         // 设置智能体对应的模型
         setSelectedModel(targetAgent.model.base_model);
-        // 如果智能体有工具，自动启用工具功能
-        if (targetAgent.tools && targetAgent.tools.length > 0) {
-          setEnableTools(true);
-          setSelectedTools(targetAgent.tools.map(t => t.name));
-        }
       } else {
         console.warn('未找到指定的智能体，ID:', agentId);
       }
     }
-  }, [searchParams, agents, setChatMode, setSelectedAgent, setSelectedModel, setEnableTools, setSelectedTools]);
+  }, [searchParams, agents, setChatMode, setSelectedAgent, setSelectedModel]);
 
   // 🆕 创建新对话（业务逻辑层）
   const handleCreateNewConversation = async (): Promise<string | null> => {
@@ -456,6 +462,33 @@ function ChatPageContent() {
   useEffect(() => {
     loadTools();
   }, []);
+
+  // 🤖 智能体切换时自动选择关联的工具
+  useEffect(() => {
+    if (chatMode === 'agent' && selectedAgent && selectedAgent.tools) {
+      // 获取智能体关联的工具名称
+      const agentToolNames = selectedAgent.tools.map(tool => tool.name);
+      console.log('智能体关联的工具:', agentToolNames);
+      
+      // 自动选择智能体的工具
+      if (agentToolNames.length > 0) {
+        setSelectedTools(agentToolNames);
+        setEnableTools(true); // 自动启用工具功能
+        console.log('✅ 已自动选择智能体的工具:', agentToolNames);
+        console.log('✅ 已自动启用工具功能');
+      } else {
+        // 如果智能体没有关联工具，清空选择
+        setSelectedTools([]);
+        setEnableTools(false); // 没有工具时禁用工具功能
+        console.log('智能体没有关联工具，清空工具选择并禁用工具功能');
+      }
+    } else if (chatMode === 'model') {
+      // 切换到模型模式时，清空工具选择（让用户手动选择）
+      setSelectedTools([]);
+      setEnableTools(false); // 模型模式下默认禁用工具功能
+      console.log('切换到模型模式，清空工具选择并禁用工具功能');
+    }
+  }, [chatMode, selectedAgent]);
 
   // 🔧 工具相关处理函数（使用新Hook）
   const handleToolsToggle = useCallback(async () => {
@@ -519,7 +552,6 @@ function ChatPageContent() {
       if (newValue) {
         // 如果要打开工具面板，关闭其他面板
         setShowMemoryPanel(false);
-        setShowPromptOptimizePanel(false);
       }
       return newValue;
     });
@@ -531,19 +563,6 @@ function ChatPageContent() {
       if (newValue) {
         // 如果要打开记忆面板，关闭其他面板
         setShowToolPanel(false);
-        setShowPromptOptimizePanel(false);
-      }
-      return newValue;
-    });
-  }, []);
-
-  const handleTogglePromptOptimizePanel = useCallback(() => {
-    setShowPromptOptimizePanel(prev => {
-      const newValue = !prev;
-      if (newValue) {
-        // 如果要打开提示词优化面板，关闭其他面板
-        setShowToolPanel(false);
-        setShowMemoryPanel(false);
       }
       return newValue;
     });
@@ -663,10 +682,8 @@ function ChatPageContent() {
             // 面板状态管理
             showToolPanel={showToolPanel}
             showMemoryPanel={showMemoryPanel}
-            showPromptOptimizePanel={showPromptOptimizePanel}
             onToggleToolPanel={handleToggleToolPanel}
             onToggleMemoryPanel={handleToggleMemoryPanel}
-            onTogglePromptOptimizePanel={handleTogglePromptOptimizePanel}
             
             // 修复的模型工具支持检测
             isCheckingModel={isCheckingModel}
@@ -681,10 +698,8 @@ function ChatPageContent() {
             onToolSelection={handleToolSelection}
             showToolPanel={showToolPanel}
             showMemoryPanel={showMemoryPanel}
-            showPromptOptimizePanel={showPromptOptimizePanel}
             onToggleToolPanel={handleToggleToolPanel}
             onToggleMemoryPanel={handleToggleMemoryPanel}
-            onTogglePromptOptimizePanel={handleTogglePromptOptimizePanel}
             onInsertText={handleInsertText}
             conversationId={currentConversationId}
             selectedAgentId={chatMode === 'agent' ? selectedAgent?.id : undefined}
