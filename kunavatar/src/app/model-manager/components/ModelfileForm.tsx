@@ -41,7 +41,6 @@ export interface ModelfileData {
 const PARAMETER_PRESETS = {
   creative: {
     name: '创意型',
-    description: '更加创造性和多样化的回答',
     temperature: 1.0,
     top_p: 0.9,
     top_k: 40,
@@ -51,7 +50,6 @@ const PARAMETER_PRESETS = {
   },
   balanced: {
     name: '平衡型', 
-    description: '创造性和准确性的平衡',
     temperature: 0.7,
     top_p: 0.9,
     top_k: 40,
@@ -61,7 +59,6 @@ const PARAMETER_PRESETS = {
   },
   precise: {
     name: '精确型',
-    description: '更加准确和一致的回答',
     temperature: 0.3,
     top_p: 0.7,
     top_k: 20,
@@ -498,7 +495,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                           className="p-4 text-left rounded-lg border border-theme-border bg-theme-card hover:bg-theme-card-hover transition-colors duration-200"
                         >
                           <div className="font-medium text-theme-foreground">{preset.name}</div>
-                          <div className="text-sm text-theme-foreground-muted mt-1">{preset.description}</div>
+                          <div className="text-sm text-theme-foreground-muted mt-1"></div>
                         </button>
                       ))}
                     </div>

@@ -43,9 +43,7 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
   
   // 模型工具验证
   const {
-    isValidating,
     validationResult,
-    performValidation,
     clearValidation,
     isModelValidated,
   } = useModelToolValidation({
@@ -149,13 +147,10 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
     }
 
     // 模型工具兼容性验证
-    // 如果有选择工具，且模型未验证过或验证失败，则需要验证
-    if (formData.tool_ids.length > 0 && !isModelValidated()) {
-      const validationResult = await performValidation();
-      if (!validationResult.isValid) {
-        setApiError(validationResult.message || '模型工具配置验证失败');
-        return;
-      }
+    // 如果有选择工具，且模型验证失败，则阻止提交
+    if (formData.tool_ids.length > 0 && validationResult && !validationResult.isValid) {
+      setApiError(validationResult.message || '模型不支持工具调用功能，请选择支持工具的模型或移除工具选择');
+      return;
     }
 
     setIsSaving(true);
@@ -232,10 +227,7 @@ export const useAgentForm = ({ agent, onSave, availableModels }: UseAgentFormPro
     handleSubmit,
     getFieldError,
     // 模型工具验证相关
-    isValidating,
     validationResult,
-    performValidation,
     clearValidation,
-    isModelValidated,
   };
 };

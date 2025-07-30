@@ -32,10 +32,10 @@ export function MemoryControl({
         isDisabled 
           ? "请选择智能体查看记忆" 
           : memoryVisible 
-            ? "隐藏对话记忆" 
-            : "显示对话记忆"
+            ? "关闭对话记忆面板" 
+            : "打开对话记忆面板"
       }
-      enableEscClose={true}
+      enableEscClose={false} // 禁用BaseControlButton的ESC处理，由ToolSettings统一处理
       onEscClose={onToggle}
     >
       <Brain className="w-5 h-5" />

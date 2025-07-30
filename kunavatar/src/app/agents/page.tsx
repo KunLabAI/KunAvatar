@@ -73,11 +73,12 @@ function AgentsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [notification]); // 添加notification依赖项
+  }, [notification]);
 
+  // 组件挂载时加载智能体列表
   useEffect(() => {
     fetchAgents();
-  }, [fetchAgents]);
+  }, []); // 空依赖数组，只在组件挂载时执行一次
 
   const prepareAndOpenModal = async (agent: AgentWithRelations | null) => {
     setSelectedAgent(agent);

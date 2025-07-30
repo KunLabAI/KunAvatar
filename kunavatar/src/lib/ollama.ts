@@ -106,6 +106,7 @@ export interface ChatResponse {
     role: string;
     content: string;
     tool_calls?: ToolCall[];
+    thinking?: string; // 思考模型的思考过程
   };
   done: boolean;
   total_duration?: number;

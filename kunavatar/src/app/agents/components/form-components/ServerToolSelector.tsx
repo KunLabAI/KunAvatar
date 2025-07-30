@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Server, Axe, ChevronDown, ChevronRight } from 'lucide-react';
+import { Server, Axe, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { McpServer, McpTool } from '@/lib/database';
 
 interface ServerToolSelectorProps {
@@ -27,6 +27,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
 }) => {
   // 管理每个服务器的展开状态
   const [expandedServers, setExpandedServers] = useState<Set<number>>(new Set());
+  
   const handleServerToggle = (serverId: number) => {
     if (disabled) return; // 禁用时不响应点击
     
@@ -90,45 +91,80 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
     }
   };
 
+  // 移除单个工具的函数
+  const handleRemoveTool = (toolId: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止事件冒泡
+    if (disabled) return;
+    onToolChange(selectedToolIds.filter(id => id !== toolId));
+  };
+
   return (
     <div className={`space-y-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       {availableServers.map(server => {
         const isServerSelected = selectedServerIds.includes(server.id);
         const isExpanded = expandedServers.has(server.id);
         const serverTools = allAvailableTools.filter(tool => tool.server_id === server.id);
+        const selectedServerTools = serverTools.filter(tool => selectedToolIds.includes(tool.id));
         
         return (
-          <div key={server.id} className="border border-theme-border rounded-lg overflow-hidden">
+          <div key={server.id} className="rounded-lg overflow-hidden">
             {/* 服务器选择 */}
-            <div className={`flex items-center gap-3 p-4 transition-colors ${
+            <div className={`flex items-start gap-3 p-4 transition-colors ${
               isServerSelected
                 ? 'bg-theme-primary/10 border-theme-primary/30'
                 : 'bg-theme-card hover:bg-theme-card-hover'
             }`}>
               {/* Checkbox区域 - 只负责选择服务器和全选工具 */}
-              <label className={`flex items-center gap-3 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+              <label className={`flex items-center gap-3 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} mt-0.5`}>
                 <input
                   type="checkbox"
                   checked={isServerSelected}
                   onChange={() => handleServerToggle(server.id)}
                   disabled={disabled}
-                  className="w-4 h-4 text-theme-primary border-theme-border rounded focus:ring-theme-primary disabled:opacity-50"
+                  className="w-4 h-4 text-theme-primary rounded focus:ring-theme-primary disabled:opacity-50"
                 />
                 <Server className="w-5 h-5 text-theme-foreground-muted" />
               </label>
               
               {/* 服务器信息区域 - 点击展开/收起 */}
-              <div 
-                className={`flex-1 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={() => !disabled && serverTools.length > 0 && toggleServerExpanded(server.id)}
-              >
-                <span className="text-sm font-medium text-theme-foreground">
-                  {server.display_name}
-                </span>
-                {serverTools.length > 0 && (
-                  <p className="text-xs text-theme-foreground-muted mt-1">
-                    包含 {serverTools.length} 个工具
-                  </p>
+              <div className="flex-1 min-w-0">
+                <div 
+                  className={`${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={() => !disabled && serverTools.length > 0 && toggleServerExpanded(server.id)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-theme-foreground">
+                      {server.display_name}
+                    </span>
+                    {serverTools.length > 0 && (
+                      <span className="text-xs text-theme-foreground-muted">
+                        ({serverTools.length} 个工具)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* 选中的工具标签 */}
+                {selectedServerTools.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {selectedServerTools.map(tool => (
+                      <div
+                        key={tool.id}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-theme-primary text-white text-xs rounded-md shadow-sm"
+                      >
+                        <span className="truncate max-w-20">{tool.name}</span>
+                        {!disabled && (
+                          <button
+                            onClick={(e) => handleRemoveTool(tool.id, e)}
+                            className="flex-shrink-0 hover:bg-white/20 rounded-sm p-0.5 transition-colors"
+                            title={`移除工具: ${tool.name}`}
+                          >
+                            <X className="w-3 h-3 text-white" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
               
@@ -137,7 +173,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                 <button
                   onClick={() => !disabled && toggleServerExpanded(server.id)}
                   disabled={disabled}
-                  className="p-1 rounded hover:bg-theme-background-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 rounded hover:bg-theme-background-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-0.5"
                   title={isExpanded ? '收起工具列表' : '展开工具列表'}
                 >
                   {isExpanded ? (
@@ -155,7 +191,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                 <div className="p-3">
                   <div className="flex items-center gap-2 mb-3 text-xs text-theme-foreground-muted">
                     <Axe className="w-3 h-3" />
-                    <span>选择工具 ({selectedToolIds.filter(id => serverTools.some(t => t.id === id)).length}/{serverTools.length})</span>
+                    <span>选择工具 ({selectedServerTools.length}/{serverTools.length})</span>
                   </div>
                   <div className="space-y-2">
                     {serverTools.map(tool => {
@@ -167,7 +203,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                           key={tool.id}
                           className={`flex items-center gap-2 p-2 rounded text-xs transition-colors ${
                             isToolSelected
-                              ? 'bg-theme-primary/5 text-theme-primary'
+                              ? 'bg-theme-primary/5 text-theme-primary '
                               : isToolDisabled
                               ? 'bg-theme-card text-theme-foreground-muted cursor-not-allowed opacity-50'
                               : 'bg-theme-card text-theme-foreground hover:bg-theme-card-hover cursor-pointer'
@@ -178,9 +214,14 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                             checked={isToolSelected}
                             onChange={() => handleToolToggle(tool.id)}
                             disabled={isToolDisabled}
-                            className="w-3 h-3 text-theme-primary border-theme-border rounded focus:ring-theme-primary disabled:opacity-50"
+                            className="w-3 h-3 text-theme-primary rounded focus:ring-theme-primary disabled:opacity-50"
                           />
                           <span className="font-medium">{tool.name}</span>
+                          {tool.description && (
+                            <span className="text-theme-foreground-muted ml-auto truncate">
+                              {tool.description}
+                            </span>
+                          )}
                         </label>
                       );
                     })}

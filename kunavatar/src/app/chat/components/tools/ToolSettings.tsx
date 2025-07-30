@@ -38,8 +38,9 @@ export function ToolSettings({
   selectedAgentId,
 }: ToolSettingsProps) {
 
-  // 全局ESC键监听，关闭所有打开的面板
+  // 全局ESC键监听，只用于关闭面板（不切换）
   const handleEscClose = useCallback(() => {
+    // ESC键只关闭当前打开的面板，不切换
     if (showToolPanel && onToggleToolPanel) {
       onToggleToolPanel();
     }
@@ -60,7 +61,7 @@ export function ToolSettings({
       }
     };
     
-    // 添加全局键盘监听
+    // 添加全局键盘监听，使用capture模式确保优先处理
     document.addEventListener('keydown', handleKeyDown, true);
     
     return () => {

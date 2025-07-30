@@ -299,11 +299,11 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
           const selectedCount = getServerSelectedCount(serverGroup.tools);
           
           return (
-            <div key={serverGroup.name} className="border border-theme-border rounded-lg">
+            <div key={serverGroup.name} className="rounded-lg">
               {/* 服务器头部 */}
               <div
                 onClick={() => toggleServerExpansion(serverGroup.name)}
-                className="flex items-center gap-2 p-3 cursor-pointer hover:bg-theme-card-hover transition-colors rounded-t-lg"
+                className="flex items-center gap-2 p-3 cursor-pointer hover:bg-theme-card-hover transition-colors rounded-lg"
               >
                 {isExpanded ? (
                   <ChevronDown className="w-4 h-4 text-theme-foreground-muted" />
@@ -337,7 +337,7 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
               
               {/* 工具列表 */}
               {isExpanded && (
-                <div className="border-t border-theme-border p-2 space-y-1">
+                <div className=" p-2 space-y-1">
                   {serverGroup.tools.map((tool) => {
                     const isSelected = selectedTools.includes(tool.function.name);
                     return (

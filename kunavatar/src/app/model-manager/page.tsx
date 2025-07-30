@@ -295,10 +295,9 @@ function ModelManagerPageContent() {
     setIsDetailsModalOpen(false);
   };
 
-  // 初始加载 - 只在组件挂载时执行一次
   useEffect(() => {
-    loadModels(false); // 初始加载时不同步Ollama模型，避免错误循环
-  }, [loadModels]);
+    loadModels(false); 
+  }, []); 
 
   // 如果有权限错误，显示权限不足页面
   if (hasPermissionError) {

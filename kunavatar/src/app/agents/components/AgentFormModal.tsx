@@ -36,10 +36,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
     resetForm,
     handleSubmit,
     getFieldError,
-    isValidating,
     validationResult,
-    performValidation,
-    clearValidation,
   } = useAgentForm({ agent, onSave, availableModels });
   
   // 关闭弹窗时的处理
@@ -122,6 +119,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                   <AvatarUpload
                     currentAvatar={formData.avatar}
                     onAvatarChange={(avatar) => setFormData(prev => ({ ...prev, avatar }))}
+                    agentName={formData.name}
                   />
                 </FormInput>
                 
@@ -154,28 +152,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
             </FormSection>
 
             {/* 模型配置 */}
-            <FormSection 
-              title="模型配置"
-              titleAction={
-                <button
-                  type="button"
-                  onClick={performValidation}
-                  disabled={!formData.model_id || isValidating}
-                  className={`btn-base text-sm px-3 py-2 flex items-center gap-2 ${
-                    !formData.model_id || isValidating
-                      ? 'btn-disabled cursor-not-allowed opacity-50'
-                      : 'btn-secondary hover:btn-secondary-hover'
-                  }`}
-                >
-                  {isValidating ? (
-                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <AlertCircle className="w-3 h-3" />
-                  )}
-                  {isValidating ? '检测中...' : '检测工具支持'}
-                </button>
-              }
-            >
+            <FormSection title="模型配置">
               <div className="grid grid-cols-1 gap-6">
                 <FormInput 
                   label="搭载模型" 
@@ -202,7 +179,6 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                     onModelChange={(modelName: string) => {
                       const selectedModel = availableModels.find(m => m.base_model === modelName);
                       setFormData(prev => ({ ...prev, model_id: selectedModel?.id || null }));
-                      clearValidation(); // 清除之前的验证结果
                     }}
                     customModels={availableModels.map(m => ({
                       base_model: m.base_model,
@@ -212,12 +188,12 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                   />
                   
                   {/* 模型工具兼容性验证状态 */}
-                  {validationResult && !isValidating && (
+                  {validationResult && (
                     <div className="mt-3">
-                      <div className={`flex items-start gap-2 p-3 rounded-lg text-sm ${
+                      <div className={`flex items-start gap-2 rounded-lg text-sm ${
                         validationResult.isValid 
-                          ? 'bg-theme-success/10 border border-theme-success/20 text-theme-success'
-                          : 'bg-theme-warning/10 border border-theme-warning/20 text-theme-warning'
+                          ? 'bg-theme-success/10 border-theme-success/20 text-theme-success'
+                          : 'bg-theme-warning/10 border-theme-warning/20 text-theme-warning'
                       }`}>
                         <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <div>
@@ -250,7 +226,6 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                         onClick={() => {
                           setFormData(prev => ({ ...prev, server_ids: [], tool_ids: [] }));
                           setApiError(null);
-                          clearValidation();
                         }}
                         className="flex items-center gap-2 text-theme-error hover:bg-theme-error/10 "
                         title="清除所有选择"
@@ -277,7 +252,6 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                           }
                           setApiError(null);
                           setFormData(prev => ({ ...prev, tool_ids: toolIds }));
-                          clearValidation(); // 清除之前的验证结果
                         }}
                         maxTools={10}
                         disabled={validationResult?.supportsTools === false}
@@ -290,7 +264,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                       )}
                     </div>
                   ) : (
-                    <div className="p-4 bg-theme-background-tertiary border border-theme-border rounded-lg">
+                    <div className="p-4 bg-theme-background-tertiary rounded-lg">
                       <div className="flex items-center gap-2 text-theme-foreground-muted">
                         <AlertCircle className="w-5 h-5" />
                         <p className="text-sm">暂无可用的MCP服务器</p>

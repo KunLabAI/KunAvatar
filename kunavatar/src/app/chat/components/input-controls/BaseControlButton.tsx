@@ -43,7 +43,7 @@ export function BaseControlButton({
   onEscClose,
 }: BaseControlButtonProps) {
   
-  // ESC键监听
+  // ESC键监听 - 只在按钮激活且启用ESC关闭时生效
   useEffect(() => {
     if (!enableEscClose || !active || !onEscClose) return;
     
@@ -55,11 +55,12 @@ export function BaseControlButton({
       }
     };
     
-    // 添加全局键盘监听
-    document.addEventListener('keydown', handleKeyDown, true);
+    // 添加全局键盘监听，使用较低优先级（非capture模式）
+    // 这样ToolSettings的ESC处理会优先执行
+    document.addEventListener('keydown', handleKeyDown, false);
     
     return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('keydown', handleKeyDown, false);
     };
   }, [enableEscClose, active, onEscClose]);
   

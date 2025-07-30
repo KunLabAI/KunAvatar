@@ -102,6 +102,13 @@ export const agentMessageQueries = {
     ORDER BY id DESC
     LIMIT ?
   `),
+
+  // 更新智能体消息
+  update: db.prepare(`
+    UPDATE agent_messages
+    SET content = ?, tool_result = ?, tool_status = ?, tool_execution_time = ?, tool_error = ?
+    WHERE id = ?
+  `),
 };
 
 // 智能体消息数据库操作类
@@ -210,6 +217,24 @@ export class AgentMessageOperations {
   getRecentCount(conversationId: string, limit: number = 50): number {
     const result = agentMessageQueries.getRecentCount.get(conversationId, limit) as { count: number };
     return result.count;
+  }
+
+  // 更新智能体消息
+  update(messageId: number, data: {
+    content?: string;
+    tool_result?: string;
+    tool_status?: string;
+    tool_execution_time?: number;
+    tool_error?: string;
+  }): void {
+    agentMessageQueries.update.run(
+      data.content || null,
+      data.tool_result || null,
+      data.tool_status || null,
+      data.tool_execution_time || null,
+      data.tool_error || null,
+      messageId
+    );
   }
 
   /**

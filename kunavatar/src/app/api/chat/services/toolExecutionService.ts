@@ -319,14 +319,12 @@ export class ToolExecutionService {
   ): number | null {
     try {
       if (isAgentMode && agentId) {
-        // 智能体模式：使用 agent_messages 表
+        // 智能体模式：使用 agent_messages 表的专门方法
         const { agentMessageOperations } = require('../../../../lib/database');
-        return agentMessageOperations.create({
+        return agentMessageOperations.createToolCall({
           conversation_id: conversationId,
-          role: 'tool' as const,
-          content: `调用工具: ${toolName}`,
-          agent_id: agentId,
           user_id: userId,
+          agent_id: agentId,
           tool_name: toolName,
           tool_args: JSON.stringify(args),
           tool_status: 'executing'
@@ -358,14 +356,9 @@ export class ToolExecutionService {
   ): void {
     try {
       if (isAgentMode) {
-        // 智能体模式：使用 agent_messages 表
+        // 智能体模式：使用 agent_messages 表的专门方法
         const { agentMessageOperations } = require('../../../../lib/database');
-        agentMessageOperations.update(messageId, {
-          content: `工具执行完成: ${JSON.stringify(result)}`,
-          tool_result: JSON.stringify(result),
-          tool_status: 'completed',
-          tool_execution_time: executionTime
-        });
+        agentMessageOperations.updateToolCallResult(messageId, JSON.stringify(result), 'completed', executionTime);
       } else {
         // 模型模式：使用 messages 表
         const updateToolCall = db.prepare(`
@@ -393,14 +386,9 @@ export class ToolExecutionService {
   ): void {
     try {
       if (isAgentMode) {
-        // 智能体模式：使用 agent_messages 表
+        // 智能体模式：使用 agent_messages 表的专门方法
         const { agentMessageOperations } = require('../../../../lib/database');
-        agentMessageOperations.update(messageId, {
-          content: `工具执行失败: ${errorMessage}`,
-          tool_result: JSON.stringify({ error: errorMessage }),
-          tool_status: 'error',
-          tool_execution_time: executionTime
-        });
+        agentMessageOperations.updateToolCallResult(messageId, JSON.stringify({ error: errorMessage }), 'error', executionTime, errorMessage);
       } else {
         // 模型模式：使用 messages 表
         const updateToolCall = db.prepare(`

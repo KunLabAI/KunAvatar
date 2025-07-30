@@ -39,7 +39,7 @@ export function ToolControl({
     if (enableTools) {
       // 如果工具已启用，点击切换设置面板
       if (onToggle) {
-        // 使用新的面板管理器
+        // 使用新的面板管理器 - 直接切换面板状态
         onToggle();
       } else if (onShowToolSettings) {
         // 兼容旧的方式
@@ -64,7 +64,7 @@ export function ToolControl({
     }
     if (enableTools) {
       const panelOpen = isOpen !== undefined ? isOpen : showToolSettings;
-      return panelOpen ? '关闭工具设置面板' : '打开工具设置面板';
+      return panelOpen ? '关闭MCP工具面板' : '打开MCP工具面板';
     }
     return '启用MCP工具调用功能';
   };
@@ -101,7 +101,7 @@ export function ToolControl({
       badge={getBadge()}
       statusIndicator={getStatusIndicator()}
       variant="default"
-      enableEscClose={true}
+      enableEscClose={false} // 禁用BaseControlButton的ESC处理，由ToolSettings统一处理
       onEscClose={onToggle}
     >
       <Server className="w-5 h-5" />

@@ -7,11 +7,13 @@ import { Bot, Camera, X } from 'lucide-react';
 interface AvatarUploadProps {
   currentAvatar: string | null;
   onAvatarChange: (avatar: string | null) => void;
+  agentName?: string;
 }
 
 export const AvatarUpload: React.FC<AvatarUploadProps> = ({ 
   currentAvatar, 
-  onAvatarChange 
+  onAvatarChange,
+  agentName 
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -121,7 +123,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   return (
     <div className="flex items-center gap-4">
       <div className="relative">
-        <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center overflow-hidden border-2 border-theme-border">
+        <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center overflow-hidden">
           {previewUrl ? (
             <Image 
               src={previewUrl} 
@@ -134,6 +136,10 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
                 console.log('错误详情:', e);
               }}
             />
+          ) : agentName ? (
+            <span className="text-2xl font-bold text-white">
+              {agentName.charAt(0).toUpperCase()}
+            </span>
           ) : (
             <Bot className="w-10 h-10 text-white" />
           )}
@@ -165,7 +171,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         >
           {isUploading ? (
             <>
-              <div className="w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 bg-theme-primary rounded-full animate-spin" />
               上传中...
             </>
           ) : (

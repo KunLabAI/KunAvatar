@@ -15,6 +15,7 @@ import {
   Brain,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AgentAvatar } from '../../chat/components/ui/AgentAvatar';
 
 interface AgentListProps {
   agents: AgentWithRelations[];
@@ -59,7 +60,7 @@ const AgentList: React.FC<AgentListProps> = ({
         </div>
         <h3 className="text-lg font-medium text-theme-foreground mb-2">未找到任何智能体</h3>
         <p className="text-theme-foreground-muted text-center max-w-md">
-          还没有创建任何智能体。点击上方的&ldquo;创建智能体&rdquo;按钮开始创建您的第一个智能体。
+          点击上方的&ldquo;创建智能体&rdquo;按钮开始创建您的第一个智能体。
         </p>
       </div>
     );
@@ -85,19 +86,14 @@ const AgentList: React.FC<AgentListProps> = ({
           <div className="p-6 flex-grow">
             {/* 智能体头像和基本信息 */}
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14">
-                {agent.avatar ? (
-                  <Image 
-                    src={agent.avatar} 
-                    alt={agent.name}
-                    width={56}
-                    height={56}
-                    className="w-full h-full rounded-xl object-cover"
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-white">{agent.name.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
+              <AgentAvatar 
+                agent={{
+                  name: agent.name,
+                  avatar: agent.avatar
+                }}
+                size="lg"
+                className="flex-shrink-0"
+              />
               
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-bold text-theme-foreground truncate group-hover:text-theme-primary transition-colors duration-300">

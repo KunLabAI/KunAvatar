@@ -99,6 +99,7 @@ function ChatPageContent() {
     selectedAgent,
     chatMode,
     enableTools,
+    availableModels: models,
     showWarning: warning,
     showError: notifyError
   });
@@ -550,7 +551,7 @@ function ChatPageContent() {
     setShowToolPanel(prev => {
       const newValue = !prev;
       if (newValue) {
-        // 如果要打开工具面板，关闭其他面板
+        // 如果要打开工具面板，确保关闭其他所有面板（互斥）
         setShowMemoryPanel(false);
       }
       return newValue;
@@ -561,7 +562,7 @@ function ChatPageContent() {
     setShowMemoryPanel(prev => {
       const newValue = !prev;
       if (newValue) {
-        // 如果要打开记忆面板，关闭其他面板
+        // 如果要打开记忆面板，确保关闭其他所有面板（互斥）
         setShowToolPanel(false);
       }
       return newValue;
