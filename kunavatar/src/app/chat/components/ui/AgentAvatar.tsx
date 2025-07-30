@@ -40,7 +40,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   // 如果有上传的头像，显示图片
   if (agent?.avatar) {
     return (
-      <div className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0 ${className}`}>
+      <div className={`${sizeClass} rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
         <Image 
           src={agent.avatar} 
           alt={agent.name}
@@ -60,7 +60,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   if (agent?.name) {
     const firstChar = agent.name.charAt(0).toUpperCase();
     return (
-      <div className={`${sizeClass} rounded-full bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center text-white font-medium flex-shrink-0 ${className}`}>
+      <div className={`${sizeClass} rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center text-white font-medium flex-shrink-0 ${className}`}>
         {firstChar}
       </div>
     );
@@ -69,7 +69,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   // 默认显示机器人图标
   if (showFallback) {
     return (
-      <div className={`${sizeClass} rounded-full bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center text-white flex-shrink-0 ${className}`}>
+      <div className={`${sizeClass} rounded-xl bg-gradient-to-br from-theme-primary to-theme-accent flex items-center justify-center text-white flex-shrink-0 ${className}`}>
         <Bot className={iconSize} />
       </div>
     );

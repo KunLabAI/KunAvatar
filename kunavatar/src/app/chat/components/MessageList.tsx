@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { User, Copy, Settings, ChevronDown, ChevronUp, Check, Trash2 } from 'lucide-react';
+import { User, Copy, Axe, ChevronDown, ChevronUp, Check, Trash2 } from 'lucide-react';
 import { ToolCallPanel } from './tools/ToolCallPanel';
 import { useAgentData } from '../hooks/useAgentData';
 import ModelLogo from '@/app/model-manager/components/ModelLogo';
@@ -11,6 +11,8 @@ import StreamedContent from './ui/StreamedContent';
 import { ThinkingMode, hasThinkingContent } from './ui/ThinkingMode';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useChatStyle } from '../hooks/useChatStyle';
+import { StatsDisplay } from './ui/StatsDisplay';
+import { MessageStats } from '../../api/chat/services/messageStorageService';
 
 // 消息类型定义
 interface Message {
@@ -28,6 +30,13 @@ interface Message {
   tool_status?: 'executing' | 'completed' | 'error';
   tool_execution_time?: number;
   tool_error?: string;
+  // Ollama统计信息字段
+  total_duration?: number;
+  load_duration?: number;
+  prompt_eval_count?: number;
+  prompt_eval_duration?: number;
+  eval_count?: number;
+  eval_duration?: number;
 }
 
 interface Agent {
@@ -316,6 +325,17 @@ function MessageItem({
     return null;
   };
 
+  // 获取消息气泡样式
+  const getMessageBubbleStyle = () => {
+    if (isUser) {
+      // 用户消息气泡：彩色背景，圆润设计
+      return 'bg-theme-primary text-theme-primary-foreground rounded-2xl px-4 py-3';
+    } else {
+      // AI模型消息气泡：简洁设计，无背景，只有轻微的视觉分隔
+      return 'text-theme-foreground rounded-lg px-1 py-1';
+    }
+  };
+
   return (
     <div className={`group flex gap-3 ${chatStyle === 'conversation' && isUser ? 'justify-end' : 'justify-start'}`}>
       {/* 左侧头像（助手消息或助手模式下的所有消息） */}
@@ -335,20 +355,14 @@ function MessageItem({
                 className="p-1 text-theme-foreground-muted hover:text-theme-primary hover:bg-theme-primary/10 rounded transition-all duration-200"
                 title={`查看工具调用详情 (${message.toolCalls!.length} 个工具)`}
               >
-                <Settings className="w-3 h-3" />
+                <Axe className="w-3 h-3" />
               </button>
             )}
           </div>
         )}
 
         {/* 消息气泡 */}
-        <div
-          className={`rounded-2xl px-4 py-3 relative group ${
-            isUser
-              ? 'bg-theme-primary text-theme-primary-foreground'
-              : 'bg-theme-card border border-theme-border'
-          }`}
-        >
+        <div className={`relative group ${getMessageBubbleStyle()}`}>
           {/* 思考面板 - 仅在助手消息且有思考内容时显示，放在消息内容之前 */}
           {isAssistant && hasThinking && (
             <div className="mb-3">
@@ -409,13 +423,33 @@ function MessageItem({
 
         {/* 操作区域 - 统一的时间戳和操作按钮 */}
         <div className="flex items-center justify-between mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* 左侧：时间戳（只在助手消息显示） */}
-          <div className="text-xs text-theme-foreground-muted opacity-60">
-            {isAssistant ? new Date(message.timestamp).toLocaleTimeString() : ''}
+          {/* 左侧：时间戳和统计信息 */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            {/* 时间戳（只在助手消息显示） */}
+            {isAssistant && (
+              <div className="text-xs text-theme-foreground-muted opacity-60 flex-shrink-0">
+                {new Date(message.timestamp).toLocaleTimeString()}
+              </div>
+            )}
+            
+            {/* 统计信息（只在助手消息且有统计数据时显示） */}
+            {isAssistant && (
+              <StatsDisplay 
+                stats={{
+                  total_duration: message.total_duration,
+                  load_duration: message.load_duration,
+                  prompt_eval_count: message.prompt_eval_count,
+                  prompt_eval_duration: message.prompt_eval_duration,
+                  eval_count: message.eval_count,
+                  eval_duration: message.eval_duration,
+                }}
+                className="opacity-70 overflow-hidden"
+              />
+            )}
           </div>
           
           {/* 右侧：操作按钮 */}
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1 flex-shrink-0 ml-4">
             {/* 复制按钮 */}
             {message.content && (
               <button

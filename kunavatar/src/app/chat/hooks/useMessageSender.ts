@@ -189,6 +189,13 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                 timestamp: msg.timestamp || new Date(msg.created_at).getTime(),
                 model: msg.model,
                 toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+                // 添加Ollama统计信息字段
+                total_duration: msg.total_duration,
+                load_duration: msg.load_duration,
+                prompt_eval_count: msg.prompt_eval_count,
+                prompt_eval_duration: msg.prompt_eval_duration,
+                eval_count: msg.eval_count,
+                eval_duration: msg.eval_duration,
               };
             });
 
@@ -473,6 +480,35 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                   );
                 }
 
+                // 处理统计信息（当done为true时）
+                if (parsed.done && (parsed.total_duration || parsed.eval_count)) {
+                  console.log('🔧 收到统计信息:', {
+                    total_duration: parsed.total_duration,
+                    load_duration: parsed.load_duration,
+                    prompt_eval_count: parsed.prompt_eval_count,
+                    prompt_eval_duration: parsed.prompt_eval_duration,
+                    eval_count: parsed.eval_count,
+                    eval_duration: parsed.eval_duration
+                  });
+                  
+                  // 将统计信息添加到助手消息
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === currentTargetMessageId 
+                        ? { 
+                            ...msg, 
+                            total_duration: parsed.total_duration,
+                            load_duration: parsed.load_duration,
+                            prompt_eval_count: parsed.prompt_eval_count,
+                            prompt_eval_duration: parsed.prompt_eval_duration,
+                            eval_count: parsed.eval_count,
+                            eval_duration: parsed.eval_duration
+                          }
+                        : msg
+                    )
+                  );
+                }
+
                 // 处理工具调用（初始阶段）
                 if (parsed.message?.tool_calls || parsed.tool_calls) {
                   const toolCalls = parsed.message?.tool_calls || parsed.tool_calls;
@@ -486,13 +522,67 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                 }
 
                 // 处理思考过程
+                if (parsed.type === 'thinking' && parsed.thinking) {
+                  setMessages(prev => 
+                    prev.map(msg => {
+                      if (msg.id === currentTargetMessageId) {
+                        // 检查是否已经有思考内容
+                        const existingContent = msg.content;
+                        const hasExistingThink = existingContent.includes('<think>');
+                        
+                        if (hasExistingThink) {
+                          // 如果已经有<think>标签，将新的思考内容追加到现有的思考内容中
+                          const thinkRegex = /(<think>[\s\S]*?)<\/think>/;
+                          const match = existingContent.match(thinkRegex);
+                          if (match) {
+                            const existingThinkContent = match[1];
+                            const newContent = existingContent.replace(
+                              thinkRegex, 
+                              `${existingThinkContent}\n\n${parsed.thinking}</think>`
+                            );
+                            return { ...msg, content: newContent };
+                          }
+                        } else {
+                          // 如果没有思考内容，在内容开头添加思考标签
+                          const newContent = `<think>\n${parsed.thinking}\n</think>\n\n${existingContent}`;
+                          return { ...msg, content: newContent };
+                        }
+                      }
+                      return msg;
+                    })
+                  );
+                  continue;
+                }
+
+                // 处理思考过程（兼容旧格式）
                 if (parsed.thinking) {
                   setMessages(prev => 
-                    prev.map(msg => 
-                      msg.id === currentTargetMessageId 
-                        ? { ...msg, thinking: parsed.thinking }
-                        : msg
-                    )
+                    prev.map(msg => {
+                      if (msg.id === currentTargetMessageId) {
+                        // 检查是否已经有思考内容
+                        const existingContent = msg.content;
+                        const hasExistingThink = existingContent.includes('<think>');
+                        
+                        if (hasExistingThink) {
+                          // 如果已经有<think>标签，将新的思考内容追加到现有的思考内容中
+                          const thinkRegex = /(<think>[\s\S]*?)<\/think>/;
+                          const match = existingContent.match(thinkRegex);
+                          if (match) {
+                            const existingThinkContent = match[1];
+                            const newContent = existingContent.replace(
+                              thinkRegex, 
+                              `${existingThinkContent}\n\n${parsed.thinking}</think>`
+                            );
+                            return { ...msg, content: newContent };
+                          }
+                        } else {
+                          // 如果没有思考内容，在内容开头添加思考标签
+                          const newContent = `<think>\n${parsed.thinking}\n</think>\n\n${existingContent}`;
+                          return { ...msg, content: newContent };
+                        }
+                      }
+                      return msg;
+                    })
                   );
                 }
 

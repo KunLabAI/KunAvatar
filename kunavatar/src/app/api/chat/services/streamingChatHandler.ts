@@ -37,6 +37,7 @@ export class StreamingChatHandler {
       async start(controller) {
         let assistantMessage = '';
         let assistantStats: MessageStats | null = null;
+        let hasToolCalls = false; // 标记是否有工具调用
         
         // 创建流控制器
         const streamController: StreamController = { controller, encoder };
@@ -70,6 +71,7 @@ export class StreamingChatHandler {
              for await (const chunk of ollamaClient.chatStream(ollamaChatRequest)) {
                // 处理工具调用
                if (chunk.message?.tool_calls && chunk.message.tool_calls.length > 0) {
+                 hasToolCalls = true; // 标记有工具调用
                  await StreamingChatHandler.handleToolCallsInStream(
                    chunk.message.tool_calls,
                    chatRequest,
@@ -85,7 +87,8 @@ export class StreamingChatHandler {
                    assistantMessage,
                    assistantStats,
                    chatRequest,
-                   streamController
+                   streamController,
+                   hasToolCalls // 传递工具调用标志
                  );
                  assistantMessage = result.assistantMessage;
                  assistantStats = result.assistantStats;
@@ -289,25 +292,8 @@ export class StreamingChatHandler {
     assistantMessage: string,
     streamController: StreamController
   ): Promise<void> {
-    // 先保存AI决定调用工具前的回复内容（如果有）
-    if (chatRequest.conversationId && assistantMessage.trim()) {
-      try {
-        // 🎯 根据是否有agentId判断是否为智能体模式
-        const isAgentMode = !!chatRequest.agentId;
-        
-        MessageStorageService.saveAssistantMessage(
-          chatRequest.conversationId,
-          assistantMessage,
-          chatRequest.model,
-          chatRequest.userId,
-          chatRequest.agentId,
-          undefined,
-          isAgentMode
-        );
-      } catch (dbError) {
-        console.error('保存AI工具调用前回复失败:', dbError);
-      }
-    }
+    // 注意：不在这里保存工具调用前的回复内容，避免拆分thinking内容
+    // 工具调用前的内容将与工具调用后的内容合并后一起保存
 
     // 执行工具调用并获取结果
     const isAgentMode = !!chatRequest.agentId;
@@ -322,8 +308,8 @@ export class StreamingChatHandler {
       isAgentMode
     );
 
-    // 继续对话以获取基于工具结果的回复
-    await StreamingChatHandler.continueConversationAfterTools(toolCalls, toolResults, chatRequest, streamController);
+    // 继续对话以获取基于工具结果的回复，并传递工具调用前的内容
+    await StreamingChatHandler.continueConversationAfterTools(toolCalls, toolResults, chatRequest, streamController, assistantMessage);
   }
 
   /**
@@ -333,7 +319,8 @@ export class StreamingChatHandler {
     toolCalls: any[],
     toolResults: any[],
     chatRequest: StreamingChatRequest,
-    streamController: StreamController
+    streamController: StreamController,
+    preToolMessage: string = '' // 工具调用前的消息内容
   ): Promise<void> {
     // 构建包含工具结果的消息历史
     const updatedMessages: ChatMessage[] = [
@@ -391,27 +378,32 @@ export class StreamingChatHandler {
       const followUpData = `data: ${JSON.stringify(followUpChunk)}\n\n`;
       streamController.controller.enqueue(streamController.encoder.encode(followUpData));
 
-      if (followUpChunk.done && chatRequest.conversationId && followUpMessage.trim()) {
-        // 立即保存工具调用后的助手回复
-        // 🎯 根据是否有agentId判断是否为智能体模式
-        const isAgentMode = !!chatRequest.agentId;
+      if (followUpChunk.done && chatRequest.conversationId) {
+        // 合并工具调用前后的内容
+        const completeMessage = preToolMessage + followUpMessage;
         
-        MessageStorageService.saveAssistantMessage(
-          chatRequest.conversationId,
-          followUpMessage,
-          chatRequest.model,
-          chatRequest.userId,
-          chatRequest.agentId,
-          MessageStorageService.extractStatsFromChunk(followUpChunk) || undefined,
-          isAgentMode
-        );
+        if (completeMessage.trim()) {
+          // 立即保存合并后的完整助手回复
+          // 🎯 根据是否有agentId判断是否为智能体模式
+          const isAgentMode = !!chatRequest.agentId;
+          
+          MessageStorageService.saveAssistantMessage(
+            chatRequest.conversationId,
+            completeMessage,
+            chatRequest.model,
+            chatRequest.userId,
+            chatRequest.agentId,
+            MessageStorageService.extractStatsFromChunk(followUpChunk) || undefined,
+            isAgentMode
+          );
 
-        // 检查是否需要生成标题
-        StreamingChatHandler.checkAndGenerateTitle(
-          chatRequest.conversationId,
-          chatRequest.titleSummarySettings,
-          streamController
-        );
+          // 检查是否需要生成标题
+          StreamingChatHandler.checkAndGenerateTitle(
+            chatRequest.conversationId,
+            chatRequest.titleSummarySettings,
+            streamController
+          );
+        }
         break;
       }
     }
@@ -425,7 +417,8 @@ export class StreamingChatHandler {
     assistantMessage: string,
     assistantStats: MessageStats | null,
     chatRequest: StreamingChatRequest,
-    streamController: StreamController
+    streamController: StreamController,
+    hasToolCalls: boolean = false // 是否有工具调用
   ): Promise<{ assistantMessage: string; assistantStats: MessageStats | null }> {
     // 累积助手的回复内容
     if (chunk.message?.content) {
@@ -439,12 +432,22 @@ export class StreamingChatHandler {
       console.log('🔧 收到统计信息:', assistantStats);
     }
 
+    // 处理thinking字段，如果存在则发送给前端
+    if (chunk.message?.thinking) {
+      const thinkingData = {
+        type: 'thinking',
+        thinking: chunk.message.thinking
+      };
+      const thinkingDataStr = `data: ${JSON.stringify(thinkingData)}\n\n`;
+      streamController.controller.enqueue(streamController.encoder.encode(thinkingDataStr));
+    }
+
     // 发送数据块到客户端
     const data = `data: ${JSON.stringify(chunk)}\n\n`;
     streamController.controller.enqueue(streamController.encoder.encode(data));
 
-    // 如果完成，立即保存助手回复
-    if (chunk.done && chatRequest.conversationId && assistantMessage.trim()) {
+    // 如果完成且没有工具调用，才保存助手回复（有工具调用时由continueConversationAfterTools处理）
+    if (chunk.done && chatRequest.conversationId && assistantMessage.trim() && !hasToolCalls) {
       try {
         const statsToSave = MessageStorageService.extractStatsFromChunk(chunk) || assistantStats;
         console.log('🔧 保存助手消息，统计信息:', statsToSave);

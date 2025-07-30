@@ -2,11 +2,20 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
+// 定义CustomModel类型
+interface CustomModel {
+  id: number;
+  base_model: string;
+  display_name: string;
+  capabilities?: string[];
+}
+
 export interface ModelToolValidationParams {
   selectedModel: string | null;
   selectedAgent: any;
   chatMode: 'model' | 'agent';
   enableTools: boolean;
+  availableModels: CustomModel[];
   // 通知函数
   showWarning?: (title: string, message?: string) => void;
   showError?: (title: string, message?: string) => void;
@@ -19,12 +28,12 @@ export interface ModelToolValidationState {
 }
 
 export interface ModelToolValidationActions {
-  checkModelToolSupport: (model: string) => Promise<boolean>;
+  checkModelToolSupport: (model: string) => boolean;
   resetValidationState: () => void;
   handleToolsToggle: (
     setEnableTools: (value: boolean) => void,
     setShowToolPanel?: (value: boolean) => void
-  ) => Promise<boolean>;
+  ) => boolean;
   clearResetFlag: () => void;
 }
 
@@ -33,6 +42,7 @@ export function useModelToolValidation({
   selectedAgent,
   chatMode,
   enableTools,
+  availableModels,
   showWarning,
   showError
 }: ModelToolValidationParams): ModelToolValidationState & ModelToolValidationActions {
@@ -52,63 +62,36 @@ export function useModelToolValidation({
     setShouldResetTools(false);
   }, []);
 
-  // 检查模型是否支持工具调用（简化版本，不显示复杂提示）
-  const checkModelToolSupport = useCallback(async (model: string): Promise<boolean> => {
+  // 检查模型是否支持工具调用（基于capabilities字段）
+  const checkModelToolSupport = useCallback((model: string): boolean => {
     if (!model) {
       console.warn('模型名称为空，跳过工具支持检测');
       setModelSupportsTools(false);
       return false;
     }
     
-    setIsCheckingModel(true);
-    setModelSupportsTools(null);
+    // 根据模型名称查找对应的模型信息
+    const modelInfo = availableModels.find(m => m.base_model === model);
     
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [{ role: 'user', content: 'test' }],
-          enableTools: true,
-          testMode: true,
-        }),
-      });
-      
-      if (!response.ok) {
-        console.warn(`模型 ${model} 工具支持检测失败: HTTP ${response.status}`);
-        setModelSupportsTools(false);
-        return false;
-      }
-      
-      const data = await response.json();
-      if (data.success) {
-        setModelSupportsTools(data.supportsTools);
-        console.log(`模型 ${model} 工具支持检测结果:`, data.supportsTools);
-        return data.supportsTools;
-      } else {
-        console.warn(`模型 ${model} 工具支持检测失败:`, data.error);
-        setModelSupportsTools(false);
-        return false;
-      }
-    } catch (error) {
-      console.error(`模型 ${model} 工具支持检测异常:`, error);
+    if (!modelInfo) {
+      console.warn(`未找到模型 ${model} 的信息，假设不支持工具`);
       setModelSupportsTools(false);
       return false;
-    } finally {
-      setIsCheckingModel(false);
     }
-  }, []);
+    
+    // 检查capabilities字段是否包含"tools"
+    const supportsTools = modelInfo.capabilities?.includes('tools') || false;
+    
+    console.log(`模型 ${model} 工具支持检测结果:`, supportsTools);
+    setModelSupportsTools(supportsTools);
+    return supportsTools;
+  }, [availableModels]);
 
   // 处理工具开关切换
-  const handleToolsToggle = useCallback(async (
+  const handleToolsToggle = useCallback((
     setEnableTools: (value: boolean) => void,
     setShowToolPanel?: (value: boolean) => void
-  ): Promise<boolean> => {
+  ): boolean => {
     const currentModel = chatMode === 'agent' 
       ? selectedAgent?.model?.base_model 
       : selectedModel;
@@ -122,7 +105,7 @@ export function useModelToolValidation({
 
     if (!enableTools) {
       // 开启工具前检查模型支持
-      const supportsTools = await checkModelToolSupport(currentModel);
+      const supportsTools = checkModelToolSupport(currentModel);
       if (!supportsTools) {
         showError?.(
           'MCP工具不可用', 
@@ -158,15 +141,12 @@ export function useModelToolValidation({
         setShouldResetTools(true);
         console.log('🔄 未选择模型，需要重置工具状态');
       } else {
-        // 有模型时，异步检查支持性
-        const checkAndReset = async () => {
-          const supportsTools = await checkModelToolSupport(currentModel);
-          if (!supportsTools) {
-            setShouldResetTools(true);
-            console.log(`🔄 模型 ${currentModel} 不支持工具，需要重置工具状态`);
-          }
-        };
-        checkAndReset();
+        // 有模型时，同步检查支持性
+        const supportsTools = checkModelToolSupport(currentModel);
+        if (!supportsTools) {
+          setShouldResetTools(true);
+          console.log(`🔄 模型 ${currentModel} 不支持工具，需要重置工具状态`);
+        }
       }
     }
   }, [selectedModel, selectedAgent?.model?.base_model, chatMode, enableTools, checkModelToolSupport, resetValidationState]);

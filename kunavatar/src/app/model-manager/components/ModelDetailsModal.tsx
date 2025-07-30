@@ -62,7 +62,7 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
       {model.tags && model.tags.length > 0 && model.tags.map((tag, index) => (
         <span 
           key={index} 
-          className="px-3 py-1 bg-theme-primary/10 text-theme-primary text-xs rounded-full border border-theme-primary/20"
+          className="inline-flex items-center gap-1 px-2 py-1 bg-theme-primary text-white text-xs rounded-md shadow-sm"
         >
           {tag}
         </span>
@@ -130,7 +130,7 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
                         {model.capabilities.map((capability, index) => (
                           <span 
                             key={index} 
-                            className="px-3 py-1 bg-theme-primary/10 text-theme-primary text-xs rounded-full border border-theme-primary/20"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-theme-primary text-white text-xs rounded-md shadow-sm"
                           >
                             {capability}
                           </span>
@@ -220,4 +220,4 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
       </div>
     </ModalWrapper>
   );
-} 
+}

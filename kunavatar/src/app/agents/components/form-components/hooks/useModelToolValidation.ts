@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { CustomModel } from '@/lib/database/custom-models';
 
 export interface UseModelToolValidationProps {
@@ -25,50 +25,27 @@ export function useModelToolValidation({
   // 验证结果缓存
   const validationCache = useRef<Map<string, { isValid: boolean; message?: string }>>(new Map());
 
-  // 检查模型是否支持工具调用
-  const checkModelToolSupport = useCallback(async (modelName: string): Promise<boolean> => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [{ role: 'user', content: 'test' }],
-          enableTools: true,
-          testMode: true, // 添加测试模式标识
-        }),
-      });
-      
-      if (!response.ok) {
-        console.warn(`模型 ${modelName} 工具支持检测失败: HTTP ${response.status}`);
-        return false;
-      }
-      
-      const data = await response.json();
-      if (data.success) {
-        console.log(`模型 ${modelName} 工具支持检测结果:`, data.supportsTools);
-        return data.supportsTools;
-      } else {
-        console.warn(`模型 ${modelName} 工具支持检测失败:`, data.error);
-        return false;
-      }
-    } catch (error) {
-      console.error(`模型 ${modelName} 工具支持检测异常:`, error);
+  // 检查模型是否支持工具调用（基于capabilities字段）
+  const checkModelToolSupport = useCallback((modelId: number): boolean => {
+    const model = availableModels.find(m => m.id === modelId);
+    if (!model) {
+      console.warn(`模型ID ${modelId} 不存在`);
       return false;
     }
-  }, []);
+    
+    // 检查capabilities字段是否包含"tools"
+    const supportsTools = model.capabilities?.includes('tools') || false;
+    console.log(`模型 ${model.display_name || model.base_model} 工具支持检测结果:`, supportsTools, '(基于capabilities字段)');
+    return supportsTools;
+  }, [availableModels]);
 
   // 验证模型工具支持
-  const validateModelToolConfiguration = useCallback(async (): Promise<{
+  const validateModelToolConfiguration = useCallback((): {
     isValid: boolean;
     message?: string;
     modelId?: number;
     supportsTools?: boolean;
-  }> => {
+  } => {
     // 如果没有选择模型，返回无效
     if (!selectedModelId) {
       return {
@@ -107,52 +84,44 @@ export function useModelToolValidation({
       };
     }
 
-    setIsValidating(true);
+    // 基于capabilities字段检查工具支持
+    const supportsTools = checkModelToolSupport(selectedModelId);
     
-    try {
-      const supportsTools = await checkModelToolSupport(selectedModel.base_model);
-      
-      // 缓存验证结果
-      const cacheResult = { isValid: supportsTools };
-      validationCache.current.set(cacheKey, cacheResult);
-      
-      if (!supportsTools) {
-        return {
-          isValid: false,
-          modelId: selectedModelId,
-          supportsTools: false,
-          message: hasSelectedTools 
-            ? `模型 ${selectedModel.display_name || selectedModel.base_model} 不支持工具调用功能，请选择支持工具调用的模型（如 llama3.1、qwen2.5 等）或移除已选择的工具。`
-            : `模型 ${selectedModel.display_name || selectedModel.base_model} 不支持工具调用功能。如需使用工具，请选择支持工具调用的模型（如 llama3.1、qwen2.5 等）。`
-        };
-      }
-      
-      return {
-        isValid: true,
-        modelId: selectedModelId,
-        supportsTools: true,
-        message: hasSelectedTools 
-          ? undefined
-          : '该模型支持工具调用功能'
-      };
-    } catch (error) {
+    // 缓存验证结果
+    const cacheResult = { isValid: supportsTools };
+    validationCache.current.set(cacheKey, cacheResult);
+    
+    if (!supportsTools) {
       return {
         isValid: false,
         modelId: selectedModelId,
         supportsTools: false,
-        message: '模型工具支持检测失败，请稍后重试'
+        message: hasSelectedTools 
+          ? `模型 ${selectedModel.display_name || selectedModel.base_model} 不支持工具调用功能。`
+          : `模型 ${selectedModel.display_name || selectedModel.base_model} 不支持工具调用功能。`
       };
-    } finally {
-      setIsValidating(false);
     }
+    
+    return {
+      isValid: true,
+      modelId: selectedModelId,
+      supportsTools: true,
+      message: hasSelectedTools 
+        ? undefined
+        : '该模型支持工具调用功能'
+    };
   }, [selectedModelId, hasSelectedTools, availableModels, checkModelToolSupport]);
 
-  // 执行验证并更新状态
-  const performValidation = useCallback(async () => {
-    const result = await validateModelToolConfiguration();
-    setValidationResult(result);
-    return result;
-  }, [validateModelToolConfiguration]);
+  // 当选择的模型发生变化时，自动执行验证
+  useEffect(() => {
+    if (selectedModelId) {
+      const result = validateModelToolConfiguration();
+      setValidationResult(result);
+    } else {
+      // 如果没有选择模型，清除验证结果
+      setValidationResult(null);
+    }
+  }, [selectedModelId, validateModelToolConfiguration]);
 
   // 清除验证结果
   const clearValidation = useCallback(() => {
@@ -170,7 +139,6 @@ export function useModelToolValidation({
   return {
     isValidating,
     validationResult,
-    performValidation,
     clearValidation,
     checkModelToolSupport,
     isModelValidated, // 新增：检查模型是否已验证

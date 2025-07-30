@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, ChevronDown, ChevronRight, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Axe, ChevronDown, ChevronRight, Loader2, Check, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 
 interface ToolCallMessageProps {
@@ -131,7 +131,7 @@ export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
                 <ChevronRight className="w-4 h-4 text-theme-foreground-muted" />
               )}
               
-              <Wrench className="w-4 h-4 text-theme-primary" />
+              <Axe className="w-4 h-4 text-theme-primary" />
               <span className="text-sm font-medium text-theme-foreground">
                 工具调用 - {toolCall.toolName}
               </span>
@@ -168,4 +168,4 @@ export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
       </div>
     </div>
   );
-} 
+}
