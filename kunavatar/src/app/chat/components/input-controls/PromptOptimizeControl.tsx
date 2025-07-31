@@ -46,15 +46,27 @@ export function PromptOptimizeControl({
       });
       
       if (!response.ok) {
-        throw new Error('优化失败');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || '优化失败';
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || '优化失败');
+      }
+      
       // 直接替换输入框内容
       onTextChange(data.optimizedText);
     } catch (error) {
       console.error('优化提示词失败:', error);
-      // 这里可以添加错误提示，比如toast通知
+      
+      // 显示具体的错误信息
+      const errorMessage = error instanceof Error ? error.message : '优化失败';
+      
+      // 这里可以添加toast通知或其他用户友好的错误提示
+      // 暂时使用alert，后续可以替换为更好的UI组件
+      alert(`提示词优化失败：${errorMessage}`);
     } finally {
       setIsOptimizing(false);
     }

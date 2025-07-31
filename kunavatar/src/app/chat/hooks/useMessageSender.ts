@@ -597,15 +597,18 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       }
 
     } catch (err) {
-      console.error('发送消息失败:', err);
-      
+      // 如果是用户主动停止生成，不应该当作错误处理
       if (err instanceof Error && err.name === 'AbortError') {
-        setError('消息发送已取消');
-      } else {
-        setError(err instanceof Error ? err.message : '发送消息失败');
+        console.log('✅ 用户主动停止了消息生成');
+        // 不设置错误状态，因为这是用户的正常操作
+        // 保留已生成的内容，不移除助手消息
+        return;
       }
+      
+      console.error('发送消息失败:', err);
+      setError(err instanceof Error ? err.message : '发送消息失败');
 
-      // 移除失败的助手消息
+      // 只有在真正的错误情况下才移除失败的助手消息
       setMessages(prev => prev.filter(msg => msg.role !== 'assistant' || msg.content));
       
     } finally {
@@ -616,11 +619,22 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
 
   // 停止生成
   const stopGeneration = useCallback(() => {
-    if (abortControllerRef.current) {
+    if (abortControllerRef.current && isStreaming) {
+      console.log('🛑 用户请求停止生成，正在保存已生成的内容...');
+      
+      // 中止请求，这会触发后端的handleAbort逻辑来保存内容
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
+      
+      // 立即更新流状态，避免用户重复点击
+      setIsStreaming(false);
+      
+      // 清除错误状态（如果有的话）
+      setError(null);
+      
+      console.log('✅ 停止请求已发送，内容将被保存到数据库');
     }
-  }, []);
+  }, [isStreaming]);
 
   // 清空消息
   const clearMessages = useCallback(() => {

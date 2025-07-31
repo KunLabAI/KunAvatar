@@ -38,20 +38,26 @@ export class StreamingChatHandler {
         let assistantMessage = '';
         let assistantStats: MessageStats | null = null;
         let hasToolCalls = false; // 标记是否有工具调用
+        const abortState = { isAborted: false }; // 使用对象引用来共享中断状态
         
         // 创建流控制器
         const streamController: StreamController = { controller, encoder };
         
                  // 监听请求中断信号
-         const abortHandler = () => StreamingChatHandler.handleAbort(
-           chatRequest.conversationId,
-           assistantMessage,
-           chatRequest.model,
-           chatRequest.userId,
-           chatRequest.agentId,
-           assistantStats,
-           controller
-         );
+         const abortHandler = () => {
+           if (!abortState.isAborted) {
+             abortState.isAborted = true;
+             StreamingChatHandler.handleAbort(
+               chatRequest.conversationId,
+               assistantMessage,
+               chatRequest.model,
+               chatRequest.userId,
+               chatRequest.agentId,
+               assistantStats,
+               controller
+             );
+           }
+         };
          
          request.signal?.addEventListener('abort', abortHandler);
          
@@ -69,6 +75,24 @@ export class StreamingChatHandler {
 
              // 使用流式API
              for await (const chunk of ollamaClient.chatStream(ollamaChatRequest)) {
+               // 检查是否被中断
+               if (request.signal?.aborted) {
+                 if (!abortState.isAborted) {
+                   abortState.isAborted = true;
+                   console.log('🛑 检测到中断信号，停止流式处理');
+                   StreamingChatHandler.handleAbort(
+                     chatRequest.conversationId,
+                     assistantMessage,
+                     chatRequest.model,
+                     chatRequest.userId,
+                     chatRequest.agentId,
+                     assistantStats,
+                     controller
+                   );
+                 }
+                 return;
+               }
+
                // 处理工具调用
                if (chunk.message?.tool_calls && chunk.message.tool_calls.length > 0) {
                  hasToolCalls = true; // 标记有工具调用
@@ -95,9 +119,18 @@ export class StreamingChatHandler {
                }
              }
 
-             // 发送结束标志
-             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-             controller.close();
+             // 检查控制器是否已关闭，如果已关闭则不发送结束标志
+             const isControllerClosed = controller.desiredSize === null;
+             if (!isControllerClosed) {
+               try {
+                 // 发送结束标志
+                 controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                 controller.close();
+               } catch (error) {
+                 // 忽略控制器已关闭的错误
+                 console.log('🛑 控制器已关闭，无法发送结束标志');
+               }
+             }
 
            } catch (streamError) {
              // 处理流式错误并可能重试
@@ -107,7 +140,9 @@ export class StreamingChatHandler {
                retryWithoutTools,
                assistantMessage,
                assistantStats,
-               streamController
+               streamController,
+               request.signal,
+               abortState
              );
            }
          } catch (error) {
@@ -410,6 +445,25 @@ export class StreamingChatHandler {
   }
 
   /**
+   * 安全发送数据到流控制器
+   */
+  private static safeEnqueue(streamController: StreamController, data: string): boolean {
+    if (streamController.controller.desiredSize === null) {
+      return false; // 控制器已关闭
+    }
+    
+    try {
+      streamController.controller.enqueue(streamController.encoder.encode(data));
+      return true;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('Controller is already closed')) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * 处理消息块
    */
   private static async processMessageChunk(
@@ -429,22 +483,19 @@ export class StreamingChatHandler {
     const newStats = MessageStorageService.extractStatsFromChunk(chunk);
     if (newStats) {
       assistantStats = newStats;
-      console.log('🔧 收到统计信息:', assistantStats);
     }
 
-    // 处理thinking字段，如果存在则发送给前端
+    // 安全发送数据
     if (chunk.message?.thinking) {
       const thinkingData = {
         type: 'thinking',
         thinking: chunk.message.thinking
       };
-      const thinkingDataStr = `data: ${JSON.stringify(thinkingData)}\n\n`;
-      streamController.controller.enqueue(streamController.encoder.encode(thinkingDataStr));
+      StreamingChatHandler.safeEnqueue(streamController, `data: ${JSON.stringify(thinkingData)}\n\n`);
     }
 
     // 发送数据块到客户端
-    const data = `data: ${JSON.stringify(chunk)}\n\n`;
-    streamController.controller.enqueue(streamController.encoder.encode(data));
+    StreamingChatHandler.safeEnqueue(streamController, `data: ${JSON.stringify(chunk)}\n\n`);
 
     // 如果完成且没有工具调用，才保存助手回复（有工具调用时由continueConversationAfterTools处理）
     if (chunk.done && chatRequest.conversationId && assistantMessage.trim() && !hasToolCalls) {
@@ -499,6 +550,13 @@ export class StreamingChatHandler {
     try {
       const newTitle = await TitleGenerationService.checkAndGenerateTitle(conversationId, titleSummarySettings);
       if (newTitle) {
+        // 检查控制器是否已关闭
+        const isControllerClosed = streamController.controller.desiredSize === null;
+        if (isControllerClosed) {
+          console.log('流已关闭，无法发送标题更新事件，但标题已保存到数据库:', newTitle);
+          return;
+        }
+
         // 确保在流关闭前发送标题更新事件
         try {
           TitleGenerationService.sendTitleUpdateEvent(
@@ -526,7 +584,9 @@ export class StreamingChatHandler {
     retryWithoutTools: boolean,
     assistantMessage: string,
     assistantStats: MessageStats | null,
-    streamController: StreamController
+    streamController: StreamController,
+    signal?: AbortSignal,
+    abortState?: { isAborted: boolean }
   ): Promise<void> {
     console.error('流式请求错误:', streamError);
 
@@ -535,7 +595,7 @@ export class StreamingChatHandler {
     // 如果启用了工具且出现工具不支持错误，尝试不使用工具重新请求
     if (chatRequest.enableTools && !retryWithoutTools && isToolsNotSupported) {
       console.log('模型不支持工具调用，尝试不使用工具重新请求');
-      await StreamingChatHandler.retryWithoutTools(chatRequest, assistantMessage, assistantStats, streamController);
+      await StreamingChatHandler.retryWithoutTools(chatRequest, assistantMessage, assistantStats, streamController, signal, abortState);
     } else {
       // 如果已经重试过或者没有启用工具，或者不是工具不支持的错误，直接抛出错误
       throw streamError;
@@ -549,7 +609,9 @@ export class StreamingChatHandler {
     chatRequest: StreamingChatRequest,
     assistantMessage: string,
     assistantStats: MessageStats | null,
-    streamController: StreamController
+    streamController: StreamController,
+    signal?: AbortSignal,
+    abortState?: { isAborted: boolean }
   ): Promise<void> {
     // 重置助手消息内容，避免重复累积
     assistantMessage = '';
@@ -564,6 +626,31 @@ export class StreamingChatHandler {
 
     // 重新尝试流式API
     for await (const chunk of ollamaClient.chatStream(retryRequest)) {
+      // 检查是否被中断
+      if (signal?.aborted) {
+        if (!abortState?.isAborted) {
+          if (abortState) abortState.isAborted = true;
+          console.log('🛑 重试过程中检测到中断信号，停止处理');
+          StreamingChatHandler.handleAbort(
+            chatRequest.conversationId,
+            assistantMessage,
+            chatRequest.model,
+            chatRequest.userId,
+            chatRequest.agentId,
+            assistantStats,
+            streamController.controller
+          );
+        }
+        return;
+      }
+
+      // 检查控制器是否已关闭
+      const isControllerClosed = streamController.controller.desiredSize === null;
+      if (isControllerClosed) {
+        console.log('🛑 控制器已关闭，停止重试请求');
+        return;
+      }
+
       const result = await StreamingChatHandler.processMessageChunk(
         chunk,
         assistantMessage,
@@ -575,9 +662,18 @@ export class StreamingChatHandler {
       assistantStats = result.assistantStats;
     }
 
-    // 发送结束标志
-    streamController.controller.enqueue(streamController.encoder.encode('data: [DONE]\n\n'));
-    streamController.controller.close();
+    // 检查控制器是否已关闭，如果已关闭则不发送结束标志
+    const isControllerClosed = streamController.controller.desiredSize === null;
+    if (!isControllerClosed) {
+      try {
+        // 发送结束标志
+        streamController.controller.enqueue(streamController.encoder.encode('data: [DONE]\n\n'));
+        streamController.controller.close();
+      } catch (error) {
+        // 忽略控制器已关闭的错误
+        console.log('🛑 控制器已关闭，无法发送结束标志');
+      }
+    }
   }
 
   /**

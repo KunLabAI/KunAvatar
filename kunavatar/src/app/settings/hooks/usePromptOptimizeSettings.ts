@@ -61,9 +61,9 @@ export function usePromptOptimizeSettings() {
 
         // 从用户设置API加载三个系统提示词
         const systemPromptKeys = [
-          { key: 'prompt_optimize_system_prompt', field: 'promptSystemPrompt' },
-          { key: 'title_summary_system_prompt', field: 'titleSummarySystemPrompt' },
-          { key: 'memory_system_prompt', field: 'memorySystemPrompt' }
+          { key: 'prompt_optimize_system_prompt', field: 'promptSystemPrompt', category: 'prompt_optimize' },
+          { key: 'title_summary_system_prompt', field: 'titleSummarySystemPrompt', category: 'title_summary' },
+          { key: 'memory_system_prompt', field: 'memorySystemPrompt', category: 'memory' }
         ];
 
         // 获取认证令牌
@@ -74,18 +74,21 @@ export function usePromptOptimizeSettings() {
           return;
         }
 
-        for (const { key, field } of systemPromptKeys) {
+        for (const { key, field, category } of systemPromptKeys) {
           try {
-            const response = await fetch(`/api/user-settings?key=${key}`, {
+            const response = await fetch(`/api/user-settings?category=${category}`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
               },
             });
             if (response.ok) {
               const result = await response.json();
-              // 检查返回的是数组且不为空，并且第一个元素有value属性
-              if (Array.isArray(result) && result.length > 0 && result[0].value) {
-                (localSettings as any)[field] = result[0].value;
+              // 检查返回的是数组且不为空，并且找到对应的设置项
+              if (Array.isArray(result) && result.length > 0) {
+                const setting = result.find(s => s.key === key);
+                if (setting && setting.value) {
+                  (localSettings as any)[field] = setting.value;
+                }
               }
               // 如果API返回空数组，说明设置不存在，保持使用默认值或localStorage中的值
             }

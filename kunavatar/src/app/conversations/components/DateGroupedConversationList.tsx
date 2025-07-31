@@ -2,6 +2,7 @@ import { MessageSquare, Trash2, Calendar, Clock, Bot, CheckSquare, Square, Hash,
 import { motion } from 'framer-motion';
 import { Conversation } from '@/lib/database';
 import { Agent } from '@/lib/database/agents';
+import { formatTime, formatDate as formatDateOnly } from '@/lib/utils/time';
 
 interface DateGroupedConversationListProps {
   conversations: Conversation[];
@@ -32,28 +33,6 @@ export function DateGroupedConversationList({
   const getAgentById = (agentId: number | null | undefined): Agent | null => {
     if (!agentId) return null;
     return agents.find(agent => agent.id === agentId) || null;
-  };
-  const formatDate = (dateString: string) => {
-    // SQLite DATETIME 是 UTC 时间，需要正确解析
-    const date = new Date(dateString + 'Z'); // 添加 Z 表示 UTC 时间
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
-  const formatUpdateTime = (dateString: string) => {
-    // SQLite DATETIME 是 UTC 时间，需要正确解析
-    const date = new Date(dateString + 'Z'); // 添加 Z 表示 UTC 时间
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
   };
 
   const getDateLabel = (dateString: string): { label: string; actualDate: string } => {
@@ -313,11 +292,11 @@ export function DateGroupedConversationList({
                       }}>
                         <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                           <Calendar className="w-4 h-4" />
-                          <span>创建于 {formatDate(conversation.created_at)}</span>
+                          <span>创建于 {formatDateOnly(conversation.created_at)}</span>
                         </div>
                         <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                           <Clock className="w-4 h-4" />
-                          <span>更新于 {formatUpdateTime(conversation.updated_at)}</span>
+                          <span>更新于 {formatTime(conversation.updated_at)}</span>
                         </div>
                       </div>
                     </div>

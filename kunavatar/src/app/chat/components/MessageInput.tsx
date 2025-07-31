@@ -209,10 +209,11 @@ export function MessageInput({
 
   // 停止生成（如果正在流式生成）
   const handleStopGeneration = useCallback(() => {
-    if (onStopGeneration) {
+    if (onStopGeneration && isStreaming) {
+      console.log('🛑 用户点击停止生成按钮');
       onStopGeneration();
     }
-  }, [onStopGeneration]);
+  }, [onStopGeneration, isStreaming]);
 
   // 处理文本插入
   const handleInsertText = useCallback((text: string) => {

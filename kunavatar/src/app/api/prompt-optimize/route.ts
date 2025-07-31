@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { userSettingOperations, userOperations } from '@/lib/database';
 import { withAuth, canAccessResource, AuthenticatedRequest } from '@/lib/middleware/auth';
 import { getUserOllamaClient } from '@/lib/ollama';
+import defaultPrompts from '@/config/default-prompts.json';
 
 export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
@@ -69,56 +70,40 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
-    // 从数据库获取系统提示词
-    const defaultSystemPrompt = `提示词优化任务：
-
-将用户的简单提示词转化为详细、具体的提示词。
-
-要求：
-- 只输出优化后的提示词
-- 不要任何解释或前缀
-- 保持用户核心意图
-- 不要使用思考模式，直接输出结果
-
-示例：
-用户："写一个故事"
-优化后：
-请创作一个引人入胜的短篇故事，要求：
-1. 故事长度：800-1200字
-2. 包含开头、发展、高潮、结尾
-3. 创造有深度的角色和内心冲突
-4. 使用生动的描写和自然对话
-5. 传递积极向上的价值观
-6. 适合成年读者阅读
-
-现在优化用户的提示词：`;
+    // 从JSON配置文件获取默认系统提示词
+    const defaultSystemPrompt = defaultPrompts.prompt_optimize_system_prompt.value;
     
-    // 获取第一个用户的提示词优化设置
-    const users = userOperations.getAll();
-    const firstUserId = users.length > 0 ? users[0].id : null;
-    
+    // 获取当前用户的提示词优化设置
     let systemPrompt = defaultSystemPrompt;
-    if (firstUserId) {
+    try {
       const userPrompt = userSettingOperations.getValue(
-        firstUserId,
+        request.user!.id,
         'prompt_optimize_system_prompt',
         'prompt_optimize'
       );
-      if (userPrompt) {
-        systemPrompt = userPrompt;
+      
+      // 确保获取到的是有效的提示词内容，而不是键名
+      if (userPrompt && userPrompt.trim() && userPrompt !== 'prompt_optimize') {
+        systemPrompt = userPrompt.trim();
+        console.log('使用用户自定义系统提示词:', userPrompt.substring(0, 50) + (userPrompt.length > 50 ? '...' : ''));
+      } else {
+        console.log('使用默认系统提示词，用户提示词无效:', userPrompt);
       }
+    } catch (error) {
+      console.warn('获取用户系统提示词失败，使用默认提示词:', error);
     }
 
+    console.log('使用的系统提示词:', systemPrompt.substring(0, 100) + '...');
     console.log('发送到Ollama的请求:', {
       model,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompt.substring(0, 100) + '...' },
         { role: 'user', content: text.trim() }
       ],
       stream: false,
       think: false,
       options: {
-        temperature: 0.7, // 进一步降低温度，提高一致性
+        temperature: 0.7,
       }
     });
 
@@ -141,10 +126,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           },
         ],
         stream: false,
-        think: false,
         options: {
           temperature: 0.7,
           num_predict: 2048,
+          top_k: 40,
+          top_p: 0.9,
+          repeat_penalty: 1.1,
+          stop: ["<|im_end|>", "<|endoftext|>"]
         },
       }),
     });
@@ -159,12 +147,29 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     }
 
     const ollamaData = await ollamaResponse.json();
-    console.log('Ollama响应:', ollamaData);
+    console.log('Ollama响应:', {
+      model: ollamaData.model,
+      done: ollamaData.done,
+      done_reason: ollamaData.done_reason,
+      message_role: ollamaData.message?.role,
+      message_content_length: ollamaData.message?.content?.length || 0,
+      message_content_preview: ollamaData.message?.content?.substring(0, 100) || 'empty'
+    });
     
     if (!ollamaData.message?.content) {
       console.error('模型返回空响应，完整响应:', ollamaData);
+      
+      // 提供更具体的错误信息
+      let errorMessage = '模型返回空响应';
+      if (ollamaData.done_reason === 'stop') {
+        errorMessage += '，模型可能不理解当前的提示词格式';
+      } else if (ollamaData.done_reason === 'length') {
+        errorMessage += '，响应被长度限制截断';
+      }
+      errorMessage += '。建议：1) 检查模型是否支持中文 2) 尝试更换其他模型 3) 简化输入内容';
+      
       return NextResponse.json(
-        { success: false, error: '模型返回空响应，请检查模型是否正常工作' },
+        { success: false, error: errorMessage },
         { status: 500 }
       );
     }

@@ -5,6 +5,7 @@ import { Brain, Clock, Star, TrendingUp, ChevronRight, X, Edit3, Trash2, AlertTr
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '@/components/Modal';
 import { useNotification } from '@/components/notification/NotificationContext';
+import { formatTime } from '@/lib/utils/time';
 
 interface MemoryItem {
   id: number;
@@ -399,17 +400,6 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
     return formatted;
   };
 
-  // 格式化日期
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -505,7 +495,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                                   <div className="flex items-center gap-4 text-xs opacity-75">
                                     <div className="flex items-center gap-1">
                                       <Clock className="w-3 h-3 flex-shrink-0" />
-                                      <span className="truncate">{formatDate(memory.created_at)}</span>
+                                      <span className="truncate">{formatTime(memory.created_at)}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <Star className="w-3 h-3 flex-shrink-0" />

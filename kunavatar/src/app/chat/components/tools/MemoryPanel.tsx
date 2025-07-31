@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, Clock, Star, TrendingUp, ChevronDown, ChevronRight, X, GripVertical, Edit3, Trash2 } from 'lucide-react';
+import { Brain, X, Clock, Star, TrendingUp, ChevronRight, ChevronDown, Edit3, Trash2, GripVertical } from 'lucide-react';
 import { InlineLoading } from '@/components/Loading';
+import { formatTime } from '@/lib/utils/time';
 import { authenticatedFetch, useAuthErrorHandler } from '@/lib/utils/auth-utils';
 
 interface MemoryItem {
@@ -267,27 +268,13 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
 
   // 格式化记忆内容，去除JSON格式
   const formatMemoryContent = (content: string) => {
-    try {
-      // 尝试解析JSON
-      const parsed = JSON.parse(content);
-      if (typeof parsed === 'object' && parsed !== null) {
-        // 如果是对象，提取主要内容
-        return parsed.summary || parsed.content || parsed.text || JSON.stringify(parsed, null, 2);
-      }
+    if (typeof content === 'string') {
       return content;
-    } catch {
-      // 如果不是JSON，直接返回原内容
+    } else if (typeof content === 'object') {
+      return JSON.stringify(content);
+    } else {
       return content;
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const getImportanceColor = (score: number) => {
@@ -415,7 +402,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                        <div className="flex items-center gap-4 text-xs text-theme-foreground-muted ml-6">
                          <div className="flex items-center gap-1">
                            <Clock className="w-3 h-3" />
-                           <span>{formatDate(memory.created_at)}</span>
+                           <span>{formatTime(memory.created_at)}</span>
                          </div>
                          <div className="flex items-center gap-1">
                            <Star className="w-3 h-3" />
@@ -539,7 +526,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                               <span>节省: {memory.tokens_saved} tokens</span>
                             </div>
                             <div className="mt-1 text-xs text-theme-foreground-muted">
-                              类型: {memory.memory_type} | 创建时间: {formatDate(memory.created_at)}
+                              类型: {memory.memory_type} | 创建时间: {formatTime(memory.created_at)}
                             </div>
                           </div>
                         </>

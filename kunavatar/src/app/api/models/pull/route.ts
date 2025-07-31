@@ -26,37 +26,53 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     const ollamaBaseUrl = ollamaClient.getBaseUrl();
 
     // 创建流式响应
+    let isClosed = false;
+    let isAborted = false;
+    let abortController: AbortController;
+
     const stream = new ReadableStream({
       async start(controller) {
-        let isClosed = false;
-        let isAborted = false;
+        abortController = new AbortController();
         
         const safeEnqueue = (data: string) => {
-          if (!isClosed && !isAborted) {
-            try {
-              controller.enqueue(new TextEncoder().encode(data));
-            } catch (error) {
+          if (isClosed || isAborted) {
+            return false;
+          }
+          
+          try {
+            controller.enqueue(new TextEncoder().encode(data));
+            return true;
+          } catch (error) {
+            // 检查是否是控制器已关闭的错误
+            if (error instanceof TypeError && error.message.includes('Controller is already closed')) {
+              console.log('流控制器已关闭，停止写入数据');
+            } else {
               console.warn('流已关闭，无法写入数据:', error);
-              isClosed = true;
             }
+            isClosed = true;
+            return false;
           }
         };
 
         const safeClose = () => {
-          if (!isClosed && !isAborted) {
-            try {
-              controller.close();
-              isClosed = true;
-            } catch (error) {
-              console.warn('流已关闭:', error);
-              isClosed = true;
+          if (isClosed || isAborted) {
+            return;
+          }
+          
+          try {
+            controller.close();
+            isClosed = true;
+          } catch (error) {
+            // 检查是否是控制器已关闭的错误
+            if (error instanceof TypeError && error.message.includes('Controller is already closed')) {
+              console.log('流控制器已经关闭');
+            } else {
+              console.warn('关闭流时出错:', error);
             }
+            isClosed = true;
           }
         };
 
-        // 创建AbortController来处理取消
-        const abortController = new AbortController();
-        
         // 监听客户端断开连接
         const checkAborted = () => {
           if (abortController.signal?.aborted) {
@@ -186,6 +202,13 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       
       cancel() {
         console.log('客户端取消了流');
+        isAborted = true;
+        isClosed = true;
+        try {
+          abortController.abort();
+        } catch (error) {
+          console.warn('取消请求时出错:', error);
+        }
       }
     });
 
