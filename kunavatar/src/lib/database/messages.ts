@@ -2,15 +2,20 @@ import { db } from './connection';
 import { conversationOperations } from './conversations';
 import type { Message, CreateMessageData } from './types';
 
+// 内部类型：数据库原始数据格式
+interface RawMessage extends Omit<Message, 'images'> {
+  images?: string | null; // 数据库中的JSON字符串格式
+}
+
 // 消息相关查询语句
 export const messageQueries = {
   // 创建新消息
   create: db.prepare(`
     INSERT INTO messages (
       conversation_id, role, content, model, user_id, sequence_number, timestamp,
-      total_duration, load_duration, prompt_eval_count, prompt_eval_duration,
+      images, total_duration, load_duration, prompt_eval_count, prompt_eval_duration,
       eval_count, eval_duration
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
 
   // 获取对话的所有消息（需要用户权限验证）
@@ -105,6 +110,7 @@ export const messageOperations = {
       data.user_id,
       0, // sequence_number 设为0，不再使用
       timestamp,
+      data.images || null, // 添加images字段支持
       data.total_duration || null,
       data.load_duration || null,
       data.prompt_eval_count || null,
@@ -119,12 +125,20 @@ export const messageOperations = {
 
   // 获取对话的所有消息（需要用户权限验证）
   getByConversationIdAndUserId(conversationId: string, userId: string): Message[] {
-    return messageQueries.getByConversationIdAndUserId.all(conversationId, userId) as Message[];
+    const rawMessages = messageQueries.getByConversationIdAndUserId.all(conversationId, userId) as RawMessage[];
+    return rawMessages.map(message => ({
+      ...message,
+      images: message.images ? JSON.parse(message.images) : undefined
+    }));
   },
 
   // 获取对话的所有消息（内部使用，不检查用户权限）
   getByConversationId(conversationId: string): Message[] {
-    return messageQueries.getByConversationId.all(conversationId) as Message[];
+    const rawMessages = messageQueries.getByConversationId.all(conversationId) as RawMessage[];
+    return rawMessages.map(message => ({
+      ...message,
+      images: message.images ? JSON.parse(message.images) : undefined
+    }));
   },
 
   // 删除对话的所有消息

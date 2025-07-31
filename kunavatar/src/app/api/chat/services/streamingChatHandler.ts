@@ -64,9 +64,7 @@ export class StreamingChatHandler {
          try {
            // 构建聊天请求
            const ollamaChatRequest = await StreamingChatHandler.buildChatRequest(chatRequest);
-           
-           console.log('发送聊天请求:', JSON.stringify(ollamaChatRequest, null, 2));
-           
+                      
            let retryWithoutTools = false;
            
            try {
@@ -279,7 +277,8 @@ export class StreamingChatHandler {
       if (msg.role === 'assistant' && 'tool_calls' in msg) {
         return {
           role: msg.role,
-          content: msg.content || '[助手使用了工具]'
+          content: msg.content || '[助手使用了工具]',
+          ...(msg.images && { images: msg.images }) // 保留图片字段
         };
       }
       
@@ -288,10 +287,11 @@ export class StreamingChatHandler {
         return null;
       }
       
-      // 保留其他消息
+      // 保留其他消息，包括图片字段
       return {
         role: msg.role,
-        content: msg.content
+        content: msg.content,
+        ...(msg.images && { images: msg.images }) // 保留图片字段
       };
     }).filter(msg => msg !== null) as ChatMessage[];
   }
@@ -313,7 +313,8 @@ export class StreamingChatHandler {
         chatRequest.model,
         chatRequest.userId,
         chatRequest.agentId,
-        isAgentMode
+        isAgentMode,
+        lastUserMessage.images // 传递图片数据
       );
     }
   }
@@ -383,8 +384,6 @@ export class StreamingChatHandler {
         });
       }
     }
-
-    console.log('🔧 构建的消息历史包含工具结果:', JSON.stringify(updatedMessages.slice(-3), null, 2));
 
     // 为工具调用后的对话也注入记忆上下文
     let messagesWithMemory = updatedMessages;

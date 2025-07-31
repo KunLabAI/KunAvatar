@@ -29,6 +29,9 @@ export interface Message {
   created_at: string;
   timestamp: number;
   
+  // 图片相关字段
+  images?: string[]; // Base64编码的图片数组
+  
   // 性能指标
   total_duration?: number;
   load_duration?: number;
@@ -61,6 +64,8 @@ export interface CreateMessageData {
   model?: string;
   user_id: string;
   sequence_number?: number;
+  // 图片相关字段
+  images?: string | null; // JSON数组格式存储base64编码的图片
   // 工具调用相关字段
   tool_name?: string;
   tool_args?: string; // JSON字符串

@@ -38,6 +38,8 @@ const executeInitialization = (db: Database.Database) => {
       sequence_number INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
+      -- 图片相关字段
+      images TEXT, -- JSON数组格式存储base64编码的图片
       -- 工具调用相关字段
       tool_name TEXT, -- 工具名称
       tool_args TEXT, -- 工具参数 (JSON)
@@ -66,6 +68,8 @@ const executeInitialization = (db: Database.Database) => {
       sequence_number INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
+      -- 图片相关字段
+      images TEXT, -- JSON数组格式存储base64编码的图片
       -- 工具调用相关字段
       tool_name TEXT, -- 工具名称
       tool_args TEXT, -- 工具参数 (JSON)

@@ -659,7 +659,7 @@ function ChatPageContent() {
             currentConversationId={currentConversationId}
             onCreateConversation={handleCreateNewConversation}
             isCreatingConversation={isCreatingConversation}
-            onSendMessage={async (message: string) => {
+            onSendMessage={async (message: string, images?: string[]) => {
               let conversationId = currentConversationId;
               if (!conversationId) {
                 conversationId = await handleCreateNewConversation();
@@ -668,7 +668,7 @@ function ChatPageContent() {
                   return;
                 }
               }
-              await messageSender.sendMessage(message, conversationId);
+              await messageSender.sendMessage(message, conversationId, images);
             }}
             isStreaming={messageSender.isStreaming}
             onStopGeneration={messageSender.stopGeneration}
@@ -689,6 +689,14 @@ function ChatPageContent() {
             // 修复的模型工具支持检测
             isCheckingModel={isCheckingModel}
             modelSupportsTools={modelSupportsTools}
+            
+            // 图片上传相关
+            enableImageUpload={true}
+            maxImages={5}
+            maxImageSize={10 * 1024 * 1024} // 10MB
+            
+            // 模型数据（用于多模态验证）
+            availableModels={models || []}
           />
 
           {/* 🔧 工具面板 - 修复的数据传递 */}
