@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageSquare, Trash2, Calendar, Clock, Bot, CheckSquare, Square, Hash, Type } from 'lucide-react';
+import { MessageSquare, Trash2, Calendar, Clock, Bot, CheckSquare, Square, Hash, Type, Edit3, MoreVertical, Check } from 'lucide-react';
+import { formatTime, formatDate as formatDateOnly } from '@/lib/utils/time';
 import { motion } from 'framer-motion';
 import { Conversation } from '@/lib/database';
 
@@ -20,28 +21,6 @@ export function ConversationList({
   selectedConversations = new Set(),
   onToggleSelection,
 }: ConversationListProps) {
-  const formatDate = (dateString: string) => {
-    // SQLite DATETIME 是 UTC 时间，需要正确解析
-    const date = new Date(dateString + 'Z'); // 添加 Z 表示 UTC 时间
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
-  const formatUpdateTime = (dateString: string) => {
-    // SQLite DATETIME 是 UTC 时间，需要正确解析
-    const date = new Date(dateString + 'Z'); // 添加 Z 表示 UTC 时间
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
@@ -168,11 +147,11 @@ export function ConversationList({
                 }}>
                   <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                     <Calendar className="w-4 h-4" />
-                    <span>创建于 {formatDate(conversation.created_at)}</span>
+                    <span>创建于 {formatDateOnly(conversation.created_at)}</span>
                   </div>
                   <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                     <Clock className="w-4 h-4" />
-                    <span>更新于 {formatUpdateTime(conversation.updated_at)}</span>
+                    <span>更新于 {formatTime(conversation.updated_at)}</span>
                   </div>
                 </div>
               </div>

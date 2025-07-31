@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Edit, Save, X, Eye, EyeOff, Shield, Mail, Calendar, Check, LogOut } from 'lucide-react';
 import { useNotification } from '@/components/notification';
+import { formatTime } from '@/lib/utils/time';
 import { PageLoading } from '@/components/Loading';
 
 interface UserInfo {
@@ -429,7 +430,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-theme-foreground-muted">注册时间</span>
                 <span className="text-sm text-theme-foreground">
-                  {new Date(getSafeUserInfo().created_at).toLocaleDateString()}
+                  {formatTime(getSafeUserInfo().created_at)}
                 </span>
               </div>
 
@@ -437,7 +438,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-theme-foreground-muted">最后登录</span>
                   <span className="text-sm text-theme-foreground">
-                    {new Date(getSafeUserInfo().last_login_at!).toLocaleDateString()}
+                    {formatTime(getSafeUserInfo().last_login_at!)}
                   </span>
                 </div>
               )}

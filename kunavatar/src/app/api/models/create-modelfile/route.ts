@@ -153,6 +153,10 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
           errorMessage = '权限不足，请检查文件权限';
         } else if (errorMessage.includes('timeout')) {
           errorMessage = '操作超时，请检查模型大小和网络连接';
+        } else if (errorMessage.includes('template error')) {
+          errorMessage = '模板语法错误，请检查对话模板的语法是否正确。建议留空使用默认模板或使用简单的模板格式。';
+        } else if (errorMessage.includes('unexpected')) {
+          errorMessage = '模板语法错误，请检查模板中的条件语句和大括号是否正确匹配。';
         }
       }
       

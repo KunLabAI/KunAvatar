@@ -50,7 +50,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
       {models.map((model, index) => (
         <div 
           key={model.id}
-          className="rounded-xl hover:border-theme-primary/30 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group border border-theme-border"
+          className="rounded-xl hover:border-theme-primary/30 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group"
           style={{ backgroundColor: 'var(--color-card)' }}
         >
           {/* 卡片头部 */}
@@ -86,7 +86,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 model.tags.slice(0, 3).map((tag, index) => (
                   <span 
                     key={index} 
-                    className="px-2 py-1 bg-theme-primary/10 text-theme-primary text-xs rounded-full flex items-center border border-theme-primary/20 transition-colors duration-300"
+                    className="px-2 py-1 bg-theme-primary/10 text-theme-primary text-xs rounded-full flex items-center transition-colors duration-300"
                   >
                     <Tag className="w-3 h-3 mr-1"/>
                     {tag}

@@ -5,6 +5,7 @@ import { Info, Settings, Shield } from 'lucide-react';
 import ModelLogo from '@/app/model-manager/components/ModelLogo';
 import ModalWrapper from './ModalWrapper';
 import { Button, FormSection } from './FormComponents';
+import { formatTime } from '@/lib/utils/time';
 
 interface ModelDetailsModalProps {
   model: CustomModel | null;
@@ -140,11 +141,11 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
                   />
                   <InfoRow 
                     label="更新时间" 
-                    value={model.updated_at ? new Date(model.updated_at).toLocaleString('zh-CN') : new Date(model.created_at).toLocaleString('zh-CN')} 
+                    value={formatTime(model.updated_at || model.created_at)} 
                   />
                   <InfoRow 
                     label="Ollama修改时间" 
-                    value={model.ollama_modified_at ? new Date(model.ollama_modified_at).toLocaleString('zh-CN') : '未知'} 
+                    value={model.ollama_modified_at ? formatTime(model.ollama_modified_at) : '未知'} 
                   />
                 </div>
               </div>

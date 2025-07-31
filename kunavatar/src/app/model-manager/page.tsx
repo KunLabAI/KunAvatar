@@ -30,6 +30,7 @@ function ModelManagerPageContent() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedModelForDetails, setSelectedModelForDetails] = useState<CustomModel | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingType, setProcessingType] = useState<'create' | 'update' | 'delete' | 'modelfile' | 'general'>('general');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<CustomModel | null>(null);
   const [hasPermissionError, setHasPermissionError] = useState(false);
@@ -84,6 +85,7 @@ function ModelManagerPageContent() {
   // 创建新模型
   const handleCreateModel = async (id: number, modelData: Omit<CustomModel, 'id' | 'model_hash'>) => {
     try {
+      setProcessingType('create');
       setIsProcessing(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch('/api/custom-models', {
@@ -116,6 +118,7 @@ function ModelManagerPageContent() {
   // 更新模型
   const handleUpdateModel = async (id: number, modelData: Partial<CustomModel>) => {
     try {
+      setProcessingType('update');
       setIsProcessing(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/custom-models/${id}`, {
@@ -157,7 +160,12 @@ function ModelManagerPageContent() {
   // 确认删除
   const confirmDeleteModel = async () => {
     if (!modelToDelete) return;
+    
+    // 立即关闭Modal，避免loading被覆盖
+    setDeleteModalOpen(false);
+    
     try {
+      setProcessingType('delete');
       setIsProcessing(true);
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/custom-models/${modelToDelete.id}`, {
@@ -179,7 +187,6 @@ function ModelManagerPageContent() {
       notification.error('删除模型失败', message);
     } finally {
       setIsProcessing(false);
-      setDeleteModalOpen(false);
       setModelToDelete(null);
     }
   };
@@ -206,6 +213,7 @@ function ModelManagerPageContent() {
   // 处理 Modelfile 创建
   const handleCreateModelfile = async (modelfileData: ModelfileData) => {
     try {
+      setProcessingType('modelfile');
       setIsProcessing(true);
       
       // 生成 Modelfile 内容
@@ -361,7 +369,7 @@ function ModelManagerPageContent() {
           <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
               <div className="mb-8">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
                     模型管理
@@ -371,17 +379,17 @@ function ModelManagerPageContent() {
                       管理和配置 AI 模型 · 共 {models.length} 个模型
                     </p>
                   </div>
-                  <div className="flex-shrink-0 flex items-center gap-3">
+                  <div className="flex-shrink-0 flex items-center gap-2">
                     <button
                       onClick={() => setShowPullModelModal(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <Download className="w-4 h-4" />
                       <span className="hidden sm:inline">拉取模型</span>
                     </button>
                     <button
                       onClick={() => setShowFileUploadForm(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <Upload className="w-4 h-4" />
                       <span className="hidden sm:inline">上传文件</span>
@@ -401,10 +409,16 @@ function ModelManagerPageContent() {
             <div className="space-y-6">
               {/* 处理状态指示器 */}
               {isProcessing && (
-                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40">
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[10000]">
                   <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-2 shadow-lg">
                     <InlineLoading 
-                      text="处理中..."
+                      text={
+                        processingType === 'delete' ? '正在删除模型...' :
+                        processingType === 'create' ? '正在创建模型...' :
+                        processingType === 'update' ? '正在更新模型...' :
+                        processingType === 'modelfile' ? '正在创建Modelfile模型...' :
+                        '处理中...'
+                      }
                       size="small"
                     />
                   </div>

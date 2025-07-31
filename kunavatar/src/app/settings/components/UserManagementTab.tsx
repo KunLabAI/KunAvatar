@@ -6,6 +6,7 @@ import { Users, Plus, Edit, Trash2, Shield, Eye, X, Save, Mail, User, Lock, Chec
 import { useNotification } from '@/components/notification';
 import { PageLoading } from '@/components/Loading';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatTime } from '@/lib/utils/time';
 
 interface User {
   id: number;
@@ -594,11 +595,11 @@ export function UserManagementTab({}: UserManagementTabProps) {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-theme-foreground-muted">
-                      {new Date(user.created_at).toLocaleDateString('zh-CN')}
+                      {formatTime(user.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-theme-foreground-muted">
                       {user.last_login_at 
-                        ? new Date(user.last_login_at).toLocaleDateString('zh-CN')
+                        ? formatTime(user.last_login_at)
                         : '从未登录'
                       }
                     </td>
@@ -1028,14 +1029,14 @@ export function UserManagementTab({}: UserManagementTabProps) {
               <div className="flex justify-between">
                 <span className="text-theme-foreground-muted">创建时间:</span>
                 <span className="text-theme-foreground">
-                  {new Date(selectedUser.created_at).toLocaleDateString('zh-CN')}
+                  {formatTime(selectedUser.created_at)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-theme-foreground-muted">最后登录:</span>
                 <span className="text-theme-foreground">
                   {selectedUser.last_login_at 
-                    ? new Date(selectedUser.last_login_at).toLocaleDateString('zh-CN')
+                    ? formatTime(selectedUser.last_login_at)
                     : '从未登录'
                   }
                 </span>

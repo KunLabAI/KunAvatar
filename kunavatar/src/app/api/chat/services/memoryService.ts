@@ -5,6 +5,7 @@ import { agentOperations } from '../../../../lib/database/agents';
 import { userSettingOperations } from '../../../../lib/database/user-settings';
 import { userOperations } from '../../../../lib/database/users';
 import type { ConversationMemory } from '../../../../lib/database/memories';
+import defaultPrompts from '../../../../config/default-prompts.json';
 
 // 定义全局记忆设置的结构
 interface GlobalMemorySettings {
@@ -319,7 +320,16 @@ ${conversationText}
    * 获取默认记忆提示词
    */
   private static getDefaultMemoryPrompt(style: string): string {
-    return `你是一个专业的对话记忆助手。请从对话中提取和整理重要信息，形成${style === 'brief' ? '简洁' : '详细'}的记忆总结。`;
+    const promptKeys = {
+      brief: 'memory_system_prompt_brief',
+      detailed: 'memory_system_prompt_detailed', 
+      structured: 'memory_system_prompt_structured'
+    };
+
+    const promptKey = promptKeys[style as keyof typeof promptKeys] || 'memory_system_prompt_detailed';
+    const prompt = defaultPrompts[promptKey as keyof typeof defaultPrompts];
+    
+    return prompt?.value || defaultPrompts.memory_system_prompt.value;
   }
 
   /**
