@@ -225,7 +225,8 @@ async function handleNonStreamingChat({
           model,
           userId,
           agentId,
-          isAgentMode
+          isAgentMode,
+          lastUserMessage.images // 传递图片数据
         );
       }
 

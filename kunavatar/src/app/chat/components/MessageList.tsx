@@ -1,19 +1,16 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { User, Copy, Axe, ChevronDown, ChevronUp, Check, Trash2 } from 'lucide-react';
 import { ToolCallPanel } from './tools/ToolCallPanel';
 import { useAgentData } from '../hooks/useAgentData';
 import ModelLogo from '@/app/model-manager/components/ModelLogo';
 import { AgentAvatar } from './ui/AgentAvatar';
-import { InlineLoading } from '@/components/Loading';
 import StreamedContent from './ui/StreamedContent';
 import { ThinkingMode, hasThinkingContent } from './ui/ThinkingMode';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useChatStyle } from '../hooks/useChatStyle';
 import { StatsDisplay } from './ui/StatsDisplay';
-import { MessageStats } from '../../api/chat/services/messageStorageService';
-
 // 消息类型定义
 interface Message {
   id: string;
@@ -23,6 +20,7 @@ interface Message {
   model?: string;
   toolCalls?: any[];
   thinking?: string;
+  images?: string[]; // 新增：图片数据数组
   // 工具调用相关字段
   tool_name?: string;
   tool_args?: string;
@@ -65,6 +63,7 @@ interface MessageListProps {
   models: any[]; // 添加models参数
   conversation?: any | null; // 新增：对话信息
   onDeleteMessage?: (messageId: string) => void; // 添加删除消息回调
+  onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void; // 新增：图片预览回调
 }
 
 export function MessageList({ 
@@ -76,7 +75,8 @@ export function MessageList({
   selectedAgent,
   models,
   conversation, // 新增：对话信息
-  onDeleteMessage
+  onDeleteMessage,
+  onImagePreview // 新增：图片预览回调
 }: MessageListProps) {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [showToolCallPanel, setShowToolCallPanel] = useState(false);
@@ -124,18 +124,19 @@ export function MessageList({
           {/* 消息列表 */}
           {processedMessages.map((message) => (
             <MessageItem
-              key={message.id}
-              message={message}
-              isStreaming={isStreaming && message.role === 'assistant' && message === processedMessages[processedMessages.length - 1]}
-              onMcpIconClick={handleMcpIconClick}
-              onDeleteMessage={onDeleteMessage}
-              chatMode={chatMode}
-              selectedAgent={selectedAgent}
-              models={models}
-              conversation={conversation} // 新增：传递对话信息
-              chatStyle={chatStyle}
-              displaySize={displaySize}
-            />
+                key={message.id}
+                message={message}
+                isStreaming={isStreaming && message.role === 'assistant' && message === processedMessages[processedMessages.length - 1]}
+                onMcpIconClick={handleMcpIconClick}
+                onDeleteMessage={onDeleteMessage}
+                chatMode={chatMode}
+                selectedAgent={selectedAgent}
+                models={models}
+                conversation={conversation} // 新增：传递对话信息
+                chatStyle={chatStyle}
+                displaySize={displaySize}
+                onImagePreview={onImagePreview}
+              />
           ))}
           
           {/* 滚动目标元素 */}
@@ -199,7 +200,8 @@ function MessageItem({
   models,
   conversation, // 新增：对话信息
   chatStyle,
-  displaySize
+  displaySize,
+  onImagePreview
 }: { 
   message: Message; 
   isStreaming: boolean;
@@ -211,6 +213,7 @@ function MessageItem({
   conversation?: any | null; // 新增：对话信息
   chatStyle: 'conversation' | 'assistant';
   displaySize: 'fullscreen' | 'compact';
+  onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void;
 }) {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
@@ -343,6 +346,43 @@ function MessageItem({
 
       {/* 消息内容区域 */}
       <div className={`max-w-[80%] group ${chatStyle === 'conversation' && isUser ? 'order-first' : ''}`}>
+        {/* 图片显示 - 仅在用户消息且有图片时显示 */}
+          {isUser && message.images && message.images.length > 0 && (
+            <div className="mb-4 p-2 bg-theme-background/50 rounded-lg">
+              <div className={`grid gap-2 max-w-md ${
+                message.images.length === 1 
+                  ? 'grid-cols-1' 
+                  : message.images.length === 2 
+                  ? 'grid-cols-2' 
+                  : message.images.length === 3 
+                  ? 'grid-cols-3' 
+                  : 'grid-cols-2'
+              }`}>
+                {message.images.map((image, index) => {
+                  // 确保图片有正确的 data URL 前缀
+                  const imageUrl = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
+                  
+                  return (
+                    <div key={index} className="relative group">
+                      <img
+                        src={imageUrl}
+                        alt={`上传的图片 ${index + 1}`}
+                        className="w-full h-auto rounded-lg cursor-pointer max-h-48 object-cover"
+                        onClick={() => {
+                          // 确保传递给预览模态框的所有图片URL都有正确的前缀
+                          const processedImages = message.images!.map(img => 
+                            img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`
+                          );
+                          onImagePreview?.(imageUrl, index, processedImages);
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        
         {/* 发送者名称 */}
         {(isAssistant || (chatStyle === 'assistant' && isUser)) && (
           <div className="flex items-center gap-2 mb-2">
@@ -374,6 +414,8 @@ function MessageItem({
               />
             </div>
           )}
+
+
 
           {/* 消息内容 */}
           <div className={isUser ? 'whitespace-pre-wrap break-words' : `prose prose-sm max-w-none prose-theme`}>

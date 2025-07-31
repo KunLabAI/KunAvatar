@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Bot, MessageCircle } from 'lucide-react';
 import { MessageList } from './MessageList';
 import Modal from '@/components/Modal';
+import ImagePreviewModal from './ImagePreviewModal';
 
 type ChatMode = 'model' | 'agent';
 
@@ -148,6 +149,29 @@ function ChatInterface({
     messageId: null,
   });
 
+  // 图片预览模态框状态
+  const [imagePreviewModal, setImagePreviewModal] = useState<{
+    isOpen: boolean;
+    imageUrl: string;
+    imageIndex: number;
+    images: string[];
+  }>({ isOpen: false, imageUrl: '', imageIndex: 0, images: [] });
+
+  // 处理图片预览
+  const handleImagePreview = (imageUrl: string, imageIndex: number, images: string[]) => {
+    setImagePreviewModal({
+      isOpen: true,
+      imageUrl,
+      imageIndex,
+      images
+    });
+  };
+
+  // 关闭图片预览
+  const handleCloseImagePreview = () => {
+    setImagePreviewModal({ isOpen: false, imageUrl: '', imageIndex: 0, images: [] });
+  };
+
   // 删除消息的处理函数
   const handleDeleteMessage = async (messageId: string) => {
     // 检查是否为临时ID（前端生成的ID）
@@ -241,6 +265,7 @@ function ChatInterface({
                 models={models} // 传递models参数
                 conversation={currentConversation} // 传递conversation参数
                 onDeleteMessage={handleDeleteMessage}
+                onImagePreview={handleImagePreview} // 添加图片预览回调
               />
             </div>
           ) : (
@@ -285,6 +310,15 @@ function ChatInterface({
       >
         <p>确定要删除这条消息吗？此操作无法撤销。</p>
       </Modal>
+
+      {/* 图片预览模态框 */}
+      <ImagePreviewModal
+        isOpen={imagePreviewModal.isOpen}
+        imageUrl={imagePreviewModal.imageUrl}
+        imageIndex={imagePreviewModal.imageIndex}
+        images={imagePreviewModal.images}
+        onClose={handleCloseImagePreview}
+      />
     </>
   );
 }

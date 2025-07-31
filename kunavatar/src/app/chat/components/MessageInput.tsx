@@ -6,8 +6,10 @@ import {
   ToolControl,
   MemoryControl,
   PromptOptimizeControl,
-  ChatActionsControl
+  ChatActionsControl,
+  ImageUploadControl
 } from './input-controls';
+import { useModelVisionValidation } from '../hooks/useModelVisionValidation';
 
 type ChatMode = 'model' | 'agent';
 
@@ -34,7 +36,7 @@ interface MessageInputProps {
   currentConversationId: string | null;
   onCreateConversation: () => Promise<string | null>;
   isCreatingConversation: boolean;
-  onSendMessage?: (message: string) => Promise<void>;
+  onSendMessage?: (message: string, images?: string[]) => Promise<void>;
   isStreaming?: boolean;
   disabled?: boolean;
   
@@ -57,6 +59,14 @@ interface MessageInputProps {
   // 模型工具支持检测
   isCheckingModel?: boolean;
   modelSupportsTools?: boolean | null;
+  
+  // 图片上传相关
+  enableImageUpload?: boolean;
+  maxImages?: number;
+  maxImageSize?: number;
+  
+  // 模型数据（用于多模态验证）
+  availableModels?: any[];
 }
 
 export function MessageInput({
@@ -87,16 +97,41 @@ export function MessageInput({
   // 模型工具支持检测
   isCheckingModel = false,
   modelSupportsTools = null,
+  
+  // 图片上传相关
+  enableImageUpload = false,
+  maxImages = 5,
+  maxImageSize = 10 * 1024 * 1024, // 10MB
+  
+  // 模型数据
+  availableModels = [],
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // 防抖定时器引用
   const adjustHeightTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 多模态验证Hook
+  const { modelSupportsVision, validateImageUpload } = useModelVisionValidation({
+    selectedModel,
+    selectedAgent,
+    chatMode,
+    availableModels,
+    showWarning: (title: string, message?: string) => {
+      console.warn(`${title}: ${message}`);
+      if (message) alert(`${title}: ${message}`);
+    },
+    showError: (title: string, message?: string) => {
+      console.error(`${title}: ${message}`);
+      if (message) alert(`${title}: ${message}`);
+    }
+  });
+
   // 检查是否可以发送消息
-  const canSend = !isLoading && !isStreaming && !disabled && message.trim().length > 0;
+  const canSend = !isLoading && !isStreaming && !disabled && (message.trim().length > 0 || images.length > 0);
   const hasSelection = chatMode === 'model' ? !!selectedModel : !!selectedAgent;
 
   // 使用useCallback优化自动调整高度的函数，添加防抖
@@ -168,25 +203,34 @@ export function MessageInput({
     if (!canSend || !hasSelection) return;
 
     const messageToSend = message.trim();
-    if (!messageToSend) return;
+    const imagesToSend = [...images];
+    
+    if (!messageToSend && imagesToSend.length === 0) return;
+
+    // 如果有图片但模型不支持多模态，显示警告
+    if (imagesToSend.length > 0 && !validateImageUpload()) {
+      return;
+    }
 
     try {
       setIsLoading(true);
-      // 立即清空输入框，提供更好的用户体验
+      // 立即清空输入框和图片，提供更好的用户体验
       setMessage('');
+      setImages([]);
 
       // 发送消息（对话创建逻辑在父组件处理）
       if (onSendMessage) {
-        await onSendMessage(messageToSend);
+        await onSendMessage(messageToSend, imagesToSend.length > 0 ? imagesToSend : undefined);
       }
     } catch (error) {
       console.error('发送消息失败:', error);
-      // 如果发送失败，恢复消息内容
+      // 如果发送失败，恢复消息内容和图片
       setMessage(messageToSend);
+      setImages(imagesToSend);
     } finally {
       setIsLoading(false);
     }
-  }, [canSend, hasSelection, message, onSendMessage]);
+  }, [canSend, hasSelection, message, images, onSendMessage, validateImageUpload]);
 
   // 使用useCallback优化按键处理函数
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
@@ -214,6 +258,60 @@ export function MessageInput({
       onStopGeneration();
     }
   }, [onStopGeneration, isStreaming]);
+
+  // 处理图片上传控件的文件选择
+  const handleImageControlUpload = useCallback(async (files: FileList) => {
+    if (!enableImageUpload || !modelSupportsVision || disabled) return;
+
+    const fileArray = Array.from(files);
+    const remainingSlots = maxImages - images.length;
+    
+    if (fileArray.length > remainingSlots) {
+      alert(`最多只能上传 ${maxImages} 张图片，当前还可以上传 ${remainingSlots} 张`);
+      return;
+    }
+
+    const newImages: string[] = [];
+
+    for (const file of fileArray) {
+      // 验证文件类型
+      if (!file.type.startsWith('image/')) {
+        alert(`文件 "${file.name}" 不是图片文件`);
+        continue;
+      }
+
+      // 验证文件大小
+      if (file.size > maxImageSize) {
+        const maxSizeMB = maxImageSize / (1024 * 1024);
+        alert(`文件 "${file.name}" 大小超过 ${maxSizeMB}MB`);
+        continue;
+      }
+
+      try {
+        // 转换为base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // 移除data:image/...;base64,前缀，只保留base64数据
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        newImages.push(base64);
+      } catch (error) {
+        console.error('文件转换失败:', error);
+        alert(`文件 "${file.name}" 转换失败`);
+      }
+    }
+
+    if (newImages.length > 0) {
+      setImages(prev => [...prev, ...newImages]);
+    }
+  }, [enableImageUpload, modelSupportsVision, disabled, maxImages, images.length, maxImageSize]);
 
   // 处理文本插入
   const handleInsertText = useCallback((text: string) => {
@@ -248,6 +346,24 @@ export function MessageInput({
           {/* 控件栏 */}
           <div className="flex items-center justify-between px-4 py-3 bg-theme-background/50 overflow-visible">
             <div className="flex items-center space-x-2">
+              {/* 图片上传控件 - 默认显示，点击时验证模型支持 */}
+              {enableImageUpload && (
+                <ImageUploadControl
+                  onImagesSelected={handleImageControlUpload}
+                  disabled={disabled || isStreaming}
+                  hasImages={images.length > 0}
+                  imageCount={images.length}
+                  maxImages={maxImages}
+                  tooltip={`上传图片 (${images.length}/${maxImages})`}
+                  isCheckingModel={isCheckingModel}
+                  modelSupportsVision={modelSupportsVision}
+                  onValidationError={(title: string, message: string) => {
+                    console.error(`${title}: ${message}`);
+                    alert(`${title}: ${message}`);
+                  }}
+                />
+              )}
+
               {/* 工具控件 */}
               {onToolsToggle && (
                 <ToolControl
@@ -282,65 +398,70 @@ export function MessageInput({
           </div>
 
           {/* 输入区域 */}
-          <div className="relative flex items-end bg-theme-background/50 overflow-visible">        
-            {/* 左侧：提示词优化控件 */}
-            <div className="flex-shrink-0 p-3 overflow-visible">
-              <PromptOptimizeControl
-                currentText={message}
-                onTextChange={setMessage}
-                disabled={disabled || !hasSelection}
-              />
-            </div>
-            
-            {/* 主输入区域 */}
-            <div className="flex-1 relative">
-              <textarea
-                ref={textareaRef}
-                value={message}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyPress}
-                placeholder={
-                  hasSelection 
-                    ? `与${chatMode === 'model' ? selectedModel : selectedAgent?.name}对话...`
-                    : `请先选择${chatMode === 'model' ? '模型' : '智能体'}...`
-                }
-                disabled={disabled || !hasSelection}
-                className="w-full px-4 py-3 bg-transparent text-theme-foreground placeholder-theme-foreground-muted border-0 resize-none focus:outline-none scrollbar-thin"
-                style={{ minHeight: '48px', lineHeight: '24px' }}
-                rows={1}
-              />
+          <div className="relative flex flex-col bg-theme-background/50 overflow-visible">
+            {/* 文本输入区域 */}
+            <div className="flex items-end overflow-visible">        
+              {/* 左侧：提示词优化控件 */}
+              <div className="flex-shrink-0 p-3 overflow-visible">
+                <PromptOptimizeControl
+                  currentText={message}
+                  onTextChange={setMessage}
+                  disabled={disabled || !hasSelection}
+                />
+              </div>
               
-              {/* 字符计数指示器（可选） */}
-              {message.length > 0 && (
-                <div className="absolute bottom-2 right-12 text-xs text-theme-foreground-muted pointer-events-none">
-                  {message.length}
-                </div>
-              )}
-            </div>
-            
-            {/* 右侧：发送按钮 */}
-            <div className="flex-shrink-0 p-3 flex items-center">
-              {/* 发送按钮 */}
-              <button
-                onClick={isStreaming ? handleStopGeneration : handleSendMessage}
-                disabled={!isStreaming && (!message.trim() || !hasSelection)}
-                className={`
-                  w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200
-                  ${isStreaming
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
-                    : message.trim() && hasSelection
-                      ? 'bg-theme-primary hover:bg-theme-primary/90 text-theme-primary-foreground shadow-sm'
-                      : 'text-theme-foreground-muted cursor-not-allowed'
+              {/* 主输入区域 */}
+              <div className="flex-1 relative">
+                <textarea
+                  ref={textareaRef}
+                  value={message}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyPress}
+                  placeholder={
+                    hasSelection 
+                      ? `与${chatMode === 'model' ? selectedModel : selectedAgent?.name}对话...`
+                      : `请先选择${chatMode === 'model' ? '模型' : '智能体'}...`
                   }
-                `}
-                title={isStreaming ? "停止生成" : "发送消息 (Enter)"}
-              >
-                {isStreaming ? (
-                  <Circle className="w-4 h-4 fill-current" />
-                ) : (
-                  <Send className="w-4 h-4" />
+                  disabled={disabled || !hasSelection}
+                  className="w-full px-4 py-3 bg-transparent text-theme-foreground placeholder-theme-foreground-muted border-0 resize-none focus:outline-none scrollbar-thin"
+                  style={{ minHeight: '48px', lineHeight: '24px' }}
+                  rows={1}
+                />
+                
+                {/* 字符计数指示器（可选） */}
+                {(message.length > 0 || images.length > 0) && (
+                  <div className="absolute bottom-2 right-12 text-xs text-theme-foreground-muted pointer-events-none">
+                    {message.length > 0 && `${message.length}字符`}
+                    {message.length > 0 && images.length > 0 && ' • '}
+                    {images.length > 0 && `${images.length}张图片`}
+                  </div>
                 )}
-              </button>
+              </div>
+              
+              {/* 右侧：发送按钮 */}
+              <div className="flex-shrink-0 p-3 flex items-center">
+                {/* 发送按钮 */}
+                <button
+                  onClick={isStreaming ? handleStopGeneration : handleSendMessage}
+                  disabled={!isStreaming && (!message.trim() && images.length === 0) || !hasSelection}
+                  className={`
+                    w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200
+                    ${isStreaming
+                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
+                      : (message.trim() || images.length > 0) && hasSelection
+                        ? 'bg-theme-primary hover:bg-theme-primary/90 text-theme-primary-foreground shadow-sm'
+                        : 'text-theme-foreground-muted cursor-not-allowed'
+                    }
+                  `}
+                  title={isStreaming ? "停止生成" : "发送消息 (Enter)"}
+                >
+                  {isStreaming ? (
+                    <Circle className="w-4 h-4 fill-current" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

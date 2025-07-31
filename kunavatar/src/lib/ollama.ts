@@ -56,6 +56,7 @@ export interface ChatMessage {
   content: string;
   tool_calls?: ToolCall[];
   tool_name?: string; // 新增：用于tool角色消息标识执行的工具名称
+  images?: string[]; // 新增：图片数据数组（Base64编码）
 }
 
 export interface ToolCall {

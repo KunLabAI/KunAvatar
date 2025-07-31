@@ -2,6 +2,33 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { usePromptOptimizeSettings } from '../../settings/hooks/usePromptOptimizeSettings';
 import { authenticatedFetch, useAuthErrorHandler } from '../../../lib/utils/auth-utils';
 
+/**
+ * 缩减消息中的base64图片数据用于日志显示
+ */
+function sanitizeMessagesForLogging(messages: any[]): any[] {
+  return messages.map(message => {
+    if (message.images && Array.isArray(message.images)) {
+      return {
+        ...message,
+        images: message.images.map((image: string) => {
+          if (typeof image === 'string' && image.startsWith('data:image/')) {
+            const commaIndex = image.indexOf(',');
+            if (commaIndex !== -1) {
+              const prefix = image.substring(0, commaIndex + 1);
+              const base64Data = image.substring(commaIndex + 1);
+              if (base64Data.length > 50) {
+                return `${prefix}${base64Data.substring(0, 50)}...[base64数据已缩减,长度:${base64Data.length}]`;
+              }
+            }
+          }
+          return image;
+        })
+      };
+    }
+    return message;
+  });
+}
+
 // 消息类型定义
 interface Message {
   id: string;
@@ -11,6 +38,7 @@ interface Message {
   model?: string;
   toolCalls?: any[];
   thinking?: string;
+  images?: string[]; // 新增：图片数据数组
 }
 
 interface UseMessageSenderReturn {
@@ -18,7 +46,7 @@ interface UseMessageSenderReturn {
   isStreaming: boolean;
   error: string | null;
   isLoadingHistory: boolean;
-  sendMessage: (message: string, conversationId: string) => Promise<void>;
+  sendMessage: (message: string, conversationId: string, images?: string[]) => Promise<void>;
   clearMessages: () => void;
   stopGeneration: () => void;
   loadConversationHistory: (conversationId: string) => Promise<{ conversation?: any; lastModel?: string } | null>;
@@ -189,6 +217,8 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                 timestamp: msg.timestamp || new Date(msg.created_at).getTime(),
                 model: msg.model,
                 toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+                // 添加图片字段支持
+                ...(msg.images && msg.images.length > 0 && { images: msg.images }),
                 // 添加Ollama统计信息字段
                 total_duration: msg.total_duration,
                 load_duration: msg.load_duration,
@@ -199,7 +229,7 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
               };
             });
 
-          console.log('处理后的消息:', historyMessages);
+          console.log('处理后的消息:', sanitizeMessagesForLogging(historyMessages));
           console.log('工具调用映射:', toolCallsByMessageId);
           
           // 🔥 关键修复：再次检查是否正在流式生成，如果是则不覆盖当前消息
@@ -271,8 +301,8 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
   }, [generateMessageId, handleAuthError, onConversationCleared]);
 
   // 发送消息
-  const sendMessage = useCallback(async (messageContent: string, conversationId: string) => {
-    if (isStreaming || !messageContent.trim()) return;
+  const sendMessage = useCallback(async (messageContent: string, conversationId: string, images?: string[]) => {
+    if (isStreaming || (!messageContent.trim() && (!images || images.length === 0))) return;
 
     try {
       setError(null);
@@ -290,6 +320,7 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
         role: 'user',
         content: messageContent.trim(),
         timestamp: Date.now(),
+        ...(images && images.length > 0 && { images })
       };
 
       // 创建助手消息占位符
@@ -305,17 +336,23 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       // 同时添加用户消息和助手占位符
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       
+      // 构建消息内容，支持图片
+      const userMessageContent = messageContent.trim();
+      const messageForAPI = {
+        role: 'user' as const,
+        content: userMessageContent,
+        ...(images && images.length > 0 && { images })
+      };
+      
       const requestBody = {
         model: chatMode === 'model' ? selectedModel : selectedAgent?.model?.base_model || selectedModel,
         messages: [
           ...validMessages.map(msg => ({
             role: msg.role,
             content: msg.content,
+            ...(msg.images && msg.images.length > 0 && { images: msg.images })
           })),
-          {
-            role: 'user',
-            content: messageContent.trim(),
-          }
+          messageForAPI
         ],
         conversationId,
         agentId: chatMode === 'agent' ? selectedAgent?.id : undefined,

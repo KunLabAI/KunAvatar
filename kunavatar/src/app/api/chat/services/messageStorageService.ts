@@ -33,7 +33,8 @@ export class MessageStorageService {
     model: string,
     userId: string,
     agentId?: number,
-    isAgentMode: boolean = false
+    isAgentMode: boolean = false,
+    images?: string[]
   ): number {
     try {
       // 🎯 根据模式选择不同的表
@@ -44,7 +45,8 @@ export class MessageStorageService {
           role: 'user' as const,
           content: content,
           agent_id: agentId,
-          user_id: userId
+          user_id: userId,
+          images: images ? JSON.stringify(images) : undefined
         });
       } else {
         // 模型模式：使用 messages 表
@@ -53,7 +55,8 @@ export class MessageStorageService {
           role: 'user' as const,
           content: content,
           model: model,
-          user_id: userId
+          user_id: userId,
+          images: images ? JSON.stringify(images) : undefined
         });
       }
     } catch (error) {
@@ -185,7 +188,7 @@ export class MessageStorageService {
     try {
       for (const message of messages) {
         if (message.role === 'user') {
-          this.saveUserMessage(conversationId, message.content, model, userId, agentId, isAgentMode);
+          this.saveUserMessage(conversationId, message.content, model, userId, agentId, isAgentMode, message.images);
         } else if (message.role === 'assistant') {
           this.saveAssistantMessage(conversationId, message.content, model, userId, agentId, undefined, isAgentMode);
         }

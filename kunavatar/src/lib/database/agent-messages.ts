@@ -2,15 +2,20 @@ import { db } from './connection';
 import { conversationOperations } from './conversations';
 import type { Message, CreateMessageData } from './types';
 
+// 内部类型：数据库原始数据格式
+interface RawMessage extends Omit<Message, 'images'> {
+  images?: string | null; // 数据库中的JSON字符串格式
+}
+
 // 智能体消息相关查询语句
 export const agentMessageQueries = {
   // 创建新智能体消息
   create: db.prepare(`
     INSERT INTO agent_messages (
       conversation_id, role, content, agent_id, user_id, sequence_number, timestamp,
-      total_duration, load_duration, prompt_eval_count, prompt_eval_duration,
+      images, total_duration, load_duration, prompt_eval_count, prompt_eval_duration,
       eval_count, eval_duration
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
 
   // 获取对话的所有智能体消息（需要用户权限验证）
@@ -126,6 +131,7 @@ export class AgentMessageOperations {
       data.user_id,
       data.sequence_number || 0,
       timestamp,
+      data.images || null, // 添加images字段支持
       data.total_duration || null,
       data.load_duration || null,
       data.prompt_eval_count || null,
@@ -142,12 +148,20 @@ export class AgentMessageOperations {
 
   // 获取对话的所有智能体消息（需要用户权限验证）
   getByConversationIdAndUserId(conversationId: string, userId: string): Message[] {
-    return agentMessageQueries.getByConversationIdAndUserId.all(conversationId, userId) as Message[];
+    const rawMessages = agentMessageQueries.getByConversationIdAndUserId.all(conversationId, userId) as RawMessage[];
+    return rawMessages.map(message => ({
+      ...message,
+      images: message.images ? JSON.parse(message.images) : undefined
+    }));
   }
 
   // 获取对话的所有智能体消息（内部使用）
   getByConversationId(conversationId: string): Message[] {
-    return agentMessageQueries.getByConversationId.all(conversationId) as Message[];
+    const rawMessages = agentMessageQueries.getByConversationId.all(conversationId) as RawMessage[];
+    return rawMessages.map(message => ({
+      ...message,
+      images: message.images ? JSON.parse(message.images) : undefined
+    }));
   }
 
   // 删除对话的所有智能体消息
