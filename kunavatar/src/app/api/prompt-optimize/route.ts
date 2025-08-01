@@ -96,35 +96,24 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
     console.log('使用的系统提示词:', systemPrompt.substring(0, 100) + '...');
     console.log('发送到Ollama的请求:', {
       model,
-      messages: [
-        { role: 'system', content: systemPrompt.substring(0, 100) + '...' },
-        { role: 'user', content: text.trim() }
-      ],
+      prompt: text.trim(),
+      system: systemPrompt.substring(0, 100) + '...',
       stream: false,
-      think: false,
       options: {
         temperature: 0.7,
       }
     });
 
     // 调用Ollama API进行优化
-    const ollamaResponse = await fetch(`${ollamaBaseUrl}/api/chat`, {
+    const ollamaResponse = await fetch(`${ollamaBaseUrl}/api/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: text.trim(),
-          },
-        ],
+        prompt: text.trim(),
+        system: systemPrompt,
         stream: false,
         options: {
           temperature: 0.7,
@@ -151,12 +140,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       model: ollamaData.model,
       done: ollamaData.done,
       done_reason: ollamaData.done_reason,
-      message_role: ollamaData.message?.role,
-      message_content_length: ollamaData.message?.content?.length || 0,
-      message_content_preview: ollamaData.message?.content?.substring(0, 100) || 'empty'
+      response_length: ollamaData.response?.length || 0,
+      response_preview: ollamaData.response?.substring(0, 100) || 'empty'
     });
     
-    if (!ollamaData.message?.content) {
+    if (!ollamaData.response) {
       console.error('模型返回空响应，完整响应:', ollamaData);
       
       // 提供更具体的错误信息
@@ -174,11 +162,11 @@ export const POST = withAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
-    let optimizedText = ollamaData.message.content.trim();
+    let optimizedText = ollamaData.response.trim();
     
     // 如果优化后的文本为空，返回错误
     if (!optimizedText) {
-      console.error('优化后的文本为空，原始响应:', ollamaData.message.content);
+      console.error('优化后的文本为空，原始响应:', ollamaData.response);
       return NextResponse.json(
         { success: false, error: '模型生成的优化内容为空，请重试' },
         { status: 500 }

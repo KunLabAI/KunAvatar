@@ -269,20 +269,13 @@ function ChatInterface({
               />
             </div>
           ) : (
-            // 没有对话ID时的欢迎信息
-            <div className="text-center py-8">
-              <div className="inline-flex items-center space-x-2 px-4 py-2 bg-theme-card rounded-lg mb-4">
-                <Bot className="w-4 h-4 text-theme-primary" />
-                <span className="text-theme-foreground">
-                  {chatMode === 'model' 
-                    ? `已选择模型: ${selectedModel}`
-                    : `已选择智能体: ${selectedAgent?.name}`
-                  }
-                </span>
+            // 没有对话ID时的提示 - 使用flex布局将内容推到底部
+            <div className="h-full flex flex-col justify-end">
+              <div className="text-center pb-1">
+                <p className="text-theme-foreground-muted text-sm">
+                  发送消息将自动创建新对话
+                </p>
               </div>
-              <p className="text-theme-foreground-muted text-sm">
-                发送消息将自动创建新对话
-              </p>
             </div>
           )}
         </div>

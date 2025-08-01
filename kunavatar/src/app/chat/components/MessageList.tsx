@@ -340,48 +340,53 @@ function MessageItem({
   };
 
   return (
-    <div className={`group flex gap-3 ${chatStyle === 'conversation' && isUser ? 'justify-end' : 'justify-start'}`}>
-      {/* 左侧头像（助手消息或助手模式下的所有消息） */}
-      {(chatStyle === 'assistant' || !isUser) && renderAvatar()}
-
-      {/* 消息内容区域 */}
-      <div className={`max-w-[80%] group ${chatStyle === 'conversation' && isUser ? 'order-first' : ''}`}>
-        {/* 图片显示 - 仅在用户消息且有图片时显示 */}
-          {isUser && message.images && message.images.length > 0 && (
-            <div className="mb-4 p-2 bg-theme-background/50 rounded-lg">
-              <div className={`grid gap-2 max-w-md ${
-                message.images.length === 1 
-                  ? 'grid-cols-1' 
-                  : message.images.length === 2 
-                  ? 'grid-cols-2' 
-                  : message.images.length === 3 
-                  ? 'grid-cols-3' 
-                  : 'grid-cols-2'
-              }`}>
-                {message.images.map((image, index) => {
-                  // 确保图片有正确的 data URL 前缀
-                  const imageUrl = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
-                  
-                  return (
-                    <div key={index} className="relative group">
-                      <img
-                        src={imageUrl}
-                        alt={`上传的图片 ${index + 1}`}
-                        className="w-full h-auto rounded-lg cursor-pointer max-h-48 object-cover"
-                        onClick={() => {
-                          // 确保传递给预览模态框的所有图片URL都有正确的前缀
-                          const processedImages = message.images!.map(img => 
-                            img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`
-                          );
-                          onImagePreview?.(imageUrl, index, processedImages);
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+    <div className={`group ${chatStyle === 'conversation' && isUser ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}>
+      {/* 图片显示层 - 仅在用户消息且有图片时显示，独立于消息气泡和头像 */}
+      {isUser && message.images && message.images.length > 0 && (
+        <div className={`mb-2 ${chatStyle === 'conversation' ? 'mr-12' : 'ml-12'}`}>
+          <div className="bg-theme-background/50 rounded-lg">
+            <div className={`grid gap-2 max-w-2xl ${
+              message.images.length === 1 
+                ? 'grid-cols-1' 
+                : message.images.length === 2 
+                ? 'grid-cols-2' 
+                : message.images.length === 3 
+                ? 'grid-cols-3' 
+                : 'grid-cols-2'
+            }`}>
+              {message.images.map((image, index) => {
+                // 确保图片有正确的 data URL 前缀
+                const imageUrl = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
+                
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={imageUrl}
+                      alt={`上传的图片 ${index + 1}`}
+                      className="w-full h-auto rounded-lg cursor-pointer max-h-48 object-cover"
+                      onClick={() => {
+                        // 确保传递给预览模态框的所有图片URL都有正确的前缀
+                        const processedImages = message.images!.map(img => 
+                          img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`
+                        );
+                        onImagePreview?.(imageUrl, index, processedImages);
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+      {/* 消息气泡和头像层 - 水平排列 */}
+      <div className={`flex gap-3 ${chatStyle === 'conversation' && isUser ? 'justify-end' : 'justify-start'}`}>
+        {/* 左侧头像（助手消息或助手模式下的所有消息） */}
+        {(chatStyle === 'assistant' || !isUser) && renderAvatar()}
+
+        {/* 消息内容区域 */}
+        <div className={`max-w-2xl group ${chatStyle === 'conversation' && isUser ? 'order-first' : ''}`}>
         
         {/* 发送者名称 */}
         {(isAssistant || (chatStyle === 'assistant' && isUser)) && (
@@ -395,7 +400,7 @@ function MessageItem({
                 className="p-1 text-theme-foreground-muted hover:text-theme-primary hover:bg-theme-primary/10 rounded transition-all duration-200"
                 title={`查看工具调用详情 (${message.toolCalls!.length} 个工具)`}
               >
-                <Axe className="w-3 h-3" />
+                <Axe className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -418,7 +423,7 @@ function MessageItem({
 
 
           {/* 消息内容 */}
-          <div className={isUser ? 'whitespace-pre-wrap break-words' : `prose prose-sm max-w-none prose-theme`}>
+          <div className={isUser ? 'whitespace-pre-wrap' : `prose prose-sm max-w-none prose-theme`} style={isUser ? { wordBreak: 'normal', overflowWrap: 'break-word' } : {}}>
             {message.content ? (
               <div className={shouldCollapseUserMessage && !isUserMessageExpanded ? 'line-clamp-6' : ''}>
                 <StreamedContent
@@ -521,8 +526,9 @@ function MessageItem({
         </div>
       </div>
 
-      {/* 右侧头像（对话模式下的用户消息） */}
-      {chatStyle === 'conversation' && isUser && renderAvatar()}
+        {/* 右侧头像（对话模式下的用户消息） */}
+        {chatStyle === 'conversation' && isUser && renderAvatar()}
+      </div>
     </div>
   );
 }

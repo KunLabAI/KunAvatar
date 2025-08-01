@@ -145,102 +145,13 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
 
   // 编辑记忆
   const handleEditMemory = async (memoryId: number) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/memories/${memoryId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) {
-        throw new Error('获取记忆详情失败');
-      }
-      
-      const data = await response.json();
-      const memory = data.memory;
-      
-      // 使用格式化后的内容进行编辑
-      setEditingMemoryId(memoryId);
-      setEditingContent(formatMemoryForDisplay(memory));
-      
-      // 确保选中当前记忆
-      setSelectedMemoryId(memoryId);
-      
-    } catch (error) {
-      console.error('获取记忆详情时发生错误:', error);
-      notification.error('获取记忆详情失败，请稍后重试');
-    }
-  };
-  
-  // 解析格式化文本为结构化数据
-  const parseFormattedContent = (formattedText: string) => {
-    const lines = formattedText.split('\n');
-    const result = {
-      summary: '',
-      importantTopics: [] as string[],
-      keyFacts: [] as string[],
-      preferences: [] as string[],
-      context: ''
-    };
+    const memory = memories.find(m => m.id === memoryId);
+    if (!memory) return;
     
-    let currentSection = '';
-    let currentContent = '';
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      if (trimmedLine.startsWith('**摘要：**')) {
-        currentSection = 'summary';
-        currentContent = '';
-      } else if (trimmedLine.startsWith('**重要话题：**')) {
-        if (currentSection === 'summary') {
-          result.summary = currentContent.trim();
-        }
-        currentSection = 'importantTopics';
-        currentContent = '';
-      } else if (trimmedLine.startsWith('**关键事实：**')) {
-        if (currentSection === 'importantTopics') {
-          result.importantTopics = currentContent.split('\n').filter(item => item.trim().startsWith('•')).map(item => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-        }
-        currentSection = 'keyFacts';
-        currentContent = '';
-      } else if (trimmedLine.startsWith('**用户偏好：**')) {
-        if (currentSection === 'keyFacts') {
-          result.keyFacts = currentContent.split('\n').filter(item => item.trim().startsWith('•')).map(item => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-        }
-        currentSection = 'preferences';
-        currentContent = '';
-      } else if (trimmedLine.startsWith('**上下文：**')) {
-        if (currentSection === 'preferences') {
-          result.preferences = currentContent.split('\n').filter(item => item.trim().startsWith('•')).map(item => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-        }
-        currentSection = 'context';
-        currentContent = '';
-      } else if (trimmedLine.startsWith('**元数据：**')) {
-        if (currentSection === 'context') {
-          result.context = currentContent.trim();
-        }
-        break; // 元数据部分不需要解析，保持原有值
-      } else if (currentSection && trimmedLine) {
-        currentContent += (currentContent ? '\n' : '') + line;
-      }
-    }
-    
-    // 处理最后一个section
-    if (currentSection === 'summary') {
-      result.summary = currentContent.trim();
-    } else if (currentSection === 'importantTopics') {
-      result.importantTopics = currentContent.split('\n').filter(item => item.trim().startsWith('•')).map(item => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-    } else if (currentSection === 'keyFacts') {
-      result.keyFacts = currentContent.split('\n').filter(item => item.trim().startsWith('•')).map(item => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-    } else if (currentSection === 'preferences') {
-      result.preferences = currentContent.split('\n').filter(item => item.trim().startsWith('•')).map(item => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-    } else if (currentSection === 'context') {
-      result.context = currentContent.trim();
-    }
-    
-    return result;
+    // 直接使用JSON格式进行编辑
+    setEditingMemoryId(memoryId);
+    setEditingContent(formatMemoryForDisplay(memory));
+    setSelectedMemoryId(memoryId);
   };
 
   // 保存编辑
@@ -255,8 +166,14 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
       const memory = memories.find(m => m.id === memoryId);
       if (!memory) return;
       
-      // 解析格式化文本
-      const parsedData = parseFormattedContent(editingContent);
+      // 解析JSON数据
+      let parsedData;
+      try {
+        parsedData = JSON.parse(editingContent);
+      } catch (error) {
+        notification.error('JSON格式错误，请检查格式');
+        return;
+      }
       
       const token = localStorage.getItem('accessToken');
       const updateResponse = await fetch(`/api/memories/${memoryId}`, {
@@ -345,59 +262,95 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
     }
   };
 
-  // 格式化记忆内容
+  // 格式化记忆内容用于列表显示
   const formatMemoryContent = (content: string): string => {
-    if (!content) return '';
+    if (!content) return '无内容';
     
-    try {
-      const parsed = JSON.parse(content);
-      if (typeof parsed === 'object' && parsed.summary) {
-        return parsed.summary;
-      }
-      return content;
-    } catch {
-      return content;
+    // 如果内容太长，截取前100个字符
+    if (content.length > 100) {
+      return content.substring(0, 100) + '...';
     }
+    
+    return content;
   };
 
-  // 格式化记忆数据为可读格式
-  const formatMemoryForDisplay = (memory: MemoryItem) => {
-    const data = {
-      summary: memory.parsedContent.summary || '',
-      importantTopics: memory.parsedContent.importantTopics || [],
-      keyFacts: memory.parsedContent.keyFacts || [],
-      preferences: memory.parsedContent.preferences || [],
-      context: memory.parsedContent.context || '',
-      metadata: {
-        conversation_id: memory.conversation_id,
-        agent_id: memory.agent_id,
-        memory_type: memory.memory_type,
-        importance_score: memory.importance_score,
-        tokens_saved: memory.tokens_saved,
-        source_message_range: memory.source_message_range,
-        created_at: memory.created_at
+  // 清理和格式化JSON内容
+  const cleanJsonContent = (obj: any): any => {
+    if (typeof obj === 'string') {
+      // 尝试解析嵌套的JSON字符串
+      if (obj.startsWith('```json\n') && obj.endsWith('\n```')) {
+        try {
+          const jsonStr = obj.slice(8, -4); // 移除 ```json\n 和 \n```
+          return JSON.parse(jsonStr);
+        } catch {
+          return obj.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        }
       }
+      // 处理普通的转义字符
+      return obj.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(cleanJsonContent);
+    }
+    
+    if (obj && typeof obj === 'object') {
+      const cleaned: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        cleaned[key] = cleanJsonContent(value);
+      }
+      return cleaned;
+    }
+    
+    return obj;
+  };
+
+  // 简单的JSON格式化显示
+  const formatMemoryForDisplay = (memory: MemoryItem) => {
+    // 构建优化的数据结构，避免重复显示
+    const rawData: any = {};
+    
+    // 优先显示 summary 对象中的内容（如果存在且有意义）
+    if (memory.parsedContent.summary && typeof memory.parsedContent.summary === 'object') {
+      rawData.summary = memory.parsedContent.summary;
+    } else if (memory.parsedContent.summary) {
+      rawData.summary = memory.parsedContent.summary;
+    }
+    
+    // 只有当这些字段有内容时才显示
+    if (memory.parsedContent.importantTopics && memory.parsedContent.importantTopics.length > 0) {
+      rawData.importantTopics = memory.parsedContent.importantTopics;
+    }
+    
+    if (memory.parsedContent.keyFacts && memory.parsedContent.keyFacts.length > 0) {
+      rawData.keyFacts = memory.parsedContent.keyFacts;
+    }
+    
+    if (memory.parsedContent.preferences && memory.parsedContent.preferences.length > 0) {
+      rawData.preferences = memory.parsedContent.preferences;
+    }
+    
+    // 只有当 context 与 summary 不同时才显示
+    if (memory.parsedContent.context && 
+        JSON.stringify(memory.parsedContent.context) !== JSON.stringify(memory.parsedContent.summary)) {
+      rawData.context = memory.parsedContent.context;
+    }
+    
+    // 始终显示元数据
+    rawData.metadata = {
+      conversation_id: memory.conversation_id,
+      agent_id: memory.agent_id,
+      memory_type: memory.memory_type,
+      importance_score: memory.importance_score,
+      tokens_saved: memory.tokens_saved,
+      source_message_range: memory.source_message_range,
+      created_at: memory.created_at
     };
     
-    let formatted = '';
+    // 清理数据中的转义字符和嵌套JSON
+    const cleanedData = cleanJsonContent(rawData);
     
-    if (data.summary) {
-      formatted += `**摘要：**\n${data.summary}\n\n`;
-    }
-    
-    if (data.importantTopics.length > 0) {
-      formatted += `**重要话题：**\n${data.importantTopics.map(topic => `• ${topic}`).join('\n')}\n\n`;
-    }
-    
-    if (data.keyFacts.length > 0) {
-      formatted += `**关键事实：**\n${data.keyFacts.map(fact => `• ${fact}`).join('\n')}\n\n`;
-    }
-    
-    if (data.preferences.length > 0) {
-      formatted += `**用户偏好：**\n${data.preferences.map(pref => `• ${pref}`).join('\n')}\n\n`;
-    }
-    
-    return formatted;
+    return JSON.stringify(cleanedData, null, 2);
   };
 
   return (
@@ -519,92 +472,67 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                         const selectedMemory = memories.find(m => m.id === selectedMemoryId);
                         if (!selectedMemory) return null;
                         
-                        // 构建完整的JSON数据
-                        const memoryJsonData = {
-                          id: selectedMemory.id,
-                          summary: selectedMemory.parsedContent.summary || '',
-                          content: selectedMemory.content || '',
-                          importantTopics: selectedMemory.parsedContent.importantTopics || [],
-                          keyFacts: selectedMemory.parsedContent.keyFacts || [],
-                          preferences: selectedMemory.parsedContent.preferences || [],
-                          context: selectedMemory.parsedContent.context || '',
-                          metadata: {
-                            conversation_id: selectedMemory.conversation_id,
-                            agent_id: selectedMemory.agent_id,
-                            memory_type: selectedMemory.memory_type,
-                            importance_score: selectedMemory.importance_score,
-                            tokens_saved: selectedMemory.tokens_saved,
-                            source_message_range: selectedMemory.source_message_range,
-                            created_at: selectedMemory.created_at
-                          }
-                        };
-                        
                         return (
-                          <div className="h-full flex flex-col">
-                            {/* 统一的记忆内容区域 */}
-                            <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
-                              <div className="space-y-4">
-                                {/* 标题和操作按钮 */}
-                                <div className="flex items-center justify-between">
-                                  <h4 className="text-lg font-medium text-theme-foreground">
-                                    {editingMemoryId === selectedMemory.id ? '编辑记忆' : '记忆内容'}
-                                  </h4>
-                                  <div className="flex items-center gap-2">
-                                    {editingMemoryId === selectedMemory.id ? (
-                                      <>
-                                        <button
-                                          onClick={() => handleSaveEdit(selectedMemory.id)}
-                                          className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors duration-200 font-medium text-sm"
-                                        >
-                                          保存
-                                        </button>
-                                        <button
-                                          onClick={handleCancelEdit}
-                                          className="px-4 py-2 bg-theme-background border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card transition-colors duration-200 text-sm"
-                                        >
-                                          取消
-                                        </button>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <button
-                                          onClick={() => handleEditMemory(selectedMemory.id)}
-                                          className="w-9 h-9 rounded-lg bg-theme-background hover:bg-theme-primary/10 flex items-center justify-center text-theme-foreground-muted hover:text-theme-primary transition-all duration-200 border border-theme-border"
-                                          title="编辑记忆"
-                                        >
-                                          <Edit3 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteMemory(selectedMemory)}
-                                          className="w-9 h-9 rounded-lg bg-theme-background hover:bg-theme-error/10 flex items-center justify-center text-theme-foreground-muted hover:text-theme-error transition-all duration-200 border border-theme-border"
-                                          title="删除记忆"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* 记忆内容显示/编辑区域 */}
-                                <div className="bg-theme-background border border-theme-border rounded-xl overflow-hidden h-[768px]">
-                                  {editingMemoryId === selectedMemory.id ? (
-                                    /* 编辑模式 */
-                                    <textarea
-                                      value={editingContent}
-                                      onChange={(e) => setEditingContent(e.target.value)}
-                                      className="w-full h-full p-4 text-sm bg-transparent border-none resize-none focus:outline-none font-mono text-theme-foreground"
-                                      placeholder="请输入JSON格式的记忆内容..."
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    /* 查看模式 - 格式化显示 */
-                                    <div className="p-4 text-sm text-theme-foreground leading-relaxed whitespace-pre-wrap break-words h-full overflow-y-auto scrollbar-thin">
-                                      {formatMemoryForDisplay(selectedMemory)}
-                                    </div>
-                                  )}
-                                </div>
+                          <div className="h-full flex flex-col p-6">
+                            {/* 标题和操作按钮 */}
+                            <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                              <h4 className="text-lg font-medium text-theme-foreground">
+                                {editingMemoryId === selectedMemory.id ? '编辑记忆' : '记忆内容'}
+                              </h4>
+                              <div className="flex items-center gap-2">
+                                {editingMemoryId === selectedMemory.id ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleSaveEdit(selectedMemory.id)}
+                                      className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors duration-200 font-medium text-sm"
+                                    >
+                                      保存
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEdit}
+                                      className="px-4 py-2 bg-theme-background border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card transition-colors duration-200 text-sm"
+                                    >
+                                      取消
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => handleEditMemory(selectedMemory.id)}
+                                      className="w-9 h-9 rounded-lg bg-theme-background hover:bg-theme-primary/10 flex items-center justify-center text-theme-foreground-muted hover:text-theme-primary transition-all duration-200 border border-theme-border"
+                                      title="编辑记忆"
+                                    >
+                                      <Edit3 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteMemory(selectedMemory)}
+                                      className="w-9 h-9 rounded-lg bg-theme-background hover:bg-theme-error/10 flex items-center justify-center text-theme-foreground-muted hover:text-theme-error transition-all duration-200 border border-theme-border"
+                                      title="删除记忆"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
                               </div>
+                            </div>
+                            
+                            {/* 记忆内容显示/编辑区域 - 统一高度80vh */}
+                            <div className="bg-theme-background border border-theme-border rounded-xl overflow-hidden" style={{ height: '80vh' }}>
+                              {editingMemoryId === selectedMemory.id ? (
+                                /* 编辑模式 */
+                                <textarea
+                                  value={editingContent}
+                                  onChange={(e) => setEditingContent(e.target.value)}
+                                  className="w-full h-full p-4 text-sm bg-transparent border-none resize-none focus:outline-none font-mono text-theme-foreground"
+                                  placeholder="请输入JSON格式的记忆内容..."
+                                  autoFocus
+                                />
+                              ) : (
+                                /* 查看模式 - JSON格式显示 */
+                                <pre className="p-4 text-sm text-theme-foreground leading-relaxed h-full overflow-y-auto scrollbar-thin whitespace-pre-wrap break-words">
+                                  {formatMemoryForDisplay(selectedMemory)}
+                                </pre>
+                              )}
                             </div>
                           </div>
                         );

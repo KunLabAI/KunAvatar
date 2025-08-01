@@ -260,18 +260,10 @@ export class MemoryService {
       const summaryPrompt = this.buildSummaryPrompt(messages, settings);
       const summaryModel = settings.memory_model || 'undefined';
       
-      const response = await ollamaClient.chat({
+      const response = await ollamaClient.generate({
         model: summaryModel,
-        messages: [
-          {
-            role: 'system',
-            content: settings.memory_system_prompt || this.getDefaultMemoryPrompt(settings.summary_style)
-          },
-          {
-            role: 'user',
-            content: summaryPrompt
-          }
-        ],
+        prompt: summaryPrompt,
+        system: settings.memory_system_prompt || this.getDefaultMemoryPrompt(settings.summary_style),
         stream: false,
         options: {
           temperature: 0.3,
@@ -279,19 +271,19 @@ export class MemoryService {
         }
       });
 
-      if (!response.message?.content) {
+      if (!response.response) {
         return null;
       }
 
       try {
-        return JSON.parse(response.message.content);
+        return JSON.parse(response.response);
       } catch {
         return {
-          summary: response.message.content,
+          summary: response.response,
           importantTopics: [],
           keyFacts: [],
           preferences: [],
-          context: response.message.content
+          context: response.response
         };
       }
 

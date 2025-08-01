@@ -78,7 +78,7 @@ export function ToolSettings({
 
   return (
     <div className="absolute bottom-full left-0 right-0 z-50">
-      <div className="max-w-4xl mx-auto px-4 pb-4">
+      <div className="max-w-4xl mx-auto">
         {/* 面板容器 - 统一布局在输入组件上方，适配输入组件宽度 */}
         <div className="space-y-4">
           {/* 工具设置面板 */}

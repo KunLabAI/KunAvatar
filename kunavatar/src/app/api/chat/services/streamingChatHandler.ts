@@ -524,12 +524,14 @@ export class StreamingChatHandler {
           );
         }
         
-        // 检查是否需要生成标题（等待完成以确保在流关闭前发送事件）
-        await StreamingChatHandler.checkAndGenerateTitle(
+        // 异步生成标题，不阻塞流的结束，提升用户体验
+        StreamingChatHandler.checkAndGenerateTitle(
           chatRequest.conversationId,
           chatRequest.titleSummarySettings,
           streamController
-        );
+        ).catch(error => {
+          console.error('异步标题生成失败:', error);
+        });
       } catch (dbError) {
         console.error('保存助手消息到数据库失败:', dbError);
       }

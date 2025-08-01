@@ -111,7 +111,7 @@ export function ImageUploadControl({
         badge={getBadge()}
         statusIndicator={getStatusIndicator()}
       >
-        <ImageIcon className="w-4 h-4" />
+        <ImageIcon className="w-5 h-5" />
       </BaseControlButton>
     </>
   );

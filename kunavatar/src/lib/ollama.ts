@@ -100,6 +100,22 @@ export interface ChatRequest {
   };
 }
 
+export interface GenerateRequest {
+  model: string;
+  prompt: string;
+  system?: string;
+  stream?: boolean;
+  options?: {
+    temperature?: number;
+    top_p?: number;
+    top_k?: number;
+    repeat_penalty?: number;
+    seed?: number;
+    num_predict?: number;
+    stop?: string[];
+  };
+}
+
 export interface ChatResponse {
   model: string;
   created_at: string;
@@ -110,6 +126,20 @@ export interface ChatResponse {
     thinking?: string; // 思考模型的思考过程
   };
   done: boolean;
+  total_duration?: number;
+  load_duration?: number;
+  prompt_eval_count?: number;
+  prompt_eval_duration?: number;
+  eval_count?: number;
+  eval_duration?: number;
+}
+
+export interface GenerateResponse {
+  model: string;
+  created_at: string;
+  response: string;
+  done: boolean;
+  done_reason?: string;
   total_duration?: number;
   load_duration?: number;
   prompt_eval_count?: number;
@@ -241,6 +271,35 @@ export class OllamaClient {
     } catch (error) {
       console.error('聊天请求失败:', error);
       throw new Error('聊天请求失败，请检查网络连接和Ollama服务状态');
+    }
+  }
+
+  /**
+   * 发送生成请求（非流式）
+   */
+  async generate(request: GenerateRequest): Promise<GenerateResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...request,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ollama API 错误响应:', response.status, response.statusText, errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('生成请求失败:', error);
+      throw new Error('生成请求失败，请检查网络连接和Ollama服务状态');
     }
   }
 
