@@ -10,6 +10,7 @@ import {
   ImageUploadControl
 } from './input-controls';
 import { useModelVisionValidation } from '../hooks/useModelVisionValidation';
+import { ImagePreview } from './ImagePreview';
 
 type ChatMode = 'model' | 'agent';
 
@@ -130,6 +131,17 @@ export function MessageInput({
     }
   });
 
+  // 获取模型显示名称的函数
+  const getModelDisplayName = useCallback(() => {
+    if (chatMode === 'agent') {
+      return selectedAgent?.name || '智能体';
+    } else {
+      // 在availableModels中查找匹配的模型
+      const model = availableModels.find(m => m.base_model === selectedModel);
+      return model?.display_name || selectedModel || '模型';
+    }
+  }, [chatMode, selectedModel, selectedAgent, availableModels]);
+
   // 检查是否可以发送消息
   const canSend = !isLoading && !isStreaming && !disabled && (message.trim().length > 0 || images.length > 0);
   const hasSelection = chatMode === 'model' ? !!selectedModel : !!selectedAgent;
@@ -196,6 +208,19 @@ export function MessageInput({
         clearTimeout(adjustHeightTimerRef.current);
       }
     };
+  }, []);
+
+  // 监听模型多模态支持状态变化，当模型不支持多模态时清除图片
+  useEffect(() => {
+    if (modelSupportsVision === false && images.length > 0) {
+      console.log('模型不支持多模态，清除已上传的图片');
+      setImages([]);
+    }
+  }, [modelSupportsVision, images.length]);
+
+  // 删除单个图片
+  const handleRemoveImage = useCallback((index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   }, []);
 
   // 处理发送消息
@@ -341,6 +366,13 @@ export function MessageInput({
   return (
     <div className="flex-shrink-0 p-4">
       <div className="max-w-4xl mx-auto">
+        {/* 图片预览区域 */}
+        <ImagePreview
+          images={images}
+          onRemoveImage={handleRemoveImage}
+          disabled={disabled || isStreaming}
+        />
+        
         {/* 整合的输入组件：控件栏 + 输入框 */}
         <div className="bg-theme-card border border-theme-border rounded-xl shadow-sm overflow-visible">
           {/* 控件栏 */}
@@ -419,7 +451,7 @@ export function MessageInput({
                   onKeyDown={handleKeyPress}
                   placeholder={
                     hasSelection 
-                      ? `与${chatMode === 'model' ? selectedModel : selectedAgent?.name}对话...`
+                      ? `与${getModelDisplayName()}对话...`
                       : `请先选择${chatMode === 'model' ? '模型' : '智能体'}...`
                   }
                   disabled={disabled || !hasSelection}

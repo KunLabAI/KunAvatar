@@ -280,18 +280,10 @@ ${combinedContent}
 3. 突出共同主题和模式
 4. 保持信息的连贯性`;
 
-      const response = await ollamaClient.chat({
+      const response = await ollamaClient.generate({
         model: memorySettings.memory_model,
-        messages: [
-          {
-            role: 'system',
-            content: '你是一个专业的记忆合并助手，擅长将多个相关记忆合并为一个更高级的记忆。'
-          },
-          {
-            role: 'user',
-            content: mergePrompt
-          }
-        ],
+        prompt: mergePrompt,
+        system: '你是一个专业的记忆合并助手，擅长将多个相关记忆合并为一个更高级的记忆。',
         stream: false,
         options: {
           temperature: 0.3,
@@ -299,21 +291,21 @@ ${combinedContent}
         }
       });
       
-      if (!response.message?.content) {
+      if (!response.response) {
         return null;
       }
       
       // 解析合并后的记忆
       let mergedContent: any;
       try {
-        mergedContent = JSON.parse(response.message.content);
+        mergedContent = JSON.parse(response.response);
       } catch {
         mergedContent = {
-          summary: response.message.content,
+          summary: response.response,
           importantTopics: [],
           keyFacts: [],
           preferences: [],
-          context: response.message.content
+          context: response.response
         };
       }
       

@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbOperations, agentMessageOperations } from '../../../../../lib/database';
 import { MemoryService } from '../../../chat/services/memoryService';
 import { ContextManagerService } from '../../../chat/services/contextManagerService';
-import { MessageStorageService } from '../../../chat/services/messageStorageService';
-
 /**
  * 强制清理记忆和上下文的API端点
  */

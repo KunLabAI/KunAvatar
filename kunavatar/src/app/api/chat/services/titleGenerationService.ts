@@ -165,19 +165,17 @@ export class TitleGenerationService {
       console.log('🔧 使用的提示词:', titlePrompt);
 
       // 调用模型生成标题
-      const response = await ollamaClient.chat({
+      const response = await ollamaClient.generate({
         model,
-        messages: [
-          {
-            role: 'user',
-            content: titlePrompt
-          }
-        ],
-        stream: false,
-        options: {}
+        prompt: titlePrompt,
+        options: {
+          temperature: 0.7,
+          num_predict: 50, // 标题不需要太长
+          stop: ["\n", "\r\n"] // 遇到换行符就停止
+        }
       });
 
-      let generatedTitle = response.message?.content?.trim() || '';
+      let generatedTitle = response.response?.trim() || '';
 
       // 清理生成的标题
       generatedTitle = generatedTitle
