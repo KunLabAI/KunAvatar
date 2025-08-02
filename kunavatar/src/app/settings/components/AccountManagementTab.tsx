@@ -6,6 +6,7 @@ import { User, Edit, Save, X, Eye, EyeOff, Shield, Mail, Calendar, Check, LogOut
 import { useNotification } from '@/components/notification';
 import { formatTime } from '@/lib/utils/time';
 import { PageLoading } from '@/components/Loading';
+import type { ElectronAPI } from '@/types/electron';
 
 interface UserInfo {
   id: number;
@@ -117,7 +118,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [notification]);
 
   useEffect(() => {
     fetchUserInfo();
@@ -171,17 +172,45 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
       // 显示成功消息
       notification.success('退出成功', '您已成功退出登录');
       
-      // 使用 window.location.href 强制跳转到登录页面
-      // 这样可以避免React Router的状态问题
-      setTimeout(() => {
-        window.location.href = '/login';
+      // 检查是否在Electron环境中
+      const isElectron = typeof window !== 'undefined' && window.electronAPI;
+      
+      setTimeout(async () => {
+        if (isElectron && window.electronAPI) {
+          // Electron环境：使用IPC重新加载到登录页面
+          try {
+            const result = await window.electronAPI.reloadToLogin();
+            if (!result.success) {
+              console.error('Electron跳转失败:', result.error);
+              // 如果Electron跳转失败，回退到普通跳转
+              window.location.href = '/login';
+            }
+          } catch (error) {
+            console.error('Electron跳转出错:', error);
+            // 如果Electron跳转出错，回退到普通跳转
+            window.location.href = '/login';
+          }
+        } else {
+          // 浏览器环境：使用 window.location.href 强制跳转到登录页面
+          window.location.href = '/login';
+        }
       }, 500); // 给通知一点时间显示
     } catch (error) {
       console.error('退出登录失败:', error);
       notification.error('退出失败', '退出登录时发生错误');
+      
       // 即使出错也要跳转到登录页
-      setTimeout(() => {
-        window.location.href = '/login';
+      const isElectron = typeof window !== 'undefined' && window.electronAPI;
+      setTimeout(async () => {
+        if (isElectron && window.electronAPI) {
+          try {
+            await window.electronAPI.reloadToLogin();
+          } catch (electronError) {
+            window.location.href = '/login';
+          }
+        } else {
+          window.location.href = '/login';
+        }
       }, 1000);
     }
   };

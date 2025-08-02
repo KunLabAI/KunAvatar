@@ -9,9 +9,15 @@
     "dev": "node start.js",
     "install-deps": "cd kunavatar && npm install",
     "build": "cd kunavatar && npm run build",
-    "lint": "cd kunavatar && npm run lint"
+    "lint": "cd kunavatar && npm run lint",
+    "electron:dev": "node electron/scripts/dev-electron.cjs",
+    "electron:build": "node electron/scripts/build-electron.cjs",
+    "electron:build:win": "node electron/scripts/build-electron.cjs win",
+    "electron:build:mac": "node electron/scripts/build-electron.cjs mac",
+    "electron:build:all": "node electron/scripts/build-electron.cjs all",
+    "electron:install": "cd electron && npm install"
   },
-  "keywords": ["kunavatar", "launcher", "auto-config"],
-  "author": "KunAvatar Team",
-  "license": "MIT"
+  "keywords": ["kunavatar", "launcher", "auto-config", "electron", "desktop"],
+  "author": "KunLabAI Team",
+  "license": "apache-2.0"
 }

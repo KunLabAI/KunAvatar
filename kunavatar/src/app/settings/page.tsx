@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePromptOptimizeSettings, useAvailableModels, useUserPermissions } from './hooks';
 import { Sidebar } from '../Sidebar';
-import { SettingsTabs, AssistantModelTab, AccountManagementTab, UserManagementTab, RoleManagementTab, AppearanceTab, AppInfoTab, InferenceEngineTab } from './components';
+import { SettingsTabs, AssistantModelTab, AccountManagementTab, UserManagementTab, RoleManagementTab, AppearanceTab, AppInfoTab, InferenceEngineTab, LogManagementTab } from './components';
 import { NotificationProvider, NotificationContainer, useNotification } from '@/components/notification';
 import { PageLoading } from '@/components/Loading';
 import { useConversations } from '@/hooks/useConversations';
@@ -128,6 +128,9 @@ function SettingsPageContent() {
               )}
               {activeTab === 'appearance' && (
                 <AppearanceTab />
+              )}
+              {activeTab === 'logs' && (
+                <LogManagementTab />
               )}
               {activeTab === 'appinfo' && (
                 <AppInfoTab />

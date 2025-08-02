@@ -9,3 +9,4 @@ export { RoleManagementTab } from './RoleManagementTab';
 export { AppearanceTab } from './AppearanceTab';
 export { AppInfoTab } from './AppInfoTab';
 export { InferenceEngineTab } from './InferenceEngineTab';
+export { LogManagementTab } from './LogManagementTab';
