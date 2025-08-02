@@ -41,13 +41,33 @@ export function useAuthState() {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false); // 新增：标记是否已初始化
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setUser(null);
-    // 使用 window.location.href 强制跳转，避免React Router状态问题
-    setTimeout(() => {
-      window.location.href = '/login';
+    
+    // 检查是否在Electron环境中
+    const isElectron = typeof window !== 'undefined' && window.electronAPI;
+    
+    setTimeout(async () => {
+      if (isElectron) {
+        // Electron环境：使用IPC重新加载到登录页面
+        try {
+          const result = await window.electronAPI!.reloadToLogin();
+          if (!result.success) {
+            console.error('Electron跳转失败:', result.error);
+            // 如果Electron跳转失败，回退到普通跳转
+            window.location.href = '/login';
+          }
+        } catch (error) {
+          console.error('Electron跳转出错:', error);
+          // 如果Electron跳转出错，回退到普通跳转
+          window.location.href = '/login';
+        }
+      } else {
+        // 浏览器环境：使用 window.location.href 强制跳转，避免React Router状态问题
+        window.location.href = '/login';
+      }
     }, 100);
   };
 

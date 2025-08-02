@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const TABS = [
   { key: 'account', label: '账户管理' },
@@ -9,6 +9,7 @@ const TABS = [
   { key: 'assistant', label: '辅助模型' },
   { key: 'inference', label: '推理引擎' },
   { key: 'appearance', label: '界面设置' },
+  { key: 'logs', label: '日志管理', electronOnly: true },
   { key: 'appinfo', label: '应用信息' },
 ];
 
@@ -19,8 +20,21 @@ interface SettingsTabsProps {
 }
 
 export function SettingsTabs({ activeTab, onTabChange, isAdmin }: SettingsTabsProps) {
-  // 根据用户权限过滤标签页
-  const availableTabs = TABS.filter(tab => !tab.adminOnly || isAdmin);
+  const [isElectron, setIsElectron] = useState(false);
+
+  // 检查是否在Electron环境中
+  useEffect(() => {
+    setIsElectron(typeof window !== 'undefined' && !!window.electronAPI);
+  }, []);
+
+  // 根据用户权限和环境过滤标签页
+  const availableTabs = TABS.filter(tab => {
+    // 检查管理员权限
+    if (tab.adminOnly && !isAdmin) return false;
+    // 检查Electron环境
+    if (tab.electronOnly && !isElectron) return false;
+    return true;
+  });
 
   return (
     <div className="mb-6">
