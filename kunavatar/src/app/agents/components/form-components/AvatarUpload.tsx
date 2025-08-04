@@ -4,6 +4,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Bot, Camera, X } from 'lucide-react';
 
+// Electron环境类型声明
+declare global {
+  interface Window {
+    process?: {
+      type?: string;
+    };
+  }
+}
+
 interface AvatarUploadProps {
   currentAvatar: string | null;
   onAvatarChange: (avatar: string | null) => void;
@@ -101,9 +110,23 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         throw new Error('上传失败');
       }
       
-      const { url } = await uploadResponse.json();
-      setPreviewUrl(url);
-      onAvatarChange(url);
+      const { url, apiUrl, base64 } = await uploadResponse.json();
+      
+      // 检测是否为Electron环境
+      const isElectron = typeof window !== 'undefined' && window.process && window.process.type;
+      
+      // 在Electron环境下，优先使用base64，然后是API路由，最后是静态文件路径
+      let avatarUrl = url;
+      if (isElectron) {
+        if (base64) {
+          avatarUrl = base64;
+        } else if (apiUrl) {
+          avatarUrl = apiUrl;
+        }
+      }
+      
+      setPreviewUrl(avatarUrl);
+      onAvatarChange(avatarUrl);
     } catch (error) {
       console.error('头像上传失败:', error);
       alert('头像上传失败，请重试');

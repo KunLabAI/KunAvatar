@@ -12,9 +12,10 @@ import {
   useConversations,
   useChatMode,
   useMessageSender,
-  useModelToolValidation
+  useModelToolValidation,
+  ChatMode
 } from './hooks';
-import { STORAGE_KEYS } from './types';
+import { STORAGE_KEYS, Agent } from './types';
 import { useUserSettings } from '@/contexts/UserSettingsContext';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoading } from '@/components/Loading';
@@ -168,6 +169,22 @@ function ChatPageContent() {
     }
   }, [models, modelsLoading]);
 
+  // 🔄 模式切换时的清理逻辑
+  useEffect(() => {
+    // 只在用户手动切换模式时执行清理逻辑
+    if (isUserModeChange) {
+      if (chatMode === 'model') {
+        // 切换到模型模式时，清除智能体选择
+        if (selectedAgent) {
+          console.log('🤖 切换到模型模式，清除智能体选择');
+          setSelectedAgent(null);
+        }
+      }
+      // 🔥 移除自动选择逻辑，让用户手动选择智能体和模型
+      console.log('🔄 模式切换到:', chatMode, '等待用户手动选择');
+    }
+  }, [chatMode, isUserModeChange, selectedAgent, setSelectedAgent]);
+
   // 🔄 智能模式切换时清空消息 - 精确逻辑
   useEffect(() => {
     const currentState = {
@@ -232,13 +249,6 @@ function ChatPageContent() {
       const newUrl = '/chat';
       window.history.replaceState(null, '', newUrl);
       console.log('已重置对话状态，下次发送消息时将创建新对话');
-      
-      // 🔥 新增：清除URL参数，防止重新加载历史
-      if (typeof window !== 'undefined') {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('id');
-        window.history.replaceState(null, '', url.pathname);
-      }
     }
     
     // 更新上一次的状态
@@ -405,7 +415,7 @@ function ChatPageContent() {
   }, [searchParams, agents, setChatMode, setSelectedAgent, setSelectedModel]);
 
   // 🆕 创建新对话（业务逻辑层）
-  const handleCreateNewConversation = async (): Promise<string | null> => {
+  const handleCreateNewConversation = async (targetMode?: ChatMode): Promise<string | null> => {
     if (isCreatingConversation) return null;
 
     try {
@@ -415,16 +425,37 @@ function ChatPageContent() {
       console.log('创建新对话前清空消息历史');
       messageSender.clearMessages();
       
-      // 根据当前模式创建对话
-      const conversationData = {
-        title: chatMode === 'model' 
-          ? `${selectedModel || '模型'}对话` 
-          : `${selectedAgent?.name || '智能体'}对话`,
-        model: chatMode === 'model' ? selectedModel : undefined,
-        agent_id: chatMode === 'agent' ? selectedAgent?.id : undefined,
-      };
+      // 使用目标模式或当前模式来创建对话
+      const effectiveMode = targetMode || chatMode;
+      
+      // 根据有效模式创建对话
+      let conversationData;
+      
+      if (effectiveMode === 'agent') {
+        // 智能体模式：确保有选中的智能体
+        if (!selectedAgent) {
+          console.error('智能体模式下没有选中的智能体');
+          return null;
+        }
+        conversationData = {
+          title: `与 ${selectedAgent.name} 的对话`,
+          agent_id: selectedAgent.id,
+          // 智能体模式下不设置model字段，由后端根据agent_id处理
+        };
+      } else {
+        // 模型模式：确保有选中的模型
+        if (!selectedModel) {
+          console.error('模型模式下没有选中的模型');
+          return null;
+        }
+        conversationData = {
+          title: `与 ${selectedModel} 的对话`,
+          model: selectedModel,
+          // 模型模式下不设置agent_id
+        };
+      }
 
-      console.log('创建新对话:', conversationData);
+      console.log('创建新对话 (模式:', effectiveMode, '):', conversationData);
       const newConversation = await createConversation(conversationData);
       if (newConversation) {
         console.log('新对话创建成功:', newConversation.id);
@@ -633,7 +664,28 @@ function ChatPageContent() {
           onModelChange={setSelectedModel}
           agents={agents}
           selectedAgent={selectedAgent}
-          onAgentChange={setSelectedAgent}
+          onAgentChange={(agent: Agent | null) => {
+            // 如果选择了智能体且当前有对话ID，重定向到新对话页面
+            if (agent && currentConversationId) {
+              console.log('🔄 切换智能体，重定向到新对话页面:', agent.name);
+              // 重定向到新对话页面，并传递智能体参数
+              router.push(`/chat?new=true&agent=${agent.id}`);
+              return;
+            }
+            
+            // 如果没有当前对话ID，直接设置智能体
+            setSelectedAgent(agent);
+            
+            // 如果选择了智能体，切换到智能体模式
+            if (agent) {
+              console.log('🤖 选择智能体:', agent.name);
+              setChatMode('agent');
+              setSelectedModel(agent.model.base_model);
+            } else {
+              console.log('🚫 取消选择智能体');
+            }
+          }}
+          onCreateNewConversation={handleCreateNewConversation}
         />
 
         {/* 💬 聊天消息区域 */}

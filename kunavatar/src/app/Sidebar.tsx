@@ -124,7 +124,7 @@ export function Sidebar({ conversations, chatMode, selectedAgent }: SidebarProps
       
       <div className="sidebar-container bg-theme-card flex flex-col h-full">
         {/* 顶部区域 */}
-        <div className="group p-4 border-b border-theme-border flex items-center relative">
+        <div className="group p-3 border-b border-theme-border flex items-center relative">
           <div className="w-8 h-8 flex-shrink-0 relative">
             <Image
               src="/assets/logo@64.svg"
