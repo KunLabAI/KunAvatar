@@ -19,6 +19,16 @@ const nextConfig = {
   compress: false, // 禁用gzip压缩
   poweredByHeader: false, // 禁用X-Powered-By头
   generateEtags: false, // 禁用ETag生成
+  
+  // 添加重写规则，确保上传文件在Electron环境下能正确访问
+  async rewrites() {
+    return [
+      {
+        source: '/upload/:path*',
+        destination: '/api/upload/:path*',
+      },
+    ];
+  },
 }
 
 export default nextConfig

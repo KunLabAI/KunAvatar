@@ -83,18 +83,6 @@ export function useChatMode(): UseChatModeReturn {
 
 
 
-  // 🔧 模式切换时的逻辑处理
-  useEffect(() => {
-    if (chatMode === 'model') {
-      if (selectedAgent) {
-        console.log('切换到模型模式，清除智能体选择');
-        setSelectedAgent(null);
-      }
-    } else if (chatMode === 'agent') {
-      console.log('切换到智能体模式，优先级基于 agent_id');
-    }
-  }, [chatMode, selectedAgent, setSelectedAgent]);
-
   // 🔄 从对话历史恢复模式（仅用于加载历史对话）
   const restoreModeFromConversation = useCallback((conversation: any, agents: Agent[]) => {
     if (!conversation) return;

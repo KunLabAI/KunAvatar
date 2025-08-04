@@ -12,6 +12,7 @@ import { UserSettingsProvider } from '@/contexts/UserSettingsContext'
 import { DownloadManagerProvider } from '@/contexts/DownloadManagerContext'
 import { GlobalDownloadManager } from '@/components/GlobalDownloadManager'
 import OllamaStatusChecker from '@/components/OllamaStatusChecker'
+import { ElectronLayout } from '@/components/ElectronLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,9 +43,9 @@ export default function RootLayout({
               <UserSettingsProvider>
                 <DownloadManagerProvider>
                   <NotificationProvider>
-                    <div className="min-h-screen">
+                    <ElectronLayout className="min-h-screen">
                       {children}
-                    </div>
+                    </ElectronLayout>
                     <NotificationManager />
                     <GlobalDownloadManager />
                     <OllamaStatusChecker />

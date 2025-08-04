@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    // 确保upload目录存在
+    // 确保upload目录存在 - 兼容Electron环境
     const uploadDir = join(process.cwd(), 'public', 'upload');
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
@@ -40,10 +40,19 @@ export async function POST(request: NextRequest) {
     // 保存文件
     await writeFile(filepath, buffer);
     
-    // 返回文件URL
-    const url = `/upload/${filename}`;
+    // 返回文件URL - 在Electron环境下使用API路由
+    const staticUrl = `/upload/${filename}`;
+    const apiUrl = `/api/upload/${filename}`;
     
-    return NextResponse.json({ url });
+    // 为Electron环境提供base64备选方案
+    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
+    
+    return NextResponse.json({ 
+      url: staticUrl,
+      apiUrl, // API路由URL，用于Electron环境
+      base64, // 提供base64作为备选
+      filename 
+    });
   } catch (error) {
     console.error('头像上传失败:', error);
     return NextResponse.json({ error: '上传失败' }, { status: 500 });

@@ -133,7 +133,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="form-input-base"
-                    placeholder="例如：客服助手、数据分析师..."
+                    placeholder="such as: Lucy、Tifa Lockhart、2B..."
                   />
                 </FormInput>
                 

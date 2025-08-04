@@ -480,13 +480,12 @@ html.theme-changing * {
   }
 }
 
-/* 侧边栏展开/收缩样式 - 简洁版本 */
 html[data-sidebar-state="collapsed"] .sidebar-container {
-  width: 64px;
+  width: 56px;
 }
 
 html[data-sidebar-state="expanded"] .sidebar-container {
-  width: 200px;
+  width: 176px;
 }
 
 /* 移动端响应式设计 */
@@ -496,7 +495,7 @@ html[data-sidebar-state="expanded"] .sidebar-container {
     position: fixed;
     left: 0;
     top: 0;
-    z-index: 1000;
+    z-index: 1001; /* 提高 z-index 以覆盖标题栏 */
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
     width: 280px;
@@ -533,6 +532,100 @@ html[data-sidebar-state="collapsed"] .sidebar-text {
 
 html[data-sidebar-state="expanded"] .sidebar-text {
   display: block !important;
+}
+
+/* 自定义标题栏样式 */
+.custom-titlebar {
+  -webkit-app-region: drag;
+  user-select: none;
+  position: relative;
+}
+
+.titlebar-button {
+  -webkit-app-region: no-drag;
+  transition: background-color 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.titlebar-button:hover {
+  background-color: var(--color-card-hover);
+}
+
+.titlebar-button:hover.close-button {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Electron 布局样式 */
+.electron-layout {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Electron 环境下的高度修复 - 使用更精确的选择器 */
+.electron-layout > .flex.h-screen {
+  height: calc(100vh - 2rem) !important; /* 只影响根级别的 flex h-screen 容器 */
+}
+
+.electron-layout .sidebar-container {
+  height: calc(100vh - 2rem); /* 减去标题栏高度 (32px = 2rem) */
+}
+
+/* 修复聊天页面主内容区域的高度 */
+.electron-layout .flex.h-screen > .flex-1.flex.flex-col {
+  height: calc(100vh - 2rem); /* 主内容区域高度修复 */
+  max-height: calc(100vh - 2rem);
+}
+
+/* 确保聊天区域和输入区域正确布局 */
+.electron-layout .flex.h-screen > .flex-1 > .relative:last-child {
+  position: relative;
+  flex-shrink: 0; /* 防止输入区域被压缩 */
+}
+
+/* 修复移动端在 Electron 环境下的高度 */
+@media (max-width: 768px) {
+  .electron-layout .sidebar-container {
+    height: calc(100vh - 2rem);
+  }
+  
+  .electron-layout .flex.h-screen > .flex-1.flex.flex-col {
+    height: calc(100vh - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+
+/* macOS 特殊处理 */
+@media (platform: darwin) {
+  .custom-titlebar {
+    padding-left: 80px; /* 为红绿灯按钮留出空间 */
+  }
+}
+
+/* 拖拽区域样式 */
+.drag-region {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+/* 确保交互元素不被拖拽 */
+.no-drag,
+button,
+input,
+select,
+textarea,
+a,
+.interactive,
+.titlebar-button,
+.sidebar-button {
+  -webkit-app-region: no-drag !important;
+  user-select: auto;
 }
 
 /* 按钮布局控制 */

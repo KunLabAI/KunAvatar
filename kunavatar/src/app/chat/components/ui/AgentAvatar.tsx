@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Bot } from 'lucide-react';
 
@@ -36,9 +36,10 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
 }) => {
   const sizeClass = sizeClasses[size];
   const iconSize = iconSizes[size];
+  const [imageError, setImageError] = useState(false);
   
-  // 如果有上传的头像，显示图片
-  if (agent?.avatar) {
+  // 如果有上传的头像且图片未出错，显示图片
+  if (agent?.avatar && !imageError) {
     return (
       <div className={`${sizeClass} rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
         <Image 
@@ -47,9 +48,9 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
           width={48}
           height={48}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            // 如果图片加载失败，隐藏图片元素，让父组件显示fallback
-            e.currentTarget.style.display = 'none';
+          onError={() => {
+            console.warn('头像加载失败，切换到fallback:', agent.avatar);
+            setImageError(true);
           }}
         />
       </div>
