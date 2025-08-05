@@ -128,7 +128,6 @@ function ChatPageContent() {
     enableTools,
     selectedTools,
     onTitleUpdate: useCallback((conversationId: string, title: string) => {
-      console.log('📝 收到标题更新:', conversationId, title);
       // 更新当前对话的标题
       if (updateConversationTitle) {
         updateConversationTitle(conversationId, title);
@@ -137,7 +136,6 @@ function ChatPageContent() {
       // 这样可以避免页面刷新，提供更好的用户体验
     }, [updateConversationTitle]),
     onConversationCleared: useCallback(() => {
-      console.log('🗑️ 收到对话清除通知，重置页面状态');
       // 清除当前对话ID
       setCurrentConversationId(null);
       
@@ -145,7 +143,6 @@ function ChatPageContent() {
       if (typeof window !== 'undefined') {
         const newUrl = '/chat';
         window.history.replaceState(null, '', newUrl);
-        console.log('📍 已重置URL:', newUrl);
       }
     }, []),
   });
@@ -281,10 +278,17 @@ function ChatPageContent() {
               if (result?.conversation) {
                 console.log('🔄 加载对话历史完成，恢复对话模式:', result.conversation);
                 // 从对话历史恢复模式和选择
-                if (agents && agents.length > 0) {
-                  restoreModeFromConversation(result.conversation, agents);
+                if (result.conversation.agent_id) {
+                  // 智能体模式：需要智能体数据才能恢复
+                  if (agents && agents.length > 0) {
+                    restoreModeFromConversation(result.conversation, agents);
+                  } else {
+                    console.warn('⚠️ 智能体数据未加载，无法恢复智能体模式');
+                  }
                 } else {
-                  console.warn('⚠️ 智能体数据未加载，无法恢复智能体模式');
+                  // 模型模式：不需要智能体数据，直接恢复
+                  console.log('🔧 检测到模型模式对话，直接恢复模式');
+                  restoreModeFromConversation(result.conversation, agents || []);
                 }
               }
             }).catch(error => {
@@ -316,16 +320,12 @@ function ChatPageContent() {
 
   // 🔍 验证对话ID有效性 - 当conversations加载完成后验证当前对话ID
   useEffect(() => {
-    // 🔥 修复：只在conversations刚加载完成时进行一次性验证，避免与历史加载逻辑重复
     if (conversations && conversations.length > 0 && currentConversationId) {
-      // 这里只处理初始加载时的验证，历史加载时的验证已在上面的useEffect中处理
       console.log('🔍 验证初始对话ID有效性:', currentConversationId);
     }
-  }, [conversations]); // 🔥 修复：只依赖conversations，避免重复验证
+  }, [conversations]); 
 
-  // 🔗 处理URL参数 - 优化依赖项避免无限循环
   useEffect(() => {
-    // 🔥 新增：如果用户刚刚手动切换了模式，跳过URL参数处理，避免重新加载对话
     if (isUserModeChange) {
       console.log('🔒 用户刚刚手动切换模式，跳过URL参数处理');
       return;
@@ -336,14 +336,12 @@ function ChatPageContent() {
     const modelParam = searchParams.get('model');
 
     if (conversationId) {
-      // 加载指定对话，但要验证对话是否有效
       console.log('从URL加载对话:', conversationId);
       
       // 验证对话ID是否在conversations列表中存在
       if (conversations && conversations.length > 0) {
         const conversationExists = conversations.some(conv => conv.id === conversationId);
         if (conversationExists) {
-          // 🔥 修复：只有当currentConversationId与URL中的不同时才设置，避免重复触发
           if (currentConversationId !== conversationId) {
             setCurrentConversationId(conversationId);
             console.log('✅ 对话ID有效，已设置');

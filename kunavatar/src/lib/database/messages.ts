@@ -195,7 +195,13 @@ export const messageOperations = {
       data.user_id,
       0, // sequence_number
       timestamp,
-      null, null, null, null, null, null // 统计信息字段
+      null, // images
+      null, // total_duration
+      null, // load_duration
+      null, // prompt_eval_count
+      null, // prompt_eval_duration
+      null, // eval_count
+      null  // eval_duration - 修复：添加缺失的第14个参数
     );
 
     // 更新工具相关字段

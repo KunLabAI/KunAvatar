@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import Database from 'better-sqlite3';
 import path from 'path';
+import { getDatabasePath } from '@/lib/database/db-path';
 
-const dbPath = path.join(process.cwd(), 'chat.db');
+const dbPath = getDatabasePath();
 
 interface DbServerResult {
   id: number;

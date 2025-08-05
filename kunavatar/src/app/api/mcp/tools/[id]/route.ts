@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Database from 'better-sqlite3';
 import path from 'path';
+import { getDatabasePath } from '@/lib/database/db-path';
 
-const dbPath = path.join(process.cwd(), 'chat.db');
+const dbPath = getDatabasePath();
 
 /**
  * PUT /api/mcp/tools/[id] - 更新工具状态

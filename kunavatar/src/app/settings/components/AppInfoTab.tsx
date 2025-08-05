@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Globe, Mail, Package, Info, Code, Download, RefreshCw, CheckCircle, AlertCircle, Clock, ExternalLink } from 'lucide-react';
 import { useNotification } from '@/components/notification';
-import type { ElectronAPI } from '@/types/electron';
+
 
 
 interface AppInfoTabProps {
@@ -38,6 +38,19 @@ export function AppInfoTab({}: AppInfoTabProps) {
       loadVersionHistory();
       setupUpdateListeners();
     }
+
+    // 清理函数：移除所有事件监听器
+    return () => {
+      if (window.electronAPI && window.electronAPI.removeAllListeners) {
+        window.electronAPI.removeAllListeners('update-checking');
+        window.electronAPI.removeAllListeners('update-available');
+        window.electronAPI.removeAllListeners('update-not-available');
+        window.electronAPI.removeAllListeners('update-error');
+        window.electronAPI.removeAllListeners('update-download-progress');
+        window.electronAPI.removeAllListeners('update-downloaded');
+        window.electronAPI.removeAllListeners('update-install-simulated');
+      }
+    };
   }, []);
 
   // 加载应用信息
@@ -56,11 +69,34 @@ export function AppInfoTab({}: AppInfoTabProps) {
   const loadVersionHistory = async () => {
     try {
       if (window.electronAPI) {
-        const history = await window.electronAPI.getVersionHistory();
-        setVersionHistory(history);
+        // 首先清理重复的本地数据
+        await window.electronAPI.cleanDuplicateHistory();
+        
+        // 然后尝试获取完整的GitHub版本历史
+        const githubHistory = await window.electronAPI.fetchGitHubReleases();
+        console.log('获取到的GitHub版本历史:', githubHistory);
+        
+        if (githubHistory && githubHistory.length > 0) {
+          setVersionHistory(githubHistory);
+        } else {
+          // 如果GitHub API失败，回退到本地存储的版本历史
+          const localHistory = await window.electronAPI.getVersionHistory();
+          console.log('获取到的本地版本历史:', localHistory);
+          setVersionHistory(localHistory || []);
+        }
       }
     } catch (error) {
       console.error('获取版本历史失败:', error);
+      // 出错时尝试获取本地版本历史
+      try {
+        if (window.electronAPI) {
+          const localHistory = await window.electronAPI.getVersionHistory();
+          setVersionHistory(localHistory || []);
+        }
+      } catch (localError) {
+        console.error('获取本地版本历史也失败:', localError);
+        setVersionHistory([]);
+      }
     }
   };
 
@@ -92,17 +128,78 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setIsDownloading(false);
       setLastError(error);
       
-      // 根据错误类型提供更友好的提示
-      let errorMessage = '检查更新时遇到问题，请稍后重试';
-      if (error.includes('No published versions')) {
-        errorMessage = '暂无可用的发布版本，请稍后再试';
-      } else if (error.includes('network') || error.includes('timeout')) {
-        errorMessage = '网络连接问题，请检查网络后重试';
-      } else if (error.includes('GitHub')) {
-        errorMessage = 'GitHub服务暂时不可用，请稍后重试';
-      }
+      // 更优雅的错误处理和分类
+      const processError = (errorMessage: string) => {
+        // 开发模式相关错误（不显示给用户）
+        const developmentErrors = [
+          'dev-app-update.yml',
+          'ENOENT',
+          'no such file or directory',
+          'Cannot parse releases feed',
+          'HttpError: 406',
+          'Unable to find latest version on GitHub'
+        ];
+        
+        const isDevelopmentError = developmentErrors.some(pattern => 
+          errorMessage.includes(pattern)
+        );
+        
+        if (isDevelopmentError) {
+          console.warn('开发模式更新检查错误（已忽略）:', errorMessage);
+          return null; // 不显示给用户
+        }
+        
+        // 网络相关错误
+        if (errorMessage.includes('network') || 
+            errorMessage.includes('timeout') || 
+            errorMessage.includes('ECONNREFUSED') ||
+            errorMessage.includes('ENOTFOUND')) {
+          return {
+            title: '网络连接问题',
+            message: '无法连接到更新服务器，请检查网络连接后重试'
+          };
+        }
+        
+        // GitHub API相关错误
+        if (errorMessage.includes('GitHub') || 
+            errorMessage.includes('api.github.com') ||
+            errorMessage.includes('releases')) {
+          return {
+            title: 'GitHub服务暂时不可用',
+            message: '无法访问GitHub更新服务，请稍后重试'
+          };
+        }
+        
+        // 版本相关错误
+        if (errorMessage.includes('No published versions') ||
+            errorMessage.includes('no releases found')) {
+          return {
+            title: '暂无可用版本',
+            message: '当前项目暂未发布正式版本，请关注项目更新'
+          };
+        }
+        
+        // 权限相关错误
+        if (errorMessage.includes('permission') || 
+            errorMessage.includes('EACCES')) {
+          return {
+            title: '权限不足',
+            message: '没有足够权限执行更新操作，请以管理员身份运行'
+          };
+        }
+        
+        // 其他未知错误
+        return {
+          title: '更新检查失败',
+          message: '检查更新时遇到问题，请稍后重试'
+        };
+      };
       
-      notification.error('更新检查失败', errorMessage);
+      const errorInfo = processError(error);
+      
+      if (errorInfo) {
+        notification.error(errorInfo.title, errorInfo.message);
+      }
     });
 
     window.electronAPI.onDownloadProgress((progress) => {
@@ -117,6 +214,13 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setDownloadProgress(100);
       notification.success('下载完成', '更新已下载完成，重启应用以安装更新');
     });
+
+    // 监听开发模式下的模拟安装事件
+    if (window.electronAPI.onUpdateInstallSimulated) {
+      window.electronAPI.onUpdateInstallSimulated((data) => {
+        notification.info('开发模式', data.message);
+      });
+    }
   };
 
   // 检查更新
@@ -130,22 +234,15 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setIsCheckingUpdate(true);
       setUpdateStatus('checking');
       setLastError(''); // 清除之前的错误
+      // 调用检查更新，结果通过事件监听器处理
       await window.electronAPI.checkForUpdates();
     } catch (error) {
+      // 如果IPC调用本身失败，处理错误
       setIsCheckingUpdate(false);
       setUpdateStatus('error');
       const errorMsg = error instanceof Error ? error.message : String(error);
       setLastError(errorMsg);
-      
-      // 提供更友好的错误提示
-      let userMessage = '检查更新时遇到问题，请稍后重试';
-      if (errorMsg.includes('No published versions')) {
-        userMessage = '暂无可用的发布版本，请稍后再试';
-      } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
-        userMessage = '网络连接问题，请检查网络后重试';
-      }
-      
-      notification.error('检查更新失败', userMessage);
+      notification.error('检查更新失败', '无法启动更新检查，请稍后重试');
     }
   };
 
@@ -335,22 +432,104 @@ export function AppInfoTab({}: AppInfoTabProps) {
                   </div>
                 )}
 
-                {/* 错误信息显示 */}
+                {/* 错误信息显示 - 更优雅的错误展示 */}
                 {updateStatus === 'error' && lastError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-sm text-red-600 mb-2">
-                      {lastError.includes('No published versions') 
-                        ? '暂无可用的发布版本，这可能是因为项目还未发布正式版本。'
-                        : lastError.includes('network') || lastError.includes('timeout')
-                        ? '网络连接问题，请检查您的网络连接。'
-                        : lastError.includes('GitHub')
-                        ? 'GitHub服务暂时不可用，请稍后重试。'
-                        : '检查更新时遇到问题，请稍后重试。'
-                      }
-                    </p>
-                    <p className="text-xs text-red-500">
-                      错误详情: {lastError}
-                    </p>
+                  <div className=" border-red-200 rounded-lg">
+                    {(() => {
+                      // 根据错误类型显示不同的用户友好信息
+                      const getErrorDisplay = (errorMessage: string) => {
+                        // 开发模式错误
+                        const developmentErrors = [
+                          'dev-app-update.yml',
+                          'ENOENT',
+                          'no such file or directory',
+                          'Cannot parse releases feed',
+                          'HttpError: 406',
+                          'Unable to find latest version on GitHub'
+                        ];
+                        
+                        const isDevelopmentError = developmentErrors.some(pattern => 
+                          errorMessage.includes(pattern)
+                        );
+                        
+                        if (isDevelopmentError) {
+                          return {
+                            userMessage: '开发模式下的更新检查功能受限，这是正常现象。在正式发布版本中，更新功能将正常工作。',
+                            showDetails: false,
+                            severity: 'info'
+                          };
+                        }
+                        
+                        // 网络错误
+                        if (errorMessage.includes('network') || 
+                            errorMessage.includes('timeout') || 
+                            errorMessage.includes('ECONNREFUSED') ||
+                            errorMessage.includes('ENOTFOUND')) {
+                          return {
+                            userMessage: '网络连接问题，请检查您的网络连接后重试。',
+                            showDetails: true,
+                            severity: 'warning'
+                          };
+                        }
+                        
+                        // GitHub相关错误
+                        if (errorMessage.includes('GitHub') || 
+                            errorMessage.includes('api.github.com') ||
+                            errorMessage.includes('releases')) {
+                          return {
+                            userMessage: 'GitHub服务暂时不可用，请稍后重试。这可能是由于GitHub服务器维护或网络问题导致的。',
+                            showDetails: true,
+                            severity: 'warning'
+                          };
+                        }
+                        
+                        // 版本相关错误
+                        if (errorMessage.includes('No published versions') ||
+                            errorMessage.includes('no releases found')) {
+                          return {
+                            userMessage: '当前项目暂未发布正式版本，请关注项目更新。',
+                            showDetails: false,
+                            severity: 'info'
+                          };
+                        }
+                        
+                        // 默认错误
+                        return {
+                          userMessage: '检查更新时遇到问题，请稍后重试。',
+                          showDetails: true,
+                          severity: 'error'
+                        };
+                      };
+                      
+                      const errorDisplay = getErrorDisplay(lastError);
+                      const bgColor = errorDisplay.severity === 'info' ? 'bg-blue-50 border-blue-200' : 
+                                     errorDisplay.severity === 'warning' ? 'bg-yellow-50 border-yellow-200' : 
+                                     'bg-red-50 border-red-200';
+                      const textColor = errorDisplay.severity === 'info' ? 'text-blue-600' : 
+                                       errorDisplay.severity === 'warning' ? 'text-yellow-600' : 
+                                       'text-red-600';
+                      const detailColor = errorDisplay.severity === 'info' ? 'text-blue-500' : 
+                                         errorDisplay.severity === 'warning' ? 'text-yellow-500' : 
+                                         'text-red-500';
+                      
+                      return (
+                        <div className={`${bgColor} border rounded-lg p-3`}>
+                          <p className={`text-sm ${textColor} mb-2`}>
+                            {errorDisplay.userMessage}
+                          </p>
+                          {errorDisplay.showDetails && (
+                            <details className="mt-2">
+                              <summary className={`text-xs ${textColor} cursor-pointer hover:underline`}>
+                                查看技术详情
+                              </summary>
+                              <p className={`text-xs ${detailColor} mt-1 font-mono bg-white/50 p-2 rounded border`}>
+                                {lastError}
+                              </p>
+                            </details>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -361,7 +540,6 @@ export function AppInfoTab({}: AppInfoTabProps) {
                     disabled={isCheckingUpdate || isDownloading}
                     className="flex items-center gap-2 px-3 py-2 text-sm bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <RefreshCw className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
                     检查更新
                   </button>
 
@@ -398,22 +576,63 @@ export function AppInfoTab({}: AppInfoTabProps) {
                 更新日志
               </h4>
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {versionHistory.slice(0, 5).map((version, index) => (
-                  <div key={index} className="border-l-2 border-theme-primary/20 pl-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-theme-foreground">v{version.version}</span>
-                      <span className="text-xs text-theme-foreground-muted">{version.date}</span>
+                {versionHistory.slice(0, 5).map((version, index) => {
+                  // 格式化日期
+                  const formatDate = (dateStr: string) => {
+                    try {
+                      const date = new Date(dateStr);
+                      return date.toLocaleDateString('zh-CN');
+                    } catch {
+                      return dateStr;
+                    }
+                  };
+
+                  // 解析发布说明为变更列表
+                  const parseReleaseNotes = (notes: string) => {
+                    if (!notes) return ['暂无详细说明'];
+                    
+                    // 尝试按行分割，过滤空行
+                    const lines = notes.split('\n').filter(line => line.trim());
+                    if (lines.length <= 1) {
+                      return [notes];
+                    }
+                    
+                    // 如果有多行，取前几行作为变更列表
+                    return lines.slice(0, 3).map(line => 
+                      line.replace(/^[-*•]\s*/, '').trim()
+                    );
+                  };
+
+                  const displayDate = formatDate(version.releaseDate || version.timestamp);
+                  const changes = parseReleaseNotes(version.releaseNotes || '');
+
+                  return (
+                    <div key={index} className="border-l-2 border-theme-primary/20 pl-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-theme-foreground">v{version.version}</span>
+                        <span className="text-xs text-theme-foreground-muted">{displayDate}</span>
+                        {version.source && (
+                          <span className="text-xs px-2 py-0.5 bg-theme-primary/10 text-theme-primary rounded">
+                            {version.source}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-theme-foreground-muted space-y-1">
+                        {changes.map((change: string, changeIndex: number) => (
+                          <div key={changeIndex} className="flex items-start gap-2">
+                            <span className="text-theme-primary mt-1">•</span>
+                            <span>{change}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {version.previousVersion && (
+                        <div className="text-xs text-theme-foreground-muted mt-1">
+                          从 v{version.previousVersion} 升级
+                        </div>
+                      )}
                     </div>
-                    <ul className="text-sm text-theme-foreground-muted space-y-1">
-                      {version.changes.map((change: string, changeIndex: number) => (
-                        <li key={changeIndex} className="flex items-start gap-2">
-                          <span className="text-theme-primary mt-1">•</span>
-                          <span>{change}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               {/* 查看完整更新日志链接 */}

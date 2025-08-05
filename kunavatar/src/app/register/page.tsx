@@ -26,6 +26,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isFirstUser, setIsFirstUser] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   // 验证状态管理
   const [validationStates, setValidationStates] = useState<{
@@ -198,9 +200,11 @@ export default function RegisterPage() {
 
       if (response.ok && data.success) {
         setSuccess(true);
+        setIsFirstUser(data.isFirstUser || false);
+        setSuccessMessage(data.message || '注册成功！');
         setTimeout(() => {
           router.push('/login');
-        }, 2000);
+        }, data.isFirstUser ? 4000 : 2000); // 第一个用户显示更长时间
       } else {
         if (data.details) {
           // 显示详细的验证错误
@@ -246,26 +250,49 @@ export default function RegisterPage() {
         <BlackHoleAnimation className="absolute inset-0" offsetX={-3} hideControls={true} />
         
         {/* 响应式布局容器 */}
-        <div className="absolute inset-0 flex flex-col lg:flex-row">
+        <div className="absolute inset-0 flex flex-col lg:flex-row auth-page-container">
           {/* 左侧黑洞动画区域 - 在大屏幕上显示，小屏幕上作为背景 */}
-          <div className="hidden lg:block lg:w-2/3"></div>
+          <div className="hidden lg:block lg:w-2/3 auth-left-section"></div>
           
           {/* 右侧成功信息区域 */}
-          <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8">
+          <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8 auth-right-section">
             {/* 小屏幕背景遮罩 */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden"></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden auth-mobile-overlay"></div>
             
-            <div className="w-full max-w-md bg-[var(--color-card)]/90 lg:bg-[var(--color-card)]/80 backdrop-blur-xl border border-[var(--color-border)]/30 rounded-2xl shadow-2xl p-6 lg:p-8 relative z-10">
+            <div className="auth-form-card">
               <div className="text-center">
-                <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-[var(--color-success)]/20 border border-[var(--color-success)]/30 mb-6">
-                  <UserPlus className="h-8 w-8 text-[var(--color-success)]" />
+                <div className={`mx-auto h-16 w-16 flex items-center justify-center rounded-full mb-6 ${
+                  isFirstUser 
+                    ? 'bg-gradient-to-r from-yellow-400/20 to-orange-400/20 border border-yellow-400/30' 
+                    : 'bg-[var(--color-success)]/20 border border-[var(--color-success)]/30'
+                }`}>
+                  <UserPlus className={`h-8 w-8 ${
+                    isFirstUser ? 'text-yellow-400' : 'text-[var(--color-success)]'
+                  }`} />
                 </div>
                 <h2 className="text-2xl lg:text-3xl font-extrabold text-[var(--color-foreground)] mb-4">
-                  注册成功！
+                  {isFirstUser ? '🎉 超级管理员创建成功！' : '注册成功！'}
                 </h2>
-                <p className="text-[var(--color-foreground-secondary)]">
-                  您的账户已创建成功，正在跳转到登录页面...
-                </p>
+                <div className="text-[var(--color-foreground-secondary)] space-y-3">
+                  <p className="text-base">
+                    {successMessage}
+                  </p>
+                  {isFirstUser && (
+                    <div className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border border-yellow-400/20 rounded-lg p-4 mt-4">
+                      <div className="text-yellow-400 font-semibold mb-2">🔑 超级管理员权限</div>
+                      <ul className="text-sm text-left space-y-1">
+                        <li>• 用户管理：创建、编辑、删除用户</li>
+                        <li>• 角色权限：管理所有角色和权限</li>
+                        <li>• 系统设置：配置系统参数</li>
+                        <li>• 模型管理：添加和配置AI模型</li>
+                        <li>• 完整访问：所有功能无限制</li>
+                      </ul>
+                    </div>
+                  )}
+                  <p className="text-sm">
+                    正在跳转到登录页面...
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -279,16 +306,14 @@ export default function RegisterPage() {
       <BlackHoleAnimation className="absolute inset-0" offsetX={-3} hideControls={true} />
       
       {/* 响应式布局容器 */}
-      <div className="absolute inset-0 flex flex-col lg:flex-row">
+      <div className="absolute inset-0 flex flex-col lg:flex-row auth-page-container">
         {/* 左侧黑洞动画区域 - 在大屏幕上显示，小屏幕上作为背景 */}
-        <div className="hidden lg:block lg:w-2/3"></div>
+        <div className="hidden lg:block lg:w-2/3 auth-left-section"></div>
         
         {/* 右侧注册表单区域 */}
-        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8">
-          {/* 小屏幕背景遮罩 */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden"></div>
+        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8 auth-right-section">
           
-          <div className="w-full max-w-md bg-[var(--color-foreground)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10 max-h-[90vh] overflow-y-auto">
+          <div className="auth-form-card max-h-[90vh] overflow-y-auto scrollbar-thin">
             {/* 品牌标题 */}
             <div className="text-center mb-6 lg:mb-8">
               <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
@@ -316,7 +341,7 @@ export default function RegisterPage() {
                     value={formData.username}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-4 py-3 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 bg-[var(--color-input)] backdrop-blur-sm transition-all ${
+                    className={`w-full px-4 py-3 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all ${
                       validationStates.username.status === 'valid' ? 'border-[var(--color-success)]/50' :
                       validationStates.username.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                       'border-[var(--color-input-border)]'
@@ -338,7 +363,7 @@ export default function RegisterPage() {
                     value={formData.email}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-4 py-3 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 bg-[var(--color-input)] backdrop-blur-sm transition-all ${
+                    className={`w-full px-4 py-3 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all ${
                       validationStates.email.status === 'valid' ? 'border-[var(--color-success)]/50' :
                       validationStates.email.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                       'border-[var(--color-input-border)]'
@@ -361,7 +386,7 @@ export default function RegisterPage() {
                       value={formData.password}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={`w-full px-4 py-3 pr-12 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 bg-[var(--color-input)] backdrop-blur-sm transition-all ${
+                      className={`w-full px-4 py-3 pr-12 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all ${
                         validationStates.password.status === 'valid' ? 'border-[var(--color-success)]/50' :
                         validationStates.password.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                         'border-[var(--color-input-border)]'
@@ -396,7 +421,7 @@ export default function RegisterPage() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={`w-full px-4 py-3 pr-12 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 bg-[var(--color-input)] backdrop-blur-sm transition-all ${
+                      className={`w-full px-4 py-3 pr-12 border placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all ${
                         validationStates.confirmPassword.status === 'valid' ? 'border-[var(--color-success)]/50' :
                         validationStates.confirmPassword.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                         'border-[var(--color-input-border)]'

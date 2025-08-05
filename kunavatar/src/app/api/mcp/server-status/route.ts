@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import Database from 'better-sqlite3';
 import path from 'path';
 import { multiServerMcpClient } from '../../../../lib/mcp/mcp-multi-server-client';
+import { getDatabasePath } from '@/lib/database/db-path';
 
-const dbPath = path.join(process.cwd(), 'chat.db');
+const dbPath = getDatabasePath();
 
 // 保存工具到数据库
 async function saveToolsToDatabase(tools: any[], serverId: number) {

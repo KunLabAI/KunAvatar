@@ -4,8 +4,9 @@ import Database from 'better-sqlite3';
 import * as path from 'path';
 import { mcpToolOperations } from '@/lib/database';
 import { mcpServerOperations } from '@/lib/database';
+import { getDatabasePath } from '@/lib/database/db-path';
 
-const dbPath = path.join(process.cwd(), 'chat.db');
+const dbPath = getDatabasePath();
 
 // 确保本地MCP服务器记录存在于数据库中
 function ensureLocalServerExists() {

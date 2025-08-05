@@ -24,6 +24,7 @@ KunAvatar is a lightweight locally deployed AI application that not only provide
 - **🔧 Tool Ecosystem** - MCP tool integration supporting multiple protocols like SSE, Streamable HTTP
 - **👥 Enterprise Management** - Complete RBAC permission system, supporting multi-tenancy and resource-level data management
 - **🚀 Local Deployment** - Completely localized data, protecting privacy and security, supporting LAN access
+- **📦 Out-of-the-box** - No complex configuration required, can be deployed and used locally out of the box(Currently only Windows is supported)
 
 Whether for personal use, team collaboration, or enterprise deployment, KunAvatar provides professional, secure, and intelligent AI interaction experience.
 
@@ -154,10 +155,14 @@ The application will automatically:
    - Pull the models you need: `ollama pull gemma3`
 
 2. **Create admin account**
+Option 1: Command execution to create an administrator account
 ```bash
 cd kunavatar/scripts
 node init-admin.js
 ```
+
+Option 2: Create an administrator account on the page
+Note: After the application starts, visit the http://localhost:3000/register page to create the administrator account.
 
 ### Basic Usage
 
