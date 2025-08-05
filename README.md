@@ -25,6 +25,7 @@ KunAvatar 是一个轻量级本地部署的AI应用，它不仅提供了完整�
 - **🔧 工具生态** - 支持SSE、Streamable HTTP等多种协议的MCP工具集成
 - **👥 企业级管理** - 完整的RBAC权限体系，支持多租户和资源级数据管理
 - **🚀 本地部署** - 数据完全本地化，保护隐私安全，支持局域网访问
+- **📦 开箱即用** - 无需复杂配置，即可在本地部署和使用（目前只支持Windows）
 
 无论是个人使用、团队协作还是企业部署，KunAvatar 都能为您提供专业、安全、智能的AI交互体验。
 
@@ -155,10 +156,15 @@ node start.js
    - 拉取您需要的模型：`ollama pull gemma3`
 
 2. **创建管理员账户**
+
+选择一：命令执行创建管理员账户
 ```bash
 cd kunavatar/scripts
 node init-admin.js
 ```
+
+选择二：页面创建管理员账户
+Note: 应用启动后，访问 http://localhost:3000/register 页面创建管理员账户
 
 ### 基本使用
 

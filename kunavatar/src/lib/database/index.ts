@@ -1,5 +1,5 @@
-// 导出数据库连接
-export { db } from './connection';
+// 导出数据库连接和初始化函数
+export { db, executeInitialization } from './connection';
 
 // 导出所有类型定义
 export * from './types';

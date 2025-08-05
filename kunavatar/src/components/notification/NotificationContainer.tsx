@@ -26,8 +26,8 @@ export function NotificationContainer({
     const baseStyles = 'fixed z-50 flex flex-col gap-3 p-4 pointer-events-none';
     
     const positionStyles = {
-      'top-right': 'top-0 right-0',
-      'top-left': 'top-0 left-0',
+      'top-right': 'top-8 right-0', // 向下偏移32px（h-8）避免被标题栏遮挡
+      'top-left': 'top-8 left-0',   // 向下偏移32px（h-8）避免被标题栏遮挡
       'bottom-right': 'bottom-0 right-0',
       'bottom-left': 'bottom-0 left-0',
     };
@@ -101,4 +101,4 @@ export function NotificationContainer({
       </div>
     </>
   );
-} 
+}

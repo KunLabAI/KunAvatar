@@ -973,7 +973,7 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   grid-template-columns: 1fr;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .steam-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1010,6 +1010,93 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
 /* 自定义工具类 */
 .text-shadow {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 登录注册页面响应式布局优化 */
+/* 小于1440px：注册/登录窗口在页面中间 */
+/* 大于1440px：注册/登录窗口在页面右侧（左侧2/3黑洞动画，右侧1/3表单） */
+
+@media (max-width: 1439px) {
+  /* 小于1440px：居中布局 */
+  .auth-page-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2rem !important;
+    height: 100vh !important;
+  }
+  
+  .auth-page-container .auth-left-section {
+    display: none !important; /* 隐藏左侧动画区域 */
+  }
+  
+  .auth-page-container .auth-right-section {
+    width: 100% !important;
+    max-width: 520px !important;
+    flex: none !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+  
+  .auth-page-container .auth-form-card {
+    background: var(--color-card) !important;
+    border-radius: 1.5rem !important;
+    padding: 3rem !important;
+    width: 100% !important;
+    max-width: 520px !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+  
+  /* 移除小屏幕的背景遮罩 */
+  .auth-page-container .auth-mobile-overlay {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  /* 大于1440px：右侧布局 */
+  .auth-page-container {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+  }
+  
+  .auth-page-container .auth-left-section {
+    /* 显示左侧动画区域，占据2/3空间 */
+    display: block !important;
+    flex: 2 !important;
+    width: 66.666667% !important;
+  }
+  
+  .auth-page-container .auth-right-section {
+    /* 右侧表单区域，占据1/3空间 */
+    flex: 1 !important;
+    width: 33.333333% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2rem !important;
+  }
+  
+  .auth-page-container .auth-form-card {
+    background: var(--color-card) !important;
+    border-radius: 1.5rem !important;
+    padding: 2.5rem !important;
+    width: 100% !important;
+    max-width: 520px !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+  
+  /* 移除小屏幕的背景遮罩 */
+  .auth-page-container .auth-mobile-overlay {
+    display: none !important;
+  }
 }
 
 

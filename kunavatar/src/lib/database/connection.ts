@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import defaultPrompts from '../../config/default-prompts.json';
+import { getDatabasePath, getLockFilePath } from './db-path';
 
 // 🔧 修复：使用全局变量和单例模式来确保数据库只初始化一次
 // 定义全局缓存的类型
@@ -11,282 +12,14 @@ declare global {
 }
 
 // 数据库连接配置
-const dbPath = path.join(process.cwd(), 'chat.db');
-const lockFilePath = path.join(process.cwd(), '.db-initialized');
+const dbPath = getDatabasePath();
+const lockFilePath = getLockFilePath();
 
 // 初始化数据库表的函数
 const executeInitialization = (db: Database.Database) => {
-  // 基础表结构SQL
+  // 基础表结构SQL - 按依赖顺序创建表
   const baseSQL = `
-    CREATE TABLE IF NOT EXISTS conversations (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      model TEXT,
-      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      conversation_id TEXT NOT NULL,
-      role TEXT NOT NULL,
-      content TEXT NOT NULL,
-      model TEXT,
-      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-      sequence_number INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
-      -- 图片相关字段
-      images TEXT, -- JSON数组格式存储base64编码的图片
-      -- 工具调用相关字段
-      tool_name TEXT, -- 工具名称
-      tool_args TEXT, -- 工具参数 (JSON)
-      tool_result TEXT, -- 工具结果 (JSON)
-      tool_status TEXT CHECK (tool_status IN ('executing', 'completed', 'error')), -- 工具状态
-      tool_execution_time INTEGER, -- 工具执行时间(毫秒)
-      tool_error TEXT, -- 工具错误信息
-      -- Ollama生成统计信息
-      total_duration INTEGER,
-      load_duration INTEGER,
-      prompt_eval_count INTEGER,
-      prompt_eval_duration INTEGER,
-      eval_count INTEGER,
-      eval_duration INTEGER,
-      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE
-    );
-
-    -- 智能体消息表（专门存储与智能体的对话）
-    CREATE TABLE IF NOT EXISTS agent_messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      conversation_id TEXT NOT NULL,
-      role TEXT NOT NULL,
-      content TEXT NOT NULL,
-      agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
-      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-      sequence_number INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
-      -- 图片相关字段
-      images TEXT, -- JSON数组格式存储base64编码的图片
-      -- 工具调用相关字段
-      tool_name TEXT, -- 工具名称
-      tool_args TEXT, -- 工具参数 (JSON)
-      tool_result TEXT, -- 工具结果 (JSON)
-      tool_status TEXT CHECK (tool_status IN ('executing', 'completed', 'error')), -- 工具状态
-      tool_execution_time INTEGER, -- 工具执行时间(毫秒)
-      tool_error TEXT, -- 工具错误信息
-      -- Ollama生成统计信息
-      total_duration INTEGER,
-      load_duration INTEGER,
-      prompt_eval_count INTEGER,
-      prompt_eval_duration INTEGER,
-      eval_count INTEGER,
-      eval_duration INTEGER,
-      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
-      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE
-    );
-
-    -- 智能体表
-    CREATE TABLE IF NOT EXISTS agents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      description TEXT,
-      model_id INTEGER NOT NULL, -- 基础模型
-      system_prompt TEXT, -- 系统提示词
-      avatar TEXT, -- 头像URL
-      memory_enabled BOOLEAN DEFAULT 0, -- 是否为该智能体启用记忆功能
-      user_id TEXT NOT NULL, -- 智能体创建者的用户ID
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (model_id) REFERENCES custom_models (id) ON DELETE CASCADE,
-      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-    );
-    
-    -- 智能体与MCP服务器关联表
-    CREATE TABLE IF NOT EXISTS agent_mcp_servers (
-      agent_id INTEGER NOT NULL,
-      server_id INTEGER NOT NULL,
-      PRIMARY KEY (agent_id, server_id),
-      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE,
-      FOREIGN KEY (server_id) REFERENCES mcp_servers (id) ON DELETE CASCADE
-    );
-
-    -- 智能体与工具关联表
-    CREATE TABLE IF NOT EXISTS agent_tools (
-      agent_id INTEGER NOT NULL,
-      tool_id INTEGER NOT NULL,
-      PRIMARY KEY (agent_id, tool_id),
-      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE,
-      FOREIGN KEY (tool_id) REFERENCES mcp_tools (id) ON DELETE CASCADE
-    );
-
-    -- 自定义模型配置表（包含完整的Ollama API字段）
-    CREATE TABLE IF NOT EXISTS custom_models (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      base_model TEXT NOT NULL UNIQUE, -- 完整的基础模型名称
-      display_name TEXT NOT NULL, -- 用户可自定义的显示名称
-      model_hash TEXT NOT NULL UNIQUE, -- 内部使用的哈希名称
-      family TEXT NOT NULL, -- 模型家族信息
-      description TEXT,
-      system_prompt TEXT,
-      parameters TEXT, -- JSON格式存储所有参数
-      template TEXT, -- 自定义模板
-      license TEXT,
-      tags TEXT, -- JSON数组格式存储标签
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      size BIGINT,
-      digest TEXT,
-      ollama_modified_at TEXT,
-      -- Ollama API详细信息字段
-      architecture TEXT, -- 模型架构（llama、gemma等）
-      parameter_count INTEGER, -- 参数数量
-      context_length INTEGER, -- 上下文长度
-      embedding_length INTEGER, -- 嵌入维度
-      quantization_level TEXT, -- 量化级别（Q8_0、Q4_0等）
-      format TEXT, -- 文件格式（gguf等）
-      capabilities TEXT -- 模型能力（JSON数组格式：completion、vision等）
-    );
-
-    -- MCP服务器统一配置表
-    CREATE TABLE IF NOT EXISTS mcp_servers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      display_name TEXT NOT NULL,
-      description TEXT,
-      type TEXT NOT NULL CHECK (type IN ('stdio', 'sse', 'streamable-http')),
-      status TEXT NOT NULL DEFAULT 'disconnected' CHECK (status IN ('connected', 'disconnected', 'error', 'connecting')),
-      enabled BOOLEAN NOT NULL DEFAULT 1,
-      
-      -- STDIO配置
-      command TEXT,
-      args TEXT, -- JSON数组格式
-      working_directory TEXT,
-      
-      -- SSE/HTTP配置
-      url TEXT,
-      base_url TEXT,
-      port INTEGER,
-      path TEXT DEFAULT '/',
-      protocol TEXT DEFAULT 'http' CHECK (protocol IN ('http', 'https')),
-      
-      -- 通用配置
-      headers TEXT, -- JSON对象格式
-      auth_type TEXT CHECK (auth_type IN ('none', 'bearer', 'basic', 'api_key')),
-      auth_config TEXT, -- JSON格式
-      timeout_ms INTEGER DEFAULT 30000,
-      retry_attempts INTEGER DEFAULT 3,
-      retry_delay_ms INTEGER DEFAULT 1000,
-      
-      -- 扩展配置
-      extra_config TEXT, -- JSON格式，存储其他特殊配置
-      
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      last_connected_at DATETIME,
-      error_message TEXT
-    );
-
-    -- MCP工具表
-    CREATE TABLE IF NOT EXISTS mcp_tools (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      server_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      description TEXT,
-      input_schema TEXT, -- JSON格式存储工具的输入参数模式
-      is_available BOOLEAN DEFAULT 1,
-      enabled BOOLEAN DEFAULT 1, -- 工具是否启用（在对话页面可见）
-      last_used_at DATETIME,
-      usage_count INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (server_id) REFERENCES mcp_servers (id) ON DELETE CASCADE,
-      UNIQUE(server_id, name)
-    );
-
-    -- MCP工具配置表
-    CREATE TABLE IF NOT EXISTS mcp_tool_configs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      tool_id INTEGER,
-      server_name TEXT NOT NULL,
-      tool_name TEXT NOT NULL,
-      config TEXT NOT NULL, -- JSON格式存储配置
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(server_name, tool_name)
-    );
-
-    -- 基础表索引
-    CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
-    CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_conversations_agent_id ON conversations(agent_id);
-    CREATE INDEX IF NOT EXISTS idx_messages_agent_id ON messages(agent_id);
-    CREATE INDEX IF NOT EXISTS idx_conversations_user_agent ON conversations(user_id, agent_id);
-    CREATE INDEX IF NOT EXISTS idx_messages_conv_agent ON messages(conversation_id, agent_id);
-    
-    -- 智能体消息表索引
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_conversation_id ON agent_messages(conversation_id);
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_agent_id ON agent_messages(agent_id);
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_user_id ON agent_messages(user_id);
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_conv_agent ON agent_messages(conversation_id, agent_id);
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_tool_name ON agent_messages(tool_name);
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_tool_status ON agent_messages(tool_status);
-    CREATE INDEX IF NOT EXISTS idx_agent_messages_conv_tool ON agent_messages(conversation_id, tool_name);
-    
-    -- 自定义模型相关索引
-    CREATE INDEX IF NOT EXISTS idx_custom_models_base_model ON custom_models(base_model);
-    CREATE INDEX IF NOT EXISTS idx_custom_models_hash ON custom_models(model_hash);
-    CREATE INDEX IF NOT EXISTS idx_custom_models_family ON custom_models(family);
-    
-    -- MCP相关索引
-    CREATE INDEX IF NOT EXISTS idx_mcp_servers_type ON mcp_servers(type);
-    CREATE INDEX IF NOT EXISTS idx_mcp_servers_status ON mcp_servers(status);
-    CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(enabled);
-    CREATE INDEX IF NOT EXISTS idx_mcp_tools_server_id ON mcp_tools(server_id);
-    CREATE INDEX IF NOT EXISTS idx_mcp_tools_name ON mcp_tools(name);
-    CREATE INDEX IF NOT EXISTS idx_mcp_tools_available ON mcp_tools(is_available);
-    -- 工具调用相关索引已迁移到messages表
-    CREATE INDEX IF NOT EXISTS idx_messages_tool_name ON messages(tool_name);
-    CREATE INDEX IF NOT EXISTS idx_messages_tool_status ON messages(tool_status);
-    CREATE INDEX IF NOT EXISTS idx_messages_conv_tool ON messages(conversation_id, tool_name);
-
-    -- 智能体相关索引
-    CREATE INDEX IF NOT EXISTS idx_agents_name ON agents(name);
-    CREATE INDEX IF NOT EXISTS idx_agents_user_id ON agents(user_id);
-    CREATE INDEX IF NOT EXISTS idx_agent_mcp_servers_agent_id ON agent_mcp_servers(agent_id);
-    CREATE INDEX IF NOT EXISTS idx_agent_tools_agent_id ON agent_tools(agent_id);
-
-    -- 系统设置表已迁移到用户设置表 (user_settings)
-
-    -- 记忆系统表
-    CREATE TABLE IF NOT EXISTS conversation_memories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      conversation_id TEXT NOT NULL,
-      agent_id INTEGER, -- 关联的智能体（可选）
-      memory_type TEXT NOT NULL DEFAULT 'summary' CHECK (memory_type IN ('summary', 'context', 'important')),
-      content TEXT NOT NULL, -- JSON格式存储结构化记忆内容
-      source_message_range TEXT, -- 记录来源消息范围，格式如 "1-20"
-      importance_score REAL DEFAULT 1.0, -- 重要性评分 0-1
-      tokens_saved INTEGER DEFAULT 0, -- 通过总结节省的token数量
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      expires_at DATETIME, -- 记忆过期时间（可选）
-      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
-      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE SET NULL
-    );
-
-    -- 智能体记忆配置表
-    DROP TABLE IF EXISTS agent_memory_settings;
-
-    -- 记忆系统索引
-    CREATE INDEX IF NOT EXISTS idx_conversation_memories_conversation_id ON conversation_memories(conversation_id);
-    CREATE INDEX IF NOT EXISTS idx_conversation_memories_agent_id ON conversation_memories(agent_id);
-    CREATE INDEX IF NOT EXISTS idx_conversation_memories_type ON conversation_memories(memory_type);
-    CREATE INDEX IF NOT EXISTS idx_conversation_memories_importance ON conversation_memories(importance_score DESC);
-    CREATE INDEX IF NOT EXISTS idx_conversation_memories_created_at ON conversation_memories(created_at DESC);
-
-    -- 用户管理系统表
+    -- 用户管理系统表（基础表，其他表依赖此表）
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       username TEXT NOT NULL UNIQUE,
@@ -374,6 +107,275 @@ const executeInitialization = (db: Database.Database) => {
       UNIQUE(user_id, key)
     );
 
+    -- 自定义模型配置表（包含完整的Ollama API字段）
+    CREATE TABLE IF NOT EXISTS custom_models (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      base_model TEXT NOT NULL UNIQUE, -- 完整的基础模型名称
+      display_name TEXT NOT NULL, -- 用户可自定义的显示名称
+      model_hash TEXT NOT NULL UNIQUE, -- 内部使用的哈希名称
+      family TEXT NOT NULL, -- 模型家族信息
+      description TEXT,
+      system_prompt TEXT,
+      parameters TEXT, -- JSON格式存储所有参数
+      template TEXT, -- 自定义模板
+      license TEXT,
+      tags TEXT, -- JSON数组格式存储标签
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      size BIGINT,
+      digest TEXT,
+      ollama_modified_at TEXT,
+      -- Ollama API详细信息字段
+      architecture TEXT, -- 模型架构（llama、gemma等）
+      parameter_count INTEGER, -- 参数数量
+      context_length INTEGER, -- 上下文长度
+      embedding_length INTEGER, -- 嵌入维度
+      quantization_level TEXT, -- 量化级别（Q8_0、Q4_0等）
+      format TEXT, -- 文件格式（gguf等）
+      capabilities TEXT -- 模型能力（JSON数组格式：completion、vision等）
+    );
+
+    -- MCP服务器统一配置表
+    CREATE TABLE IF NOT EXISTS mcp_servers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      display_name TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL CHECK (type IN ('stdio', 'sse', 'streamable-http')),
+      status TEXT NOT NULL DEFAULT 'disconnected' CHECK (status IN ('connected', 'disconnected', 'error', 'connecting')),
+      enabled BOOLEAN NOT NULL DEFAULT 1,
+      
+      -- STDIO配置
+      command TEXT,
+      args TEXT, -- JSON数组格式
+      working_directory TEXT,
+      
+      -- SSE/HTTP配置
+      url TEXT,
+      base_url TEXT,
+      port INTEGER,
+      path TEXT DEFAULT '/',
+      protocol TEXT DEFAULT 'http' CHECK (protocol IN ('http', 'https')),
+      
+      -- 通用配置
+      headers TEXT, -- JSON对象格式
+      auth_type TEXT CHECK (auth_type IN ('none', 'bearer', 'basic', 'api_key')),
+      auth_config TEXT, -- JSON格式
+      timeout_ms INTEGER DEFAULT 30000,
+      retry_attempts INTEGER DEFAULT 3,
+      retry_delay_ms INTEGER DEFAULT 1000,
+      
+      -- 扩展配置
+      extra_config TEXT, -- JSON格式，存储其他特殊配置
+      
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_connected_at DATETIME,
+      error_message TEXT
+    );
+
+    -- MCP工具表
+    CREATE TABLE IF NOT EXISTS mcp_tools (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      input_schema TEXT, -- JSON格式存储工具的输入参数模式
+      is_available BOOLEAN DEFAULT 1,
+      enabled BOOLEAN DEFAULT 1, -- 工具是否启用（在对话页面可见）
+      last_used_at DATETIME,
+      usage_count INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (server_id) REFERENCES mcp_servers (id) ON DELETE CASCADE,
+      UNIQUE(server_id, name)
+    );
+
+    -- 智能体表（依赖 users 和 custom_models）
+    CREATE TABLE IF NOT EXISTS agents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      model_id INTEGER NOT NULL, -- 基础模型
+      system_prompt TEXT, -- 系统提示词
+      avatar TEXT, -- 头像URL
+      memory_enabled BOOLEAN DEFAULT 0, -- 是否为该智能体启用记忆功能
+      user_id TEXT NOT NULL, -- 智能体创建者的用户ID
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (model_id) REFERENCES custom_models (id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    );
+
+    -- 对话表（依赖 users 和 agents）
+    CREATE TABLE IF NOT EXISTS conversations (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      model TEXT,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      agent_id INTEGER REFERENCES agents(id) ON DELETE SET NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      model TEXT,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      sequence_number INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
+      -- 图片相关字段
+      images TEXT, -- JSON数组格式存储base64编码的图片
+      -- 工具调用相关字段
+      tool_name TEXT, -- 工具名称
+      tool_args TEXT, -- 工具参数 (JSON)
+      tool_result TEXT, -- 工具结果 (JSON)
+      tool_status TEXT CHECK (tool_status IN ('executing', 'completed', 'error')), -- 工具状态
+      tool_execution_time INTEGER, -- 工具执行时间(毫秒)
+      tool_error TEXT, -- 工具错误信息
+      -- Ollama生成统计信息
+      total_duration INTEGER,
+      load_duration INTEGER,
+      prompt_eval_count INTEGER,
+      prompt_eval_duration INTEGER,
+      eval_count INTEGER,
+      eval_duration INTEGER,
+      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE
+    );
+
+    -- 智能体消息表（专门存储与智能体的对话，依赖 conversations、agents 和 users）
+    CREATE TABLE IF NOT EXISTS agent_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      sequence_number INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      timestamp INTEGER, -- 毫秒级时间戳，用于精确排序
+      -- 图片相关字段
+      images TEXT, -- JSON数组格式存储base64编码的图片
+      -- 工具调用相关字段
+      tool_name TEXT, -- 工具名称
+      tool_args TEXT, -- 工具参数 (JSON)
+      tool_result TEXT, -- 工具结果 (JSON)
+      tool_status TEXT CHECK (tool_status IN ('executing', 'completed', 'error')), -- 工具状态
+      tool_execution_time INTEGER, -- 工具执行时间(毫秒)
+      tool_error TEXT, -- 工具错误信息
+      -- Ollama生成统计信息
+      total_duration INTEGER,
+      load_duration INTEGER,
+      prompt_eval_count INTEGER,
+      prompt_eval_duration INTEGER,
+      eval_count INTEGER,
+      eval_duration INTEGER,
+      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE
+    );
+
+    -- 智能体与MCP服务器关联表
+    CREATE TABLE IF NOT EXISTS agent_mcp_servers (
+      agent_id INTEGER NOT NULL,
+      server_id INTEGER NOT NULL,
+      PRIMARY KEY (agent_id, server_id),
+      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE,
+      FOREIGN KEY (server_id) REFERENCES mcp_servers (id) ON DELETE CASCADE
+    );
+
+    -- 智能体与工具关联表
+    CREATE TABLE IF NOT EXISTS agent_tools (
+      agent_id INTEGER NOT NULL,
+      tool_id INTEGER NOT NULL,
+      PRIMARY KEY (agent_id, tool_id),
+      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE CASCADE,
+      FOREIGN KEY (tool_id) REFERENCES mcp_tools (id) ON DELETE CASCADE
+    );
+
+    -- MCP工具配置表
+    CREATE TABLE IF NOT EXISTS mcp_tool_configs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tool_id INTEGER,
+      server_name TEXT NOT NULL,
+      tool_name TEXT NOT NULL,
+      config TEXT NOT NULL, -- JSON格式存储配置
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(server_name, tool_name)
+    );
+
+    -- 基础表索引
+    CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_conversations_agent_id ON conversations(agent_id);
+    CREATE INDEX IF NOT EXISTS idx_conversations_user_agent ON conversations(user_id, agent_id);
+    
+    -- 智能体消息表索引
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_conversation_id ON agent_messages(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_agent_id ON agent_messages(agent_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_user_id ON agent_messages(user_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_conv_agent ON agent_messages(conversation_id, agent_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_tool_name ON agent_messages(tool_name);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_tool_status ON agent_messages(tool_status);
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_conv_tool ON agent_messages(conversation_id, tool_name);
+    
+    -- 自定义模型相关索引
+    CREATE INDEX IF NOT EXISTS idx_custom_models_base_model ON custom_models(base_model);
+    CREATE INDEX IF NOT EXISTS idx_custom_models_hash ON custom_models(model_hash);
+    CREATE INDEX IF NOT EXISTS idx_custom_models_family ON custom_models(family);
+    
+    -- MCP相关索引
+    CREATE INDEX IF NOT EXISTS idx_mcp_servers_type ON mcp_servers(type);
+    CREATE INDEX IF NOT EXISTS idx_mcp_servers_status ON mcp_servers(status);
+    CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(enabled);
+    CREATE INDEX IF NOT EXISTS idx_mcp_tools_server_id ON mcp_tools(server_id);
+    CREATE INDEX IF NOT EXISTS idx_mcp_tools_name ON mcp_tools(name);
+    CREATE INDEX IF NOT EXISTS idx_mcp_tools_available ON mcp_tools(is_available);
+    -- 工具调用相关索引已迁移到messages表
+    CREATE INDEX IF NOT EXISTS idx_messages_tool_name ON messages(tool_name);
+    CREATE INDEX IF NOT EXISTS idx_messages_tool_status ON messages(tool_status);
+    CREATE INDEX IF NOT EXISTS idx_messages_conv_tool ON messages(conversation_id, tool_name);
+
+    -- 智能体相关索引
+    CREATE INDEX IF NOT EXISTS idx_agents_name ON agents(name);
+    CREATE INDEX IF NOT EXISTS idx_agents_user_id ON agents(user_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_mcp_servers_agent_id ON agent_mcp_servers(agent_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_tools_agent_id ON agent_tools(agent_id);
+
+    -- 系统设置表已迁移到用户设置表 (user_settings)
+
+    -- 记忆系统表
+    CREATE TABLE IF NOT EXISTS conversation_memories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id TEXT NOT NULL,
+      agent_id INTEGER, -- 关联的智能体（可选）
+      memory_type TEXT NOT NULL DEFAULT 'summary' CHECK (memory_type IN ('summary', 'context', 'important')),
+      content TEXT NOT NULL, -- JSON格式存储结构化记忆内容
+      source_message_range TEXT, -- 记录来源消息范围，格式如 "1-20"
+      importance_score REAL DEFAULT 1.0, -- 重要性评分 0-1
+      tokens_saved INTEGER DEFAULT 0, -- 通过总结节省的token数量
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME, -- 记忆过期时间（可选）
+      FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
+      FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE SET NULL
+    );
+
+    -- 智能体记忆配置表
+    DROP TABLE IF EXISTS agent_memory_settings;
+
+    -- 记忆系统索引
+    CREATE INDEX IF NOT EXISTS idx_conversation_memories_conversation_id ON conversation_memories(conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_conversation_memories_agent_id ON conversation_memories(agent_id);
+    CREATE INDEX IF NOT EXISTS idx_conversation_memories_type ON conversation_memories(memory_type);
+    CREATE INDEX IF NOT EXISTS idx_conversation_memories_importance ON conversation_memories(importance_score DESC);
+    CREATE INDEX IF NOT EXISTS idx_conversation_memories_created_at ON conversation_memories(created_at DESC);
+
+
+
     -- 用户管理系统索引
     CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -459,38 +461,64 @@ const executeInitialization = (db: Database.Database) => {
   const insertRole = db.prepare('INSERT OR IGNORE INTO roles (id, name, display_name, description, is_system) VALUES (?, ?, ?, ?, ?)');
   const insertPermission = db.prepare('INSERT OR IGNORE INTO permissions (id, name, display_name, description, resource, action) VALUES (?, ?, ?, ?, ?, ?)');
 
-  // 创建系统角色
-  insertRole.run(crypto.randomUUID(), 'admin', '管理员', '系统管理员，拥有所有权限', 1);
-  insertRole.run(crypto.randomUUID(), 'user', '普通用户', '普通用户，拥有基本权限', 1);
+  // 创建系统角色（三级角色体系）
+  const superAdminRoleId = crypto.randomUUID();
+  const adminRoleId = crypto.randomUUID();
+  const userRoleId = crypto.randomUUID();
+  
+  insertRole.run(superAdminRoleId, 'superadmin', '超级管理员', '拥有系统所有权限的超级管理员角色', 1);
+  insertRole.run(adminRoleId, 'admin', '管理员', '系统管理员，拥有大部分管理权限', 1);
+  insertRole.run(userRoleId, 'user', '普通用户', '普通用户，拥有基本权限', 1);
 
-  // 创建基础权限
+  // 创建完整权限列表（33个权限）
   const permissions = [
-    // 用户管理权限
-    ['users:create', '创建用户', '创建新用户账户', 'users', 'create'],
-    ['users:read', '查看用户', '查看用户信息', 'users', 'read'],
-    ['users:update', '更新用户', '更新用户信息', 'users', 'update'],
-    ['users:delete', '删除用户', '删除用户账户', 'users', 'delete'],
-    ['users:manage', '管理用户', '完全管理用户', 'users', 'manage'],
+    // 用户管理权限 (5个)
+    ['users:read', '查看用户', '查看用户信息的权限', 'users', 'read'],
+    ['users:create', '创建用户', '创建新用户的权限', 'users', 'create'],
+    ['users:update', '更新用户', '更新用户信息的权限', 'users', 'update'],
+    ['users:delete', '删除用户', '删除用户的权限', 'users', 'delete'],
+    ['users:manage', '管理用户', '完全管理用户的权限', 'users', 'manage'],
 
-    // 对话管理权限
-    ['conversations:create', '创建对话', '创建新对话', 'conversations', 'create'],
-    ['conversations:read', '查看对话', '查看对话内容', 'conversations', 'read'],
-    ['conversations:update', '更新对话', '更新对话信息', 'conversations', 'update'],
-    ['conversations:delete', '删除对话', '删除对话', 'conversations', 'delete'],
+    // 角色管理权限 (5个)
+    ['roles:read', '查看角色', '查看角色信息的权限', 'roles', 'read'],
+    ['roles:create', '创建角色', '创建新角色的权限', 'roles', 'create'],
+    ['roles:update', '更新角色', '更新角色信息的权限', 'roles', 'update'],
+    ['roles:delete', '删除角色', '删除角色的权限', 'roles', 'delete'],
+    ['roles:manage', '管理角色', '完全管理角色的权限', 'roles', 'manage'],
 
-    // 智能体管理权限
+    // 权限管理权限 (3个)
+    ['permissions:read', '查看权限', '查看权限信息的权限', 'permissions', 'read'],
+    ['permissions:assign', '分配权限', '分配权限的权限', 'permissions', 'assign'],
+    ['permissions:manage', '管理权限', '完全管理权限的权限', 'permissions', 'manage'],
+
+    // 系统管理权限 (1个)
+    ['system:admin', '系统管理', '系统管理权限', 'system', 'admin'],
+
+    // 对话管理权限 (4个)
+    ['chat:read', '查看对话', '查看对话记录的权限', 'chat', 'read'],
+    ['chat:create', '创建对话', '创建新对话的权限', 'chat', 'create'],
+    ['chat:update', '更新对话', '更新对话的权限', 'chat', 'update'],
+    ['chat:delete', '删除对话', '删除对话的权限', 'chat', 'delete'],
+
+    // 智能体管理权限 (4个)
     ['agents:create', '创建智能体', '创建新智能体', 'agents', 'create'],
     ['agents:read', '查看智能体', '查看智能体信息', 'agents', 'read'],
     ['agents:update', '更新智能体', '更新智能体配置', 'agents', 'update'],
     ['agents:delete', '删除智能体', '删除智能体', 'agents', 'delete'],
 
-    // 模型管理权限
-    ['models:create', '创建模型', '创建自定义模型', 'models', 'create'],
-    ['models:read', '查看模型', '查看模型信息', 'models', 'read'],
-    ['models:update', '更新模型', '更新模型配置', 'models', 'update'],
-    ['models:delete', '删除模型', '删除模型', 'models', 'delete'],
+    // 模型管理权限 (4个)
+    ['models:read', '查看模型', '查看AI模型的权限', 'models', 'read'],
+    ['models:create', '创建模型', '创建AI模型的权限', 'models', 'create'],
+    ['models:update', '更新模型', '更新AI模型的权限', 'models', 'update'],
+    ['models:delete', '删除模型', '删除AI模型的权限', 'models', 'delete'],
 
-    // 系统设置权限
+    // 对话管理权限（别名，兼容性） (4个)
+    ['conversations:create', '创建对话', '创建新对话', 'conversations', 'create'],
+    ['conversations:read', '查看对话', '查看对话内容', 'conversations', 'read'],
+    ['conversations:update', '更新对话', '更新对话信息', 'conversations', 'update'],
+    ['conversations:delete', '删除对话', '删除对话', 'conversations', 'delete'],
+
+    // 系统设置权限 (3个)
     ['settings:read', '查看设置', '查看系统设置', 'settings', 'read'],
     ['settings:update', '更新设置', '更新系统设置', 'settings', 'update'],
     ['settings:manage', '管理设置', '完全管理系统设置', 'settings', 'manage'],
@@ -499,6 +527,34 @@ const executeInitialization = (db: Database.Database) => {
   permissions.forEach(([name, displayName, description, resource, action]) => {
     insertPermission.run(crypto.randomUUID(), name, displayName, description, resource, action);
   });
+
+  // 为超级管理员角色分配所有权限
+  const superAdminRole = db.prepare('SELECT id FROM roles WHERE name = ?').get('superadmin') as { id: string } | undefined;
+  const allPermissions = db.prepare('SELECT id FROM permissions').all() as { id: string }[];
+  
+  if (superAdminRole && allPermissions.length > 0) {
+    const insertRolePermission = db.prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
+    allPermissions.forEach(permission => {
+      insertRolePermission.run(superAdminRole.id, permission.id);
+    });
+    console.log(`✅ 已为超级管理员角色分配 ${allPermissions.length} 个权限。`);
+  }
+
+  // 为管理员角色分配部分权限（除了系统管理权限）
+  const adminRole = db.prepare('SELECT id FROM roles WHERE name = ?').get('admin') as { id: string } | undefined;
+  if (adminRole && allPermissions.length > 0) {
+    const adminPermissions = db.prepare(`
+      SELECT id FROM permissions 
+      WHERE name NOT IN ('system:admin', 'permissions:manage', 'roles:delete', 'users:delete')
+    `).all() as { id: string }[];
+    const insertRolePermission = db.prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
+    
+    adminPermissions.forEach(permission => {
+      insertRolePermission.run(adminRole.id, permission.id);
+    });
+    
+    console.log(`✅ 已为管理员角色分配 ${adminPermissions.length} 个权限。`);
+  }
 
   // 初始化本地MCP服务器记录
   const insertLocalServer = db.prepare(`
@@ -558,5 +614,8 @@ const getDatabaseInstance = (): Database.Database => {
 
 // 导出的是数据库实例本身，而不是整个模块
 export const db = getDatabaseInstance();
+
+// 导出初始化函数，供外部使用
+export { executeInitialization };
 
 export default db;

@@ -1,3 +1,18 @@
+/**
+ * 超级管理员初始化脚本
+ * 
+ * 注意：从 v2.0 开始，系统已优化为第一个注册的用户自动成为超级管理员。
+ * 此脚本主要用于以下场景：
+ * 1. 手动创建额外的超级管理员账号
+ * 2. 在特殊情况下重新初始化超级管理员
+ * 3. 批量部署时预设超级管理员账号
+ * 
+ * 使用方法：
+ * - 基本使用：node init-admin.js
+ * - 强制重新创建：node init-admin.js --force
+ * - 自定义密码：node init-admin.js --password=YourPassword
+ */
+
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
@@ -7,8 +22,34 @@ import { v4 as uuidv4 } from 'uuid';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 获取正确的数据库路径
+function getDatabasePath() {
+  // 优先使用环境变量中的数据库路径（由Electron主进程设置）
+  if (process.env.DATABASE_PATH) {
+    console.log('使用环境变量中的数据库路径:', process.env.DATABASE_PATH);
+    return process.env.DATABASE_PATH;
+  }
+  
+  // 检查是否在Electron环境中
+  if (process.env.ELECTRON_ENV || process.versions.electron) {
+    // 在Electron环境中，使用用户数据目录
+    const { app } = require('electron');
+    if (app && app.isReady()) {
+      const userDataPath = app.getPath('userData');
+      const dbPath = path.join(userDataPath, 'chat.db');
+      console.log('使用Electron用户数据目录:', dbPath);
+      return dbPath;
+    }
+  }
+  
+  // 默认使用项目根目录
+  const dbPath = path.join(__dirname, '..', 'chat.db');
+  console.log('使用项目根目录数据库路径:', dbPath);
+  return dbPath;
+}
+
 // 初始化数据库连接
-const dbPath = path.join(__dirname, '..', 'chat.db');
+const dbPath = getDatabasePath();
 const db = new Database(dbPath);
 
 // 默认超级管理员配置

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Info } from 'lucide-react';
 import BlackHoleAnimation from '@/components/BlackHoleAnimation';
 
 export default function LoginPage() {
@@ -13,6 +13,29 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFirstRun, setIsFirstRun] = useState(false);
+  const [showAdminInfo, setShowAdminInfo] = useState(false);
+
+  // 检查是否为首次运行
+  useEffect(() => {
+    const checkFirstRun = async () => {
+      try {
+        const response = await fetch('/api/system/first-run');
+        const data = await response.json();
+        
+        if (data.success && data.isFirstRun) {
+          setIsFirstRun(true);
+          setShowAdminInfo(true);
+        }
+      } catch (error) {
+        console.error('检查首次运行状态失败:', error);
+      }
+    };
+    
+    checkFirstRun();
+  }, []);
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,16 +90,13 @@ export default function LoginPage() {
       <BlackHoleAnimation className="absolute inset-0" offsetX={-3} hideControls={true} />
       
       {/* 响应式布局容器 */}
-      <div className="absolute inset-0 flex flex-col lg:flex-row">
+      <div className="absolute inset-0 flex flex-col lg:flex-row auth-page-container">
         {/* 左侧黑洞动画区域 - 在大屏幕上显示，小屏幕上作为背景 */}
-        <div className="hidden lg:block lg:w-2/3"></div>
+        <div className="hidden lg:block lg:w-2/3 auth-left-section"></div>
         
         {/* 右侧登录表单区域 */}
-        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8">
-          {/* 小屏幕背景遮罩 */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden"></div>
-          
-          <div className="w-full max-w-md bg-[var(--color-foreground)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-3xl p-6 lg:p-8 relative z-10">
+        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8 auth-right-section">        
+          <div className="auth-form-card">
             <div className="w-full space-y-6">
               {/* 品牌标题 */}
               <div className="text-center mb-6">
@@ -85,6 +105,17 @@ export default function LoginPage() {
                 </h1>
                 <div className="w-16 h-1 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] mx-auto rounded-full mb-4"></div>
               </div>
+              
+              {/* 首次启动提示 */}
+              {isFirstRun && showAdminInfo && (
+                <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg backdrop-blur-sm">
+                  <div className="flex-1 items-start space-x-3">
+                      </div>
+                      <p className="flex justify-center text-xs text-blue-300 m-2">
+                        💡 注册完成后自动激活并获得超级管理员账号
+                      </p>
+                    </div>
+              )}
               
               <div>
                 <h2 className="text-center text-xl lg:text-2xl font-bold text-[var(--color-foreground)] mb-6">
@@ -106,7 +137,7 @@ export default function LoginPage() {
                        autoComplete="username"
                        value={formData.username}
                        onChange={handleChange}
-                       className="w-full px-4 py-3 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
+                       className="w-full px-4 py-3 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
                        placeholder="请输入用户名或邮箱"
                      />
                    </div>
@@ -124,7 +155,7 @@ export default function LoginPage() {
                          autoComplete="current-password"
                          value={formData.password}
                          onChange={handleChange}
-                         className="w-full px-4 py-3 pr-12 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
+                         className="w-full px-4 py-3 pr-12 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
                          placeholder="请输入密码"
                        />
                        <button

@@ -24,6 +24,26 @@ export interface ElectronAPI {
     date: string;
     changes: string[];
   }>>;
+  fetchGitHubReleases: () => Promise<Array<{
+    version: string;
+    releaseNotes: string;
+    releaseDate: string;
+    source: string;
+    name: string;
+    htmlUrl: string;
+    timestamp: string;
+    previousVersion: string | null;
+  }>>;
+  cleanDuplicateHistory: () => Promise<Array<{
+    version: string;
+    releaseNotes: string;
+    releaseDate: string;
+    source: string;
+    name: string;
+    htmlUrl: string;
+    timestamp: string;
+    previousVersion: string | null;
+  }>>;
   getUpdateSettings: () => Promise<{
     autoCheck: boolean;
     checkInterval: number;
@@ -51,6 +71,7 @@ export interface ElectronAPI {
   onUpdateError: (callback: (error: string) => void) => void;
   onDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; total: number; transferred: number }) => void) => void;
   onUpdateDownloaded: (callback: () => void) => void;
+  onUpdateInstallSimulated: (callback: (data: { message: string }) => void) => void;
   
   // 菜单事件监听
   onMenuAction: (callback: () => void) => void;
