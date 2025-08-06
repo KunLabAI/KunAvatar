@@ -13,6 +13,7 @@ interface MarkdownRendererProps {
   isStreaming?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  onImagePreview?: (imageUrl: string, index: number, images: string[]) => void;
 }
 
 // 增强的代码块组件
@@ -159,6 +160,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
   isStreaming = false,
   className = '',
   style,
+  onImagePreview,
 }) => {
   const isDark = useIsDarkTheme();
 
@@ -224,6 +226,25 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     strong: ({ children }: any) => <strong>{children}</strong>,
     em: ({ children }: any) => <em>{children}</em>,
     del: ({ children }: any) => <del>{children}</del>,
+    
+    // 图片处理 - 限制尺寸并添加点击预览
+    img: ({ src, alt, ...props }: any) => (
+      <img
+        src={src}
+        alt={alt || '图片'}
+        className="max-w-full h-auto max-h-48 object-cover rounded-lg cursor-pointer"
+        onClick={() => {
+          if (src && onImagePreview) {
+            // 使用图片预览回调函数
+            onImagePreview(src, 0, [src]);
+          } else if (src) {
+            // 如果没有预览回调，则在新窗口打开
+            window.open(src, '_blank');
+          }
+        }}
+        {...props}
+      />
+    ),
     
     // 表格处理
     table: ({ children }: any) => <Table>{children}</Table>,

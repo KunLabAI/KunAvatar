@@ -12,15 +12,48 @@ interface ThinkingModeProps {
 
 // 提取思考内容的函数
 const extractThinkingContent = (text: string): string => {
+  const results: string[] = [];
+  
+  // 处理 <think></think> 标签格式
   const thinkRegex = /<think>([\s\S]*?)(?:<\/think>|$)/g;
-  const matches = text.match(thinkRegex);
-  if (!matches) return '';
-
-  return matches
-    .map(match => {
-      return match.replace(/<\/?think>/g, '');
-    })
-    .join('\n\n');
+  const thinkMatches = text.match(thinkRegex);
+  if (thinkMatches) {
+    thinkMatches.forEach((match, index) => {
+      let content = match.replace(/<\/?think>/g, '');
+      
+      // 保留markdown格式，只清理多余的空白
+      content = content
+        .replace(/^\s+|\s+$/g, '') // 去除首尾空白
+        .replace(/\n{3,}/g, '\n\n') // 将三个或更多连续换行替换为两个
+        .replace(/[ \t]+/g, ' '); // 将多个空格/制表符替换为单个空格
+      
+      if (content) {
+        results.push(content);
+      }
+    });
+  }
+  
+  // 处理 Thinking... ...done thinking 格式
+  const thinkingRegex = /Thinking\.\.\.\s*([\s\S]*?)(?:\s*\.\.\.done thinking|$)/gi;
+  const thinkingMatches = [...text.matchAll(thinkingRegex)];
+  if (thinkingMatches.length > 0) {
+    thinkingMatches.forEach((match, index) => {
+      let content = match[1]; // 获取捕获组的内容
+      
+      if (content && content.trim()) {
+        // 保留markdown格式，只清理多余的空白
+        content = content
+          .replace(/^\s+|\s+$/g, '') // 去除首尾空白
+          .replace(/\n{3,}/g, '\n\n') // 将三个或更多连续换行替换为两个
+          .replace(/[ \t]+/g, ' '); // 将多个空格/制表符替换为单个空格
+        
+        results.push(content);
+      }
+    });
+  }
+  
+  const finalResult = results.join('\n\n'); // 用双换行连接多个思考片段
+  return finalResult;
 };
 
 export function ThinkingMode({
@@ -31,24 +64,46 @@ export function ThinkingMode({
 }: ThinkingModeProps) {
   const [initiallyHidden, setInitiallyHidden] = useState(defaultHidden);
 
+
+
   // 使用useMemo来避免不必要的重新计算
-  const thinkingContent = useMemo(() => extractThinkingContent(content), [content]);
-  const hasThinkStart = useMemo(() => /<think>/.test(content), [content]);
-  const isCurrentlyThinking = useMemo(() => 
-    /<think>/.test(content) && !/<\/think>/.test(content), [content]
+  const thinkingContent = useMemo(() => {
+    return extractThinkingContent(content);
+  }, [content]);
+  
+  const hasThinkStart = useMemo(() => 
+    /<think>/.test(content) || /Thinking\.\.\./.test(content), [content]
   );
+  const isCurrentlyThinking = useMemo(() => 
+    (/<think>/.test(content) && !/<\/think>/.test(content)) ||
+    (/Thinking\.\.\./.test(content) && !/\.\.\.done thinking/i.test(content)), [content]
+  );
+
+  // 判断是否应该显示面板
+  const shouldShowPanel = useMemo(() => {
+    // 如果有思考内容，就显示面板（无论思考是否完成）
+    if (thinkingContent) return true;
+    
+    // 如果检测到思考开始，也显示面板
+    if (hasThinkStart) return true;
+    
+    // 如果检测到完整的思考过程（包括已完成的），也显示面板
+    if (/<think>[\s\S]*?<\/think>/.test(content)) return true;
+    if (/Thinking\.\.\.[\s\S]*?\.\.\.done thinking/i.test(content)) return true;
+    
+    return false;
+  }, [thinkingContent, hasThinkStart, content]);
 
   // 简化useEffect逻辑，避免循环更新
   useEffect(() => {
     // 只有在初始隐藏状态下，检测到思考内容时才显示
-    if (initiallyHidden && (thinkingContent || hasThinkStart)) {
-      console.log('🔍 检测到思考内容，显示思考面板');
+    if (initiallyHidden && shouldShowPanel) {
       setInitiallyHidden(false);
     }
-  }, [thinkingContent, hasThinkStart, initiallyHidden]);
+  }, [shouldShowPanel, initiallyHidden]);
 
-  // 如果初始隐藏，且没有思考标签（包括开始标签），则不渲染
-  if (initiallyHidden && !thinkingContent && !hasThinkStart) {
+  // 如果不应该显示面板，则不渲染
+  if (!shouldShowPanel) {
     return null;
   }
 
@@ -73,7 +128,7 @@ export function ThinkingMode({
         </div>
         
         {/* 状态图标显示 */}
-        <div className="flex items-center">
+        <div className="flex items-center pl-2">
           {isCurrentlyThinking && (
             <Loader2 className="w-4 h-4 text-theme-primary animate-spin" />
           )}
@@ -92,7 +147,7 @@ export function ThinkingMode({
 
           {/* 思考内容 */}
           {thinkingContent && (
-            <div className="text-sm text-theme-foreground-muted whitespace-pre-wrap break-words min-w-0 word-wrap">
+            <div className="text-sm text-theme-foreground-muted break-words min-w-0 leading-relaxed">
               {thinkingContent}
             </div>
           )}

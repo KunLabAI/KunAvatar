@@ -79,11 +79,8 @@ export function AddServerModal({
 
   // 生成服务器唯一标识
   const getServerKey = useCallback((server: typeof newServer) => {
-    if (server.type === 'stdio') {
-      return `${server.type}-${server.command}-${server.args}`;
-    } else {
-      return `${server.type}-${server.url || server.base_url}`;
-    }
+    // SSE和Streamable HTTP都使用URL作为标识
+    return `${server.type}-${server.url}`;
   }, []);
 
   // 监听服务器配置变更，清除不匹配的缓存
@@ -110,16 +107,10 @@ export function AddServerModal({
 
   // 验证服务器连接
   const validateServer = async () => {
-    if (newServer.type === 'stdio') {
-      if (!newServer.command) {
-        alert('请先填写STDIO命令');
-        return;
-      }
-    } else {
-      if (!newServer.url) {
-        alert('请先填写服务器URL');
-        return;
-      }
+    // 检查URL是否填写（SSE和Streamable HTTP都需要URL）
+    if (!newServer.url) {
+      alert('请先填写服务器URL');
+      return;
     }
 
     const currentKey = getServerKey(newServer);
@@ -297,8 +288,13 @@ export function AddServerModal({
                     placeholder="可选：描述服务器的用途和功能"
                   />
                 </FormInput>
+               
+              </div>
+            </FormSection>
 
-                <FormInput
+            {/* 连接配置 */}
+            <FormSection title="连接配置">
+               <FormInput
                   label="服务器类型（选择服务器的连接方式）"
                 >
                   <select
@@ -316,13 +312,6 @@ export function AddServerModal({
                     <option value="streamable-http">Streamable HTTP</option>
                   </select>
                 </FormInput>
-
-               
-              </div>
-            </FormSection>
-
-            {/* 连接配置 */}
-            <FormSection title="连接配置">
               <FormInput
                 label="服务器URL"
                 required={true}
@@ -424,8 +413,7 @@ export function AddServerModal({
             {/* 工具配置 */}
             {showToolConfig && validationResult?.success && validationResult.tools && (
               <FormSection title="工具参数配置">
-                <div className="bg-theme-background-secondary rounded-lg p-6 border border-theme-border">
-                  <div className="space-y-6 max-h-60 overflow-y-auto scrollbar-thin pr-2">
+                  <div className="space-y-6 max-h-80 overflow-y-auto scrollbar-thin pr-2">
                     {validationResult.tools.map((tool) => (
                       <div key={tool.name} className="bg-theme-background rounded-lg p-4 border border-theme-border">
                         <div className="mb-3">
@@ -465,7 +453,6 @@ export function AddServerModal({
                         )}
                       </div>
                     ))}
-                  </div>
                 </div>
               </FormSection>
             )}

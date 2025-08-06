@@ -7,11 +7,17 @@ interface StreamedContentProps {
   className?: string;
   style?: React.CSSProperties;
   enableMarkdown?: boolean; // 新增参数：是否启用markdown渲染
+  onImagePreview?: (imageUrl: string, index: number, images: string[]) => void;
 }
 
 // 移除思考标签内容的函数
 const removeThinkingContent = (content: string): string => {
-  return content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim();
+  const result = content
+    .replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '')
+    .replace(/Thinking\.\.\.\s*[\s\S]*?(?:\s*\.\.\.done thinking|$)/gi, '')
+    .trim();
+  
+  return result;
 };
 
 const StreamedContentComponent: React.FC<StreamedContentProps> = ({
@@ -20,6 +26,7 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
   className,
   style,
   enableMarkdown = false,
+  onImagePreview,
 }) => {
   const prevContentRef = useRef('');
 
@@ -42,6 +49,7 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
         isStreaming={isStreaming}
         className={className}
         style={style}
+        onImagePreview={onImagePreview}
       />
     );
   }

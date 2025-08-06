@@ -30,7 +30,7 @@ function ModelManagerPageContent() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedModelForDetails, setSelectedModelForDetails] = useState<CustomModel | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingType, setProcessingType] = useState<'create' | 'update' | 'delete' | 'modelfile' | 'general'>('general');
+  const [processingType, setProcessingType] = useState<'create' | 'update' | 'delete' | 'modelfile' | 'sync' | 'general'>('general');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<CustomModel | null>(null);
   const [hasPermissionError, setHasPermissionError] = useState(false);
@@ -43,6 +43,20 @@ function ModelManagerPageContent() {
 
   // 获取对话数据用于侧边栏
   const { conversations } = useConversations();
+
+  // 同步模型
+  const handleSyncModels = useCallback(async () => {
+    try {
+      setProcessingType('sync');
+      setIsProcessing(true);
+      await loadModels(true);
+    } catch (error) {
+      console.error('同步模型失败:', error);
+      notification.error('同步失败', '请检查Ollama服务是否正常运行');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [notification]);
 
   // 加载模型列表
   const loadModels = useCallback(async (forceSync = false) => {
@@ -381,18 +395,26 @@ function ModelManagerPageContent() {
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-2">
                     <button
+                      onClick={handleSyncModels}
+                      disabled={isLoading || (isProcessing && processingType === 'sync')}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${(isProcessing && processingType === 'sync') ? 'animate-spin' : ''}`} />
+                      <span className="hidden sm:inline">{(isProcessing && processingType === 'sync') ? '同步中...' : '同步'}</span>
+                    </button>
+                    <button
                       onClick={() => setShowPullModelModal(true)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <Download className="w-4 h-4" />
-                      <span className="hidden sm:inline">拉取模型</span>
+                      <span className="hidden sm:inline">拉取</span>
                     </button>
                     <button
                       onClick={() => setShowFileUploadForm(true)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <Upload className="w-4 h-4" />
-                      <span className="hidden sm:inline">上传文件</span>
+                      <span className="hidden sm:inline">上传</span>
                     </button>
                     <button
                       onClick={() => setShowModelfileForm(true)}
