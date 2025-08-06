@@ -28,8 +28,26 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
       sortOrder
     });
 
-    // 如果强制同步，或者数据库为空，则尝试从Ollama同步
-    if (forceSync || models.length === 0) {
+    // 同步逻辑：强制同步、数据库为空、或检测到模型数量不一致时同步
+    let shouldSync = forceSync || models.length === 0;
+    
+    // 如果不是强制同步且数据库有数据，检查是否需要智能同步
+    if (!shouldSync && models.length > 0) {
+      try {
+        const ollamaClient = new OllamaClient();
+        const ollamaModels = await ollamaClient.getModels();
+        
+        // 如果Ollama中的模型数量与数据库中的不一致，触发同步
+        if (ollamaModels.length !== models.length) {
+          shouldSync = true;
+          console.log(`检测到模型数量不一致：Ollama(${ollamaModels.length}) vs 数据库(${models.length})，触发同步`);
+        }
+      } catch (error) {
+        console.warn('检查Ollama模型数量失败，跳过智能同步:', error);
+      }
+    }
+    
+    if (shouldSync) {
       try {
         const ollamaClient = new OllamaClient();
         const ollamaModels = await ollamaClient.getModels();

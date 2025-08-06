@@ -3,49 +3,101 @@
  * 提供统一的模型logo映射和处理功能
  */
 
+// 模型logo配置类型
+interface LogoConfig {
+  icon: string;
+  needsThemeAdaptation?: boolean; // 是否需要主题适配
+  lightColor?: string; // 浅色主题下的颜色
+  darkColor?: string; // 深色主题下的颜色
+}
+
 // 模型logo映射配置
-const MODEL_LOGO_MAPPING: Record<string, string> = {
+const MODEL_LOGO_MAPPING: Record<string, LogoConfig> = {
   // Meta/LLaMA系列
-  'llama': 'Meta_icon.svg',
-  'meta': 'Meta_icon.svg',
+  'llama': { icon: 'Meta_icon.svg' },
+  'meta': { icon: 'Meta_icon.svg' },
   
   // 通义千问系列
-  'qwen': 'Qwen_icon.svg',
+  'qwen': { icon: 'Qwen_icon.svg' },
   
   // Google Gemma系列
-  'gemma': 'Gemma_icon.svg',
+  'gemma': { icon: 'Gemma_icon.svg' },
   
   // Mistral系列
-  'mistral': 'Mistral_icon.svg',
+  'mistral': { icon: 'Mistral_icon.svg' },
   
   // Microsoft Phi系列
-  'phi': 'Phi_icon.svg',
+  'phi': { icon: 'Phi_icon.svg' },
   
   // DeepSeek系列
-  'deepseek': 'Deepseek_icon.svg',
+  'deepseek': { icon: 'Deepseek_icon.svg' },
   
   // Cohere系列
-  'cohere': 'Cohere_icon.svg',
+  'cohere': { icon: 'Cohere_icon.svg' },
   
   // LLaVA系列
-  'llava': 'LLaVA_icon.svg',
+  'llava': { icon: 'LLaVA_icon.svg' },
   
   // NVIDIA系列
-  'nvidia': 'Nvidia_icon.svg',
+  'nvidia': { icon: 'Nvidia_icon.svg' },
   
   // ModelScope系列
-  'modelscope': 'Modelscope_icon.svg',
+  'modelscope': { icon: 'Modelscope_icon.svg' },
   
   // HuggingFace系列
-  'huggingface': 'Huggingface_icon.svg',
-  'hf': 'Huggingface_icon.svg',
+  'huggingface': { icon: 'Huggingface_icon.svg' },
+  'hf': { icon: 'Huggingface_icon.svg' },
   
   // Ollama系列
-  'ollama': 'Ollama_icon.svg',
+  'ollama': { icon: 'Ollama_icon.svg' },
+
+  // OpenAI系列 - 需要主题适配
+  'gptoss': { 
+    icon: 'Openai_icon.svg', 
+    needsThemeAdaptation: true,
+    lightColor: '#000000', // 浅色主题用黑色
+    darkColor: '#ffffff'   // 深色主题用白色
+  },
+  'gpt-oss': { 
+    icon: 'Openai_icon.svg', 
+    needsThemeAdaptation: true,
+    lightColor: '#000000',
+    darkColor: '#ffffff'
+  },
+  'gpt': { 
+    icon: 'Openai_icon.svg', 
+    needsThemeAdaptation: true,
+    lightColor: '#000000',
+    darkColor: '#ffffff'
+  },
 };
 
 // 默认图标
 const DEFAULT_ICON = 'DefaultIcon.svg';
+
+/**
+ * 根据模型名称获取对应的logo配置
+ * @param modelName 模型名称或家族名称
+ * @returns logo配置对象
+ */
+export function getModelLogoConfig(modelName: string): LogoConfig {
+  if (!modelName) return { icon: DEFAULT_ICON };
+  
+  const lowerModelName = modelName.toLowerCase();
+  
+  // 按照键长度排序，优先匹配更具体的模型名称
+  const sortedEntries = Object.entries(MODEL_LOGO_MAPPING)
+    .sort(([a], [b]) => b.length - a.length);
+  
+  // 遍历映射配置，找到匹配的图标
+  for (const [key, config] of sortedEntries) {
+    if (lowerModelName.includes(key)) {
+      return config;
+    }
+  }
+  
+  return { icon: DEFAULT_ICON };
+}
 
 /**
  * 根据模型名称获取对应的logo图标文件名
@@ -53,18 +105,8 @@ const DEFAULT_ICON = 'DefaultIcon.svg';
  * @returns logo图标文件名
  */
 export function getModelIconFile(modelName: string): string {
-  if (!modelName) return DEFAULT_ICON;
-  
-  const lowerModelName = modelName.toLowerCase();
-  
-  // 遍历映射配置，找到匹配的图标
-  for (const [key, iconFile] of Object.entries(MODEL_LOGO_MAPPING)) {
-    if (lowerModelName.includes(key)) {
-      return iconFile;
-    }
-  }
-  
-  return DEFAULT_ICON;
+  const config = getModelLogoConfig(modelName);
+  return config.icon;
 }
 
 /**
@@ -100,9 +142,33 @@ export function hasModelIcon(modelName: string): boolean {
 }
 
 /**
+ * 检查模型是否需要主题适配
+ * @param modelName 模型名称
+ * @returns 是否需要主题适配
+ */
+export function needsThemeAdaptation(modelName: string): boolean {
+  const config = getModelLogoConfig(modelName);
+  return config.needsThemeAdaptation === true;
+}
+
+/**
+ * 获取模型在指定主题下的颜色
+ * @param modelName 模型名称
+ * @param isDark 是否为深色主题
+ * @returns 对应主题下的颜色，如果不需要适配则返回undefined
+ */
+export function getModelThemeColor(modelName: string, isDark: boolean): string | undefined {
+  const config = getModelLogoConfig(modelName);
+  if (!config.needsThemeAdaptation) {
+    return undefined;
+  }
+  return isDark ? config.darkColor : config.lightColor;
+}
+
+/**
  * 获取所有支持的模型家族列表
  * @returns 支持的模型家族名称数组
  */
 export function getSupportedModelFamilies(): string[] {
   return Object.keys(MODEL_LOGO_MAPPING);
-} 
+}

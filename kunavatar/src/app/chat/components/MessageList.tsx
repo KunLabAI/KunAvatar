@@ -341,9 +341,13 @@ function MessageItem({
 
   return (
     <div className={`group ${chatStyle === 'conversation' && isUser ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}>
-      {/* 图片显示层 - 仅在用户消息且有图片时显示，独立于消息气泡和头像 */}
-      {isUser && message.images && message.images.length > 0 && (
-        <div className={`mb-2 ${chatStyle === 'conversation' ? 'mr-12' : 'ml-12'}`}>
+      {/* 图片显示层 - 用户消息和AI助手消息都支持图片显示 */}
+      {message.images && message.images.length > 0 && (
+        <div className={`mb-2 ${
+          isUser 
+            ? (chatStyle === 'conversation' ? 'mr-12' : 'ml-12')
+            : 'ml-12' // AI助手消息的图片始终在左侧对齐
+        }`}>
           <div className="bg-theme-background/50 rounded-lg">
             <div className={`grid gap-2 max-w-2xl ${
               message.images.length === 1 
@@ -355,21 +359,69 @@ function MessageItem({
                 : 'grid-cols-2'
             }`}>
               {message.images.map((image, index) => {
-                // 确保图片有正确的 data URL 前缀
-                const imageUrl = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
+                // 智能处理不同格式的图片URL
+                const imageUrl = (() => {
+                  if (!image || typeof image !== 'string') {
+                    console.error('无效的图片数据:', image);
+                    return '';
+                  }
+                  
+                  if (image.startsWith('data:')) {
+                    // 已经是data URL格式
+                    return image;
+                  } else if (image.startsWith('http://') || image.startsWith('https://')) {
+                    // HTTP URL格式，直接使用
+                    return image;
+                  } else {
+                    // 假设是base64编码，验证并添加data URL前缀
+                    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(image)) {
+                      console.error('无效的base64格式:', image.substring(0, 100));
+                      return '';
+                    }
+                    return `data:image/png;jpeg;base64,${image}`;
+                  }
+                })();
+                
+                // 只有当图片URL有效时才渲染
+                if (!imageUrl) {
+                  return null;
+                }
                 
                 return (
                   <div key={index} className="relative group">
                     <img
                       src={imageUrl}
-                      alt={`上传的图片 ${index + 1}`}
-                      className="w-full h-auto rounded-lg cursor-pointer max-h-48 object-cover"
+                      alt={isUser ? `上传的图片 ${index + 1}` : `AI回复的图片 ${index + 1}`}
+                      className={`w-full h-auto rounded-lg cursor-pointer object-cover ${
+                        isUser ? 'max-h-56' : 'max-h-24'
+                      }`}
+                      onError={(e) => {
+                        console.error('图片加载失败:', imageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
                       onClick={() => {
-                        // 确保传递给预览模态框的所有图片URL都有正确的前缀
-                        const processedImages = message.images!.map(img => 
-                          img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`
-                        );
-                        onImagePreview?.(imageUrl, index, processedImages);
+                        // 智能处理传递给预览模态框的图片URL
+                        const processedImages = message.images!.map(img => {
+                          if (!img || typeof img !== 'string') {
+                            return '';
+                          }
+                          if (img.startsWith('data:')) {
+                            return img;
+                          } else if (img.startsWith('http://') || img.startsWith('https://')) {
+                            return img;
+                          } else {
+                            // 验证base64格式
+                            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(img)) {
+                              console.error('预览时发现无效的base64格式:', img.substring(0, 100));
+                              return '';
+                            }
+                            return `data:image/jpeg;base64,${img}`;
+                          }
+                        }).filter(url => url !== ''); // 过滤掉空的URL
+                        
+                        if (imageUrl && processedImages.length > 0) {
+                          onImagePreview?.(imageUrl, index, processedImages);
+                        }
                       }}
                     />
                   </div>
@@ -431,6 +483,7 @@ function MessageItem({
                   isStreaming={isStreaming}
                   enableMarkdown={!isUser} // 只有助手消息启用 Markdown，用户消息保持原始格式
                   className={isUser ? 'text-theme-primary-foreground' : 'text-theme-foreground'}
+                  onImagePreview={onImagePreview}
                 />
               </div>
             ) : (isStreaming ? (

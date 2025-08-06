@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { getModelLogoPath, getModelFamilyInitial } from '../../../lib/modelLogo';
+import { getModelLogoPath, getModelFamilyInitial, needsThemeAdaptation, getModelThemeColor } from '../../../lib/modelLogo';
+import { useThemeToggle } from '@/theme/contexts/ThemeContext';
 
 interface ModelLogoProps {
   modelName: string;
@@ -40,9 +41,14 @@ export default function ModelLogo({
   showFallback = true 
 }: ModelLogoProps) {
   const [hasError, setHasError] = useState(false);
+  const { isDark } = useThemeToggle();
   
   const logoPath = getModelLogoPath(modelName);
   const fallbackText = getModelFamilyInitial(modelName);
+  
+  // 检查是否需要主题适配
+  const needsAdaptation = needsThemeAdaptation(modelName);
+  const themeColor = needsAdaptation ? getModelThemeColor(modelName, isDark) : undefined;
   
   // 处理尺寸，优先使用自定义尺寸
   const containerSizeClass = customContainerSize 
@@ -95,6 +101,10 @@ export default function ModelLogo({
             width={Math.round(innerImageSize)}
             height={Math.round(innerImageSize)}
             className="object-contain filter transition-all duration-300 max-w-full max-h-full"
+            style={needsAdaptation && themeColor ? {
+              filter: `brightness(0) saturate(100%) invert(${isDark ? '1' : '0'})`,
+              color: themeColor
+            } : undefined}
             onError={() => {
               if (showFallback) {
                 setHasError(true);

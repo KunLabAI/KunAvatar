@@ -30,10 +30,27 @@ export default function ImagePreviewModal({
   const [imageError, setImageError] = React.useState(false);
 
   const totalImages = images.length;
-  // 确保当前图片URL有正确的data前缀
+  // 智能处理当前图片URL
   const currentImageUrl = (() => {
     const rawUrl = images[currentIndex] || imageUrl;
-    return rawUrl.startsWith('data:') ? rawUrl : `data:image/jpeg;base64,${rawUrl}`;
+    
+    if (!rawUrl || typeof rawUrl !== 'string') {
+      return '';
+    }
+    
+    if (rawUrl.startsWith('data:')) {
+      // 已经是data URL格式
+      return rawUrl;
+    } else if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+      // HTTP URL格式，直接使用
+      return rawUrl;
+    } else {
+      // 假设是base64编码，验证并添加data URL前缀
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(rawUrl)) {
+        return '';
+      }
+      return `data:image/jpeg;base64,${rawUrl}`;
+    }
   })();
 
   // 导航函数
@@ -228,6 +245,11 @@ export default function ImagePreviewModal({
       };
     }
   }, [isDragging, handlePointerMove, handlePointerUp]);
+
+  // 如果图片URL无效，不显示模态框
+  if (!currentImageUrl) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
