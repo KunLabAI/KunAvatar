@@ -375,61 +375,7 @@ export function MessageInput({
         
         {/* 整合的输入组件：控件栏 + 输入框 */}
         <div className="bg-theme-card border border-theme-border rounded-xl shadow-sm overflow-visible">
-          {/* 控件栏 */}
-          <div className="flex items-center justify-between px-4 py-3 bg-theme-background/50 overflow-visible">
-            <div className="flex items-center space-x-2">
-              {/* 图片上传控件 - 默认显示，点击时验证模型支持 */}
-              {enableImageUpload && (
-                <ImageUploadControl
-                  onImagesSelected={handleImageControlUpload}
-                  disabled={disabled || isStreaming}
-                  hasImages={images.length > 0}
-                  imageCount={images.length}
-                  maxImages={maxImages}
-                  tooltip={`上传图片 (${images.length}/${maxImages})`}
-                  isCheckingModel={isCheckingModel}
-                  modelSupportsVision={modelSupportsVision}
-                  onValidationError={(title: string, message: string) => {
-                    console.error(`${title}: ${message}`);
-                    alert(`${title}: ${message}`);
-                  }}
-                />
-              )}
-
-              {/* 工具控件 */}
-              {onToolsToggle && (
-                <ToolControl
-                  enableTools={enableTools}
-                  isCheckingModel={isCheckingModel}
-                  modelSupportsTools={modelSupportsTools}
-                  selectedToolsCount={selectedToolsCount}
-                  onToolsToggle={onToolsToggle}
-                  isOpen={showToolPanel}
-                  onToggle={onToggleToolPanel}
-                />
-              )}
-
-              {/* 记忆控件 */}
-              {chatMode === 'agent' && (
-                <MemoryControl
-                  conversationId={currentConversationId}
-                  isOpen={showMemoryPanel}
-                  onToggle={onToggleMemoryPanel}
-                />
-              )}
-            </div>
-            
-            {/* 右侧：清除对话按钮 */}
-            <div className="flex items-center">
-              {onClearChat && (
-                <ChatActionsControl
-                  onClearChat={onClearChat}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* 输入区域 */}
+         {/* 输入区域 */}
           <div className="relative flex flex-col bg-theme-background/50 overflow-visible">
             {/* 文本输入区域 */}
             <div className="flex items-end overflow-visible">        
@@ -494,6 +440,63 @@ export function MessageInput({
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+          {/* 控件栏 */}
+          <div className="flex items-center justify-between px-2 py-2 overflow-visible">
+            <div className="flex items-center space-x-2">
+              {/* 图片上传控件 - 默认显示，点击时验证模型支持 */}
+              {enableImageUpload && (
+                <ImageUploadControl
+                  onImagesSelected={handleImageControlUpload}
+                  disabled={disabled || isStreaming}
+                  hasImages={images.length > 0}
+                  imageCount={images.length}
+                  maxImages={maxImages}
+                  tooltip={`上传图片 (${images.length}/${maxImages})`}
+                  isCheckingModel={isCheckingModel}
+                  modelSupportsVision={modelSupportsVision}
+                  onValidationError={(title: string, message: string) => {
+                    console.error(`${title}: ${message}`);
+                    alert(`${title}: ${message}`);
+                  }}
+                />
+              )}
+
+              {/* 工具控件 */}
+              {onToolsToggle && (
+                <ToolControl
+                  enableTools={enableTools}
+                  isCheckingModel={isCheckingModel}
+                  modelSupportsTools={modelSupportsTools}
+                  selectedToolsCount={selectedToolsCount}
+                  onToolsToggle={onToolsToggle}
+                  isOpen={showToolPanel}
+                  onToggle={onToggleToolPanel}
+                  onValidationError={(title: string, message: string) => {
+                    console.error(`${title}: ${message}`);
+                    alert(`${title}: ${message}`);
+                  }}
+                />
+              )}
+
+              {/* 记忆控件 */}
+              {chatMode === 'agent' && (
+                <MemoryControl
+                  conversationId={currentConversationId}
+                  isOpen={showMemoryPanel}
+                  onToggle={onToggleMemoryPanel}
+                />
+              )}
+            </div>
+            
+            {/* 右侧：清除对话按钮 */}
+            <div className="flex items-center">
+              {onClearChat && (
+                <ChatActionsControl
+                  onClearChat={onClearChat}
+                />
+              )}
             </div>
           </div>
         </div>

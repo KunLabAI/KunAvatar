@@ -14,6 +14,7 @@ import {
   History
 } from 'lucide-react';
 import { Conversation } from '@/lib/database';
+import { useCleanMode } from '@/contexts/CleanModeContext';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -80,6 +81,7 @@ function useSidebarState() {
 
 export function Sidebar({ conversations, chatMode, selectedAgent }: SidebarProps) {
   const { isExpanded, toggleSidebar } = useSidebarState();
+  const { isCleanMode } = useCleanMode();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -117,26 +119,23 @@ export function Sidebar({ conversations, chatMode, selectedAgent }: SidebarProps
     }
   };
 
-  return (
+  // 侧边栏内容组件
+  const SidebarContent = () => (
     <>
-      {/* 移动端触发区域 */}
-      <div className="fixed left-0 top-0 w-5 h-full z-[999] bg-transparent md:hidden" />
-      
-      <div className="sidebar-container bg-theme-card flex flex-col h-full">
-        {/* 顶部区域 */}
-        <div className="group p-3 border-b border-theme-border flex items-center relative">
-          <div className="w-8 h-8 flex-shrink-0 relative">
-            <Image
-              src="/assets/logo@64.svg"
-              alt="Kun Avatar Logo"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <h1 className="sidebar-text text-xl font-bold text-theme-foreground tracking-tight">
-            Kun Avatar
-          </h1>
+      {/* 顶部区域 */}
+      <div className="group p-3 border-b border-theme-border flex items-center relative">
+        <div className="w-8 h-8 flex-shrink-0 relative">
+          <Image
+            src="/assets/logo@64.svg"
+            alt="Kun Avatar Logo"
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+        <h1 className="sidebar-text text-xl font-bold text-theme-foreground tracking-tight">
+          Kun Avatar
+        </h1>
         {/* 展开/收缩按钮 */}
         <button
           onClick={toggleSidebar}
@@ -288,7 +287,29 @@ export function Sidebar({ conversations, chatMode, selectedAgent }: SidebarProps
           </Link>
         </div>
       </div>
-      </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* 移动端触发区域 */}
+      <div className="fixed left-0 top-0 w-5 pt-0 h-full z-[999] bg-transparent md:hidden" />
+      
+      {/* 干净模式下的悬浮侧边栏 */}
+      {isCleanMode && (
+        <div className="fixed left-0 top-0 bottom-0 z-40 opacity-0 hover:opacity-100 transition-opacity duration-300 ">
+          <div className="sidebar-container bg-theme-card flex flex-col h-full">
+            <SidebarContent />
+          </div>
+        </div>
+      )}
+      
+      {/* 正常模式下的侧边栏 */}
+      {!isCleanMode && (
+        <div className="sidebar-container bg-theme-card flex flex-col h-full">
+          <SidebarContent />
+        </div>
+      )}
     </>
   );
 }

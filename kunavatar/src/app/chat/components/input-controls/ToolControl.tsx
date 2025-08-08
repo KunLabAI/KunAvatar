@@ -16,6 +16,9 @@ interface ToolControlProps {
   // 新的面板管理属性
   isOpen?: boolean;
   onToggle?: () => void;
+  
+  // 验证错误提示
+  onValidationError?: (title: string, message: string) => void;
 }
 
 export function ToolControl({
@@ -28,11 +31,16 @@ export function ToolControl({
   onShowToolSettings,
   isOpen,
   onToggle,
+  onValidationError,
 }: ToolControlProps) {
   
   const handleClick = () => {
-    // 如果模型不支持工具调用，则不执行任何操作
+    // 如果模型不支持工具调用，显示错误提示
     if (modelSupportsTools === false) {
+      onValidationError?.(
+        'MCP工具不可用', 
+        '当前模型不支持工具调用功能，请选择支持工具调用的模型。'
+      );
       return;
     }
     
@@ -69,16 +77,7 @@ export function ToolControl({
     return '启用MCP工具调用功能';
   };
 
-  // 确定状态指示器
-  const getStatusIndicator = () => {
-    if (modelSupportsTools === null) return undefined;
-    
-    return {
-      status: modelSupportsTools ? 'success' as const : 'error' as const,
-      position: 'top-right' as const,
-      tooltip: modelSupportsTools ? '模型支持工具调用' : '模型不支持工具调用',
-    };
-  };
+
 
   // 确定徽章
   const getBadge = () => {
@@ -99,7 +98,6 @@ export function ToolControl({
       loading={isCheckingModel}
       tooltip={getTooltip()}
       badge={getBadge()}
-      statusIndicator={getStatusIndicator()}
       variant="default"
       enableEscClose={false} // 禁用BaseControlButton的ESC处理，由ToolSettings统一处理
       onEscClose={onToggle}

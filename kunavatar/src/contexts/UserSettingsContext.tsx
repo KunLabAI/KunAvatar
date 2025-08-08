@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { apiClient } from '@/lib/api-client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserSettings {
   themePreference: string;
@@ -32,6 +34,7 @@ interface UserSettingsProviderProps {
 }
 
 export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
+  const { checkAuth } = useAuth();
   // 优化：先从localStorage读取初始值，避免闪屏
   const [settings, setSettings] = useState<UserSettings>(() => {
     // 尝试从localStorage获取初始设置，避免默认值导致的闪屏
@@ -52,8 +55,18 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState(0);
   
-  // 缓存时间：15天
-  const CACHE_DURATION = 15 * 24 * 60 * 60 * 1000;
+  // 缓存时间：1小时（减少缓存时间，确保设置更及时更新）
+  const CACHE_DURATION = 60 * 60 * 1000;
+
+  // 处理认证失败的辅助函数
+  const handleAuthFailure = useCallback(async (response: any) => {
+    if (response.error === '认证失败，请重新登录') {
+      console.log('检测到认证失败，尝试刷新token...');
+      await checkAuth();
+      return true; // 表示需要重试
+    }
+    return false;
+  }, [checkAuth]);
 
   // 获取用户设置
   const fetchSettings = useCallback(async (forceRefresh = false) => {
@@ -65,7 +78,10 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
     try {
       // 检查缓存是否有效
       const now = Date.now();
-      if (!forceRefresh && isInitialized && (now - lastFetchTime) < CACHE_DURATION) {
+      const cacheTime = localStorage.getItem('user-settings-cache-time');
+      const lastCacheTime = cacheTime ? parseInt(cacheTime) : 0;
+      
+      if (!forceRefresh && isInitialized && (now - lastCacheTime) < CACHE_DURATION) {
         return;
       }
 
@@ -91,29 +107,33 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
         return;
       }
 
-      const response = await fetch('/api/user-settings?category=appearance', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      let response = await apiClient.get('/api/user-settings?category=appearance');
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // 只有当设置真正发生变化时才更新，减少不必要的重新渲染
-          const newSettings = data.settings;
-          setSettings(prevSettings => {
-            const hasChanged = Object.keys(newSettings).some(
-              key => prevSettings[key as keyof UserSettings] !== newSettings[key]
-            );
-            return hasChanged ? newSettings : prevSettings;
-          });
-          setLastFetchTime(now);
-        } else {
-          throw new Error(data.error || '获取设置失败');
+      // 如果认证失败，尝试刷新token后重试
+      if (!response.success) {
+        const shouldRetry = await handleAuthFailure(response);
+        if (shouldRetry) {
+          console.log('Token刷新后重试获取设置...');
+          response = await apiClient.get('/api/user-settings?category=appearance');
         }
-      } else if (response.status === 401) {
-        // 认证失败，使用本地存储作为后备
+      }
+
+      if (response.success && response.data?.settings) {
+        // 只有当设置真正发生变化时才更新，减少不必要的重新渲染
+        const newSettings = response.data.settings;
+        setSettings(prevSettings => {
+          const hasChanged = Object.keys(newSettings).some(
+            key => prevSettings[key as keyof UserSettings] !== newSettings[key]
+          );
+          return hasChanged ? newSettings : prevSettings;
+        });
+        setLastFetchTime(now);
+        
+        // 保存缓存时间到localStorage
+        localStorage.setItem('user-settings-cache-time', now.toString());
+      } else {
+        // 获取失败，使用本地存储作为后备
+        console.log('获取服务器设置失败，使用本地设置:', response.error);
         const localSettings = {
           themePreference: localStorage.getItem('theme-preference') || 'system',
           colorTheme: localStorage.getItem('color-theme') || 'kun',
@@ -122,8 +142,6 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
         };
         setSettings(localSettings);
         setLastFetchTime(now);
-      } else {
-        throw new Error('获取设置失败');
       }
     } catch (err) {
       console.error('获取用户设置失败:', err);
@@ -144,7 +162,7 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
       setLoading(false);
       setIsInitialized(true);
     }
-  }, [isInitialized, lastFetchTime, CACHE_DURATION]);
+  }, [isInitialized, CACHE_DURATION, handleAuthFailure]);
 
   // 更新单个设置
   const updateSetting = useCallback(async (key: string, value: string): Promise<boolean> => {
@@ -176,38 +194,48 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
         return true;
       }
 
-      const response = await fetch('/api/user-settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          key: {
-            themePreference: 'theme-preference',
-            colorTheme: 'color-theme',
-            chatStyle: 'chat-style',
-            displaySize: 'display-size'
-          }[key] || key,
-          value,
-          category: 'appearance'
-        }),
+      let response = await apiClient.post('/api/user-settings', {
+        key: {
+          themePreference: 'theme-preference',
+          colorTheme: 'color-theme',
+          chatStyle: 'chat-style',
+          displaySize: 'display-size'
+        }[key] || key,
+        value,
+        category: 'appearance'
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      // 如果认证失败，尝试刷新token后重试
+      if (!response.success) {
+        const shouldRetry = await handleAuthFailure(response);
+        if (shouldRetry) {
+          console.log('Token刷新后重试更新设置...');
+          response = await apiClient.post('/api/user-settings', {
+            key: {
+              themePreference: 'theme-preference',
+              colorTheme: 'color-theme',
+              chatStyle: 'chat-style',
+              displaySize: 'display-size'
+            }[key] || key,
+            value,
+            category: 'appearance'
+          });
+        }
+      }
+
+      if (response.success) {
         // 更新缓存时间
         setLastFetchTime(Date.now());
-        return data.success;
+        return response.success;
       } else {
-        console.error('更新设置失败:', response.statusText);
+        console.error('更新设置失败:', response.error);
         return false;
       }
     } catch (err) {
       console.error('更新设置失败:', err);
       return false;
     }
-  }, []);
+  }, [handleAuthFailure]);
 
   // 批量更新界面设置
   const updateAppearanceSettings = useCallback(async (newSettings: Partial<UserSettings>): Promise<boolean> => {
@@ -241,36 +269,44 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
         return true;
       }
 
-      const response = await fetch('/api/user-settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appearance: {
-            themePreference: newSettings.themePreference,
-            colorTheme: newSettings.colorTheme,
-            chatStyle: newSettings.chatStyle,
-            displaySize: newSettings.displaySize
-          }
-        }),
+      let response = await apiClient.post('/api/user-settings', {
+        appearance: {
+          themePreference: newSettings.themePreference,
+          colorTheme: newSettings.colorTheme,
+          chatStyle: newSettings.chatStyle,
+          displaySize: newSettings.displaySize
+        }
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      // 如果认证失败，尝试刷新token后重试
+      if (!response.success) {
+        const shouldRetry = await handleAuthFailure(response);
+        if (shouldRetry) {
+          console.log('Token刷新后重试批量更新设置...');
+          response = await apiClient.post('/api/user-settings', {
+            appearance: {
+              themePreference: newSettings.themePreference,
+              colorTheme: newSettings.colorTheme,
+              chatStyle: newSettings.chatStyle,
+              displaySize: newSettings.displaySize
+            }
+          });
+        }
+      }
+
+      if (response.success) {
         // 更新缓存时间
         setLastFetchTime(Date.now());
-        return data.success;
+        return response.success;
       } else {
-        console.error('批量更新设置失败:', response.statusText);
+        console.error('批量更新设置失败:', response.error);
         return false;
       }
     } catch (err) {
       console.error('批量更新设置失败:', err);
       return false;
     }
-  }, []);
+  }, [handleAuthFailure]);
 
   // 强制刷新设置
   const refreshSettings = useCallback(async () => {

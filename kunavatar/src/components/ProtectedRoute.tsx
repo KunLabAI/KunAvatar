@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import Loading from './Loading';
 
 interface ProtectedRouteProps {

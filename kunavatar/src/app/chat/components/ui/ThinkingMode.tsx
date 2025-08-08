@@ -120,18 +120,16 @@ export function ThinkingMode({
           ) : (
             <ChevronRight className="w-4 h-4 text-theme-foreground-muted" />
           )}
-          
-          <Brain className="w-4 h-4 text-theme-primary" />
+          {/* 状态图标显示 */}
+          <div className="flex items-center">
+            {isCurrentlyThinking && (
+              <Loader2 className="w-4 h-4 text-theme-primary animate-spin" />
+            )}
+          </div>
+
           <span className="text-sm font-medium text-theme-foreground">
             思考模式
           </span>
-        </div>
-        
-        {/* 状态图标显示 */}
-        <div className="flex items-center pl-2">
-          {isCurrentlyThinking && (
-            <Loader2 className="w-4 h-4 text-theme-primary animate-spin" />
-          )}
         </div>
       </div>
 

@@ -10,6 +10,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { AuthErrorBoundary } from '@/components/AuthErrorBoundary'
 import { UserSettingsProvider } from '@/contexts/UserSettingsContext'
 import { DownloadManagerProvider } from '@/contexts/DownloadManagerContext'
+import { CleanModeProvider } from '@/contexts/CleanModeContext'
 import { GlobalDownloadManager } from '@/components/GlobalDownloadManager'
 import OllamaStatusChecker from '@/components/OllamaStatusChecker'
 import { ElectronLayout } from '@/components/ElectronLayout'
@@ -43,12 +44,14 @@ export default function RootLayout({
               <UserSettingsProvider>
                 <DownloadManagerProvider>
                   <NotificationProvider>
+                    <CleanModeProvider>
                     <ElectronLayout className="min-h-screen">
                       {children}
                     </ElectronLayout>
                     <NotificationManager />
                     <GlobalDownloadManager />
                     <OllamaStatusChecker />
+                    </CleanModeProvider>
                   </NotificationProvider>
                 </DownloadManagerProvider>
               </UserSettingsProvider>

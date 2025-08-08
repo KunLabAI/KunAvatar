@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { ImageIcon, X, Upload } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 
 interface ImageUploadProps {
   images?: string[]; // 当前图片数组
@@ -28,7 +28,6 @@ export function ImageUpload({
   className = ''
 }: ImageUploadProps) {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 将文件转换为base64
@@ -117,31 +116,6 @@ export function ImageUpload({
     fileInputRef.current?.click();
   };
 
-  // 处理拖拽
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!disabled) {
-      setIsDragging(true);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (disabled) return;
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleFiles(files);
-    }
-  };
-
   // 格式化文件大小
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -157,15 +131,9 @@ export function ImageUpload({
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-4 transition-colors cursor-pointer
-          ${isDragging 
-            ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
-            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-          }
+          border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         onClick={handleUploadClick}
       >
         <input
@@ -181,8 +149,7 @@ export function ImageUpload({
         <div className="flex flex-col items-center justify-center space-y-2 text-center">
           <Upload className="w-8 h-8 text-gray-400" />
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            <span className="font-medium text-blue-600 dark:text-blue-400">点击上传</span>
-            {' '}或拖拽图片到此处
+            <span className="font-medium text-blue-600 dark:text-blue-400">点击上传图片</span>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-500">
             支持 JPG、PNG、GIF 等格式，单个文件不超过 {formatFileSize(maxFileSize)}

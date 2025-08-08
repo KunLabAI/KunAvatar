@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Minus, Square, X, Maximize2, Minimize2 } from 'lucide-react';
-import type { ElectronAPI } from '@/types/electron';
+import { Minus, Square, X, Maximize2, Minimize2, PanelsTopLeft, PanelLeftDashed } from 'lucide-react';
+import { useCleanMode } from '@/contexts/CleanModeContext';
 
 interface CustomTitleBarProps {
   title?: string;
@@ -21,6 +21,7 @@ const CustomTitleBar: React.FC<CustomTitleBarProps> = ({
   showTitle = false, 
   className = '' 
 }) => {
+  const { isCleanMode, toggleCleanMode } = useCleanMode();
   const [windowState, setWindowState] = useState<WindowState>({
     isMaximized: false,
     isMinimized: false,
@@ -130,41 +131,58 @@ const CustomTitleBar: React.FC<CustomTitleBarProps> = ({
       {/* 中间区域 - 可拖拽 */}
       <div className="flex-1 h-full" />
 
-      {/* 右侧窗口控制按钮 - 仅在非 macOS 平台显示 */}
-      {!isMacOS && (
-        <div className="flex items-center h-full">
-          <button
-            onClick={handleMinimize}
-            className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-theme-card-hover transition-colors duration-200"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-            title="最小化"
-          >
-            <Minus className="w-4 h-4 text-theme-foreground-muted" />
-          </button>
-          
-          <button
-            onClick={handleMaximize}
-            className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-theme-card-hover transition-colors duration-200"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-            title={windowState.isMaximized ? "还原" : "最大化"}
-          >
-            {windowState.isMaximized ? (
-              <Minimize2 className="w-4 h-4 text-theme-foreground-muted" />
-            ) : (
-              <Maximize2 className="w-4 h-4 text-theme-foreground-muted" />
-            )}
-          </button>
-          
-          <button
-            onClick={handleClose}
-            className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-red-500 hover:text-white transition-colors duration-200"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-            title="关闭"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      {/* 右侧控制按钮区域 */}
+      <div className="flex items-center h-full">
+        {/* 无边框模式切换按钮 */}
+        <button
+          onClick={toggleCleanMode}
+          className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-theme-card-hover transition-colors duration-200"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          title={isCleanMode ? "退出无边框模式" : "进入无边框模式"}
+        >
+          {isCleanMode ? (
+            <PanelsTopLeft className="w-4 h-4 text-theme-foreground-muted" />
+          ) : (
+            <PanelLeftDashed className="w-4 h-4 text-theme-foreground-muted" />
+          )}
+        </button>
+
+        {/* 窗口控制按钮 - 仅在非 macOS 平台显示 */}
+        {!isMacOS && (
+          <>
+            <button
+              onClick={handleMinimize}
+              className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-theme-card-hover transition-colors duration-200"
+              style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+              title="最小化"
+            >
+              <Minus className="w-4 h-4 text-theme-foreground-muted" />
+            </button>
+            
+            <button
+              onClick={handleMaximize}
+              className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-theme-card-hover transition-colors duration-200"
+              style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+              title={windowState.isMaximized ? "还原" : "最大化"}
+            >
+              {windowState.isMaximized ? (
+                <Minimize2 className="w-4 h-4 text-theme-foreground-muted" />
+              ) : (
+                <Maximize2 className="w-4 h-4 text-theme-foreground-muted" />
+              )}
+            </button>
+            
+            <button
+              onClick={handleClose}
+              className="titlebar-button flex items-center justify-center w-12 h-8 hover:bg-red-500 hover:text-white transition-colors duration-200"
+              style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+              title="关闭"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

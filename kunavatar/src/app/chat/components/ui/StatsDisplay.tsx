@@ -72,7 +72,7 @@ export function StatsDisplay({ stats, className = '' }: StatsDisplayProps) {
 
       {/* 当前对话上下文tokens */}
       {stats.prompt_eval_count && (
-        <div className="flex items-center gap-1.5 opacity-70" title={`当前上下文tokens: ${formatTokenCount(stats.prompt_eval_count)}`}>
+        <div className="flex items-center gap-1.5 opacity-70" title={`上下文tokens: ${formatTokenCount(stats.prompt_eval_count)}`}>
           <FileText className="w-3 h-3" />
           <span>{formatTokenCount(stats.prompt_eval_count)}</span>
         </div>

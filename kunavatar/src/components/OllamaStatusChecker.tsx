@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { useOllamaStatus } from '@/hooks/useOllamaStatus';
 import OllamaNotification from './OllamaNotification';
 

@@ -1,5 +1,27 @@
 # 更新日志 / Changelog
 
+## [0.0.3] - 2025-08-08
+### 🎉 新增
+- 实现无边框模式功能，提升界面自定义体验
+- 新增无边框模式上下文（CleanModeContext），支撑模式功能实现
+- 添加无边框模式切换按钮（CustomTitleBar），方便用户操作
+- 支持无边框模式下的悬浮标题栏（ElectronLayout），优化窗口交互
+
+### 🚀 优化
+- 重构MessageList组件，使用React.memo优化性能
+- 优化StreamedContent内容处理性能，提升加载效率
+- 优化数学公式渲染性能（MarkdownRenderer），增强显示流畅度
+- 优化用户设置获取和更新逻辑（UserSettingsContext），提升操作响应速度
+- 调整代码块宽度为100%（markdown.css），优化内容展示效果
+- 移除图片上传功能的拖拽功能并简化UI（ImageUpload），精简操作流程
+
+### 🛠 修复
+- 修复认证提供者导入路径问题（ProtectedRoute），保障认证功能正常运行
+
+### 📌 其他
+- 更新package.json，添加katex及相关依赖，完善数学公式渲染支持
+- 重构认证逻辑并支持token刷新（AuthProvider），增强系统安全性与稳定性
+
 ## [0.0.2] - 2025-08-06
 ### 🎉 新增
 - 增强模型同步逻辑和图片预览功能，支持最新gptoss架构的模型（包含MPC工具调用和思考模式）。
