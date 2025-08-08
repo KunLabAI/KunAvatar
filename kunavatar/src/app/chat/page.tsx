@@ -21,6 +21,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { PageLoading } from '@/components/Loading';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useNotification } from '@/components/notification';
+import { useCleanMode } from '@/contexts/CleanModeContext';
 
 // 导入工具相关的hook和函数
 import { availableTools, getAllAvailableTools } from '@/lib/tools';
@@ -37,6 +38,7 @@ export default function ChatPage() {
 function ChatPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isCleanMode } = useCleanMode();
   
   // 🎨 用户设置和主题
   const { settings, loading: settingsLoading } = useUserSettings();
@@ -653,6 +655,7 @@ function ChatPageContent() {
       {/* 🎯 主聊天区域 */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 📋 顶部选择栏 */}
+        <div className={isCleanMode ? 'mt-4' : ''}>
         <ChatHeader
           currentConversation={currentConversation}
           chatMode={chatMode}
@@ -685,6 +688,7 @@ function ChatPageContent() {
           }}
           onCreateNewConversation={handleCreateNewConversation}
         />
+        </div>
 
         {/* 💬 聊天消息区域 */}
         <ChatArea

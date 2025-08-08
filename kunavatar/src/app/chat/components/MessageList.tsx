@@ -66,7 +66,7 @@ interface MessageListProps {
   onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void; // 新增：图片预览回调
 }
 
-export function MessageList({ 
+const MessageListComponent = ({ 
   messages, 
   isStreaming, 
   error, 
@@ -77,7 +77,7 @@ export function MessageList({
   conversation, // 新增：对话信息
   onDeleteMessage,
   onImagePreview // 新增：图片预览回调
-}: MessageListProps) {
+}: MessageListProps) => {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [showToolCallPanel, setShowToolCallPanel] = useState(false);
   
@@ -187,10 +187,13 @@ export function MessageList({
       )}
     </>
   );
-}
+};
+
+// 使用 React.memo 优化性能
+export const MessageList = React.memo(MessageListComponent);
 
 // 单个消息组件
-function MessageItem({ 
+const MessageItemComponent = ({ 
   message, 
   isStreaming, 
   onMcpIconClick,
@@ -214,7 +217,7 @@ function MessageItem({
   chatStyle: 'conversation' | 'assistant';
   displaySize: 'fullscreen' | 'compact';
   onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void;
-}) {
+}) => {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
   
@@ -584,4 +587,7 @@ function MessageItem({
       </div>
     </div>
   );
-}
+};
+
+// 使用 React.memo 优化 MessageItem 性能
+const MessageItem = React.memo(MessageItemComponent);

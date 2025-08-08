@@ -26,6 +26,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export { AuthContext };
+
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -79,6 +81,28 @@ export function useAuthState() {
     }, 100);
   };
 
+  // 尝试刷新token
+  const refreshToken = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include', // 包含cookies
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+          return data.accessToken;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Token刷新失败:', error);
+      return null;
+    }
+  }, []);
+
   const checkAuth = useCallback(async (retryCount = 0, silent = false) => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -111,11 +135,23 @@ export function useAuthState() {
           setUser(null);
         }
       } else if (response.status === 401) {
-        // Token 无效，清除并设置状态
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        setUser(null);
-        setError(null); // 不显示错误，让页面自然跳转到登录
+        // Token 无效，尝试刷新
+        console.log('Access token过期，尝试刷新...');
+        const newToken = await refreshToken();
+        
+        if (newToken) {
+          // 刷新成功，重新检查认证
+          console.log('Token刷新成功，重新验证用户信息...');
+          setTimeout(() => checkAuth(0, silent), 100);
+          return;
+        } else {
+          // 刷新失败，清除token并登出
+          console.log('Token刷新失败，用户需要重新登录');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          setUser(null);
+          setError(null);
+        }
       } else {
         throw new Error(`认证检查失败: ${response.status}`);
       }
@@ -141,7 +177,7 @@ export function useAuthState() {
       setLoading(false);
       setInitialized(true);
     }
-  }, []);
+  }, [refreshToken]);
 
   useEffect(() => {
     // 初始化时静默检查认证状态

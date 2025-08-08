@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
 import { Copy, Check } from 'lucide-react';
+
+// 导入 KaTeX CSS
+import 'katex/dist/katex.min.css';
 
 interface MarkdownRendererProps {
   content: string;
@@ -16,8 +21,244 @@ interface MarkdownRendererProps {
   onImagePreview?: (imageUrl: string, index: number, images: string[]) => void;
 }
 
+// 缓存处理过的内容，避免重复计算
+const contentCache = new Map<string, string>();
+const CACHE_SIZE_LIMIT = 100;
+
+// 轻量级内容处理函数
+const processContentLightweight = (content: string, isStreaming: boolean): string => {
+  if (!content) return '';
+  
+  // 检查缓存
+  const cacheKey = `${content}_${isStreaming}`;
+  if (contentCache.has(cacheKey)) {
+    return contentCache.get(cacheKey)!;
+  }
+  
+  // 基础清理
+  let processedText = content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim();
+  
+  // 只有在内容包含数学符号时才进行数学处理
+  const hasMathContent = /[\$\\]/.test(processedText);
+  
+  if (hasMathContent) {
+    // 简化的数学处理
+    processedText = processedText.replace(/[\u00A0\u202F\u2000-\u200B]/g, ' ');
+    processedText = processedText.replace(/\\left\$/g, '\\left(');
+    processedText = processedText.replace(/\\right\$/g, '\\right)');
+    
+    // 简化的 TeX 分隔符处理
+    processedText = processedText.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_, inner) => `\n$$\n${inner.trim()}\n$$\n`);
+    processedText = processedText.replace(/\\\(\s*(.*?)\s*\\\)/g, (_, inner) => `$${inner.trim()}$`);
+    
+    // 修复块级公式格式
+    processedText = processedText.replace(/\$\$\s*([^$]+?)\s*\$\$/g, (_, formula) => `\n$$\n${formula.trim()}\n$$\n`);
+  }
+  
+  // 清理多余的换行
+  processedText = processedText.replace(/\n{3,}/g, '\n\n');
+  
+  // 流式渲染时的基本处理
+  if (isStreaming) {
+    const codeBlockCount = (processedText.match(/```/g) || []).length;
+    if (codeBlockCount % 2 === 1) {
+      processedText += '\n```';
+    }
+    
+    const mathBlockCount = (processedText.match(/\$\$/g) || []).length;
+    if (mathBlockCount % 2 === 1) {
+      processedText += '\n$$';
+    }
+  }
+  
+  // 缓存结果
+  if (contentCache.size >= CACHE_SIZE_LIMIT) {
+    const firstKey = contentCache.keys().next().value;
+    if (firstKey !== undefined) {
+      contentCache.delete(firstKey);
+    }
+  }
+  contentCache.set(cacheKey, processedText);
+  
+  return processedText;
+};
+
+// 完整内容处理函数（仅在必要时使用）
+const processContentFull = (content: string, isStreaming: boolean): string => {
+  if (!content) return '';
+  
+  let processedText = content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim();
+  processedText = processedText.replace(/[\u00A0\u202F\u2000-\u200B]/g, ' ');
+  processedText = processedText.replace(/\\left\$/g, '\\left(');
+  processedText = processedText.replace(/\\right\$/g, '\\right)');
+  
+  // 完整的 TeX 分隔符处理
+  const cleanInner = (inner: string) => {
+    const trimmed = String(inner).trim();
+    if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) {
+      return trimmed.substring(2, trimmed.length - 2).trim();
+    }
+    if (trimmed.startsWith('$') && trimmed.endsWith('$')) {
+      return trimmed.substring(1, trimmed.length - 1).trim();
+    }
+    return trimmed;
+  };
+
+  const lines = processedText.split('\n');
+  const out: string[] = [];
+  let inCodeBlock = false;
+  let inTexBlock = false;
+  let texBuffer: string[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    const trimmed = line.trimStart();
+    
+    if (trimmed.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      out.push(line);
+      continue;
+    }
+    
+    if (inCodeBlock) {
+      out.push(line);
+      continue;
+    }
+    
+    if (inTexBlock) {
+      if (line.includes('\\]')) {
+        const idx = line.indexOf('\\]');
+        const before = line.slice(0, idx);
+        const after = line.slice(idx + 2);
+        texBuffer.push(before);
+        out.push('$$');
+        out.push(cleanInner(texBuffer.join('\n')));
+        out.push('$$');
+        if (after) out.push(after);
+        texBuffer = [];
+        inTexBlock = false;
+      } else {
+        texBuffer.push(line);
+      }
+      continue;
+    }
+    
+    if (line.includes('\\[')) {
+      const idx = line.indexOf('\\[');
+      const before = line.slice(0, idx);
+      const rest = line.slice(idx + 2);
+      if (before) out.push(before);
+      
+      if (rest.includes('\\]')) {
+        const endIdx = rest.indexOf('\\]');
+        const inside = rest.slice(0, endIdx);
+        const after = rest.slice(endIdx + 2);
+        out.push('$$');
+        out.push(cleanInner(inside));
+        out.push('$$');
+        if (after) out.push(after);
+      } else {
+        inTexBlock = true;
+        if (rest) texBuffer.push(rest);
+      }
+      continue;
+    }
+    
+    line = line.replace(/\\\(\s*(.*?)\s*\\\)/g, (_, inner) => `$${cleanInner(inner)}$`);
+    out.push(line);
+  }
+  
+  if (!inTexBlock) {
+    processedText = out.join('\n');
+  }
+
+  // 修复上下标
+  const processedLines = processedText.split('\n');
+  let inCodeBlockFinal = false;
+  
+  for (let i = 0; i < processedLines.length; i++) {
+    const line = processedLines[i];
+    const trimmed = line.trimStart();
+    
+    if (trimmed.startsWith('```')) {
+      inCodeBlockFinal = !inCodeBlockFinal;
+      continue;
+    }
+    
+    if (!inCodeBlockFinal) {
+      processedLines[i] = line.replace(/\$([^$]+)\$\s*(\^|_)\s*(\{[^}]+\}|[A-Za-z0-9]+)/g, (_, expr, op, supOrSub) => {
+        return `$(${String(expr).trim()})${op}${String(supOrSub).trim()}$`;
+      });
+    }
+  }
+  
+  processedText = processedLines.join('\n');
+  
+  // 自动包裹数学表达式
+  const macroRegex = /\\(sum|frac|int|lim|binom|prod|sqrt|log|ln|exp|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|cdots|ldots|leq|geq|neq|times|to|infty|partial|nabla|cup|cap|subset|supset|in|notin|forall|exists)\b/;
+  const finalLines = processedText.split('\n');
+  let inCodeBlockMacro = false;
+  
+  for (let i = 0; i < finalLines.length; i++) {
+    let line = finalLines[i];
+    const trimmed = line.trimStart();
+    
+    if (trimmed.startsWith('```')) {
+      inCodeBlockMacro = !inCodeBlockMacro;
+      continue;
+    }
+    
+    if (!inCodeBlockMacro && !line.includes('`') && !line.includes('$') && 
+        !line.includes('\\[') && !line.includes('\\]') && 
+        !line.includes('\\(') && !line.includes('\\)') && 
+        macroRegex.test(line)) {
+      
+      const prefixMatch = line.match(/^(\s*(?:[-*+]\s+|\d+\.|\d+\)\s+|>\s+|#{1,6}\s+)?)/);
+      const prefix = prefixMatch ? prefixMatch[1] : '';
+      let body = line.slice(prefix.length);
+      body = body.replace(/\s+$/g, '');
+      
+      if (/[^\\]\\$/.test(body)) {
+        body = body.replace(/\\$/, '\\\\');
+      }
+      
+      if (body.trim().length > 0) {
+        finalLines[i] = `${prefix}$${body}$`;
+      }
+    }
+  }
+  
+  processedText = finalLines.join('\n');
+  processedText = processedText.replace(/\$\$\s*([^$]+?)\s*\$\$/g, (_, formula) => `\n$$\n${formula.trim()}\n$$\n`);
+  processedText = processedText.replace(/\n{3,}/g, '\n\n');
+  
+  if (isStreaming) {
+    const codeBlockMatches = processedText.match(/```/g);
+    if (codeBlockMatches && codeBlockMatches.length % 2 === 1) {
+      return processedText + '\n```';
+    }
+    
+    const inlineCodeMatches = processedText.match(/`/g);
+    if (inlineCodeMatches && inlineCodeMatches.length % 2 === 1) {
+      return processedText + '`';
+    }
+    
+    const mathBlockMatches = processedText.match(/\$\$/g);
+    if (mathBlockMatches && mathBlockMatches.length % 2 === 1) {
+      return processedText + '\n$$';
+    }
+    
+    const mathInlineMatches = processedText.match(/(?<!\$)\$(?!\$)/g);
+    if (mathInlineMatches && mathInlineMatches.length % 2 === 1) {
+      return processedText + '$';
+    }
+  }
+  
+  return processedText;
+};
+
 // 增强的代码块组件
-const CodeBlock = ({ 
+const CodeBlock = React.memo(({ 
   language, 
   children,
   isDark = false
@@ -28,7 +269,7 @@ const CodeBlock = ({
 }) => {
   const [copied, setCopied] = React.useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     if (typeof window === 'undefined' || !navigator.clipboard) return;
     try {
       await navigator.clipboard.writeText(children);
@@ -37,13 +278,12 @@ const CodeBlock = ({
     } catch (err) {
       console.error('复制失败:', err);
     }
-  };
+  }, [children]);
 
   const displayLanguage = language || 'text';
 
   return (
     <div className="markdown-code-block">
-      {/* 代码块标题栏 */}
       <div className="markdown-code-header">
         <span className="markdown-code-language">
           {displayLanguage}
@@ -61,7 +301,6 @@ const CodeBlock = ({
         </button>
       </div>
       
-      {/* 代码块内容 */}
       <div className="markdown-code-content">
         <SyntaxHighlighter
           language={displayLanguage}
@@ -78,19 +317,22 @@ const CodeBlock = ({
       </div>
     </div>
   );
-};
+});
+
+CodeBlock.displayName = 'CodeBlock';
 
 // 内联代码组件
-const InlineCode = ({ children }: { children: React.ReactNode }) => (
+const InlineCode = React.memo(({ children }: { children: React.ReactNode }) => (
   <code className="markdown-inline-code">
     {children}
   </code>
-);
+));
+
+InlineCode.displayName = 'InlineCode';
 
 // 检查是否为深色主题的Hook
 const useIsDarkTheme = () => {
   const [isDark, setIsDark] = React.useState(() => {
-    // 初始化时立即检查主题
     if (typeof window !== 'undefined') {
       return document.documentElement.classList.contains('dark');
     }
@@ -103,16 +345,9 @@ const useIsDarkTheme = () => {
     const checkTheme = () => {
       const htmlElement = document.documentElement;
       const isDarkMode = htmlElement.classList.contains('dark');
-      setIsDark(prev => {
-        // 只有在主题真的改变时才更新状态
-        if (prev !== isDarkMode) {
-          return isDarkMode;
-        }
-        return prev;
-      });
+      setIsDark(prev => prev !== isDarkMode ? isDarkMode : prev);
     };
 
-    // 监听主题变化
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -126,34 +361,42 @@ const useIsDarkTheme = () => {
 };
 
 // 表格组件
-const Table = ({ children }: { children: React.ReactNode }) => (
+const Table = React.memo(({ children }: { children: React.ReactNode }) => (
   <div className="markdown-table-wrapper">
     <table>
       {children}
     </table>
   </div>
-);
+));
 
-const TableHead = ({ children }: { children: React.ReactNode }) => (
+Table.displayName = 'Table';
+
+const TableHead = React.memo(({ children }: { children: React.ReactNode }) => (
   <thead>
     {children}
   </thead>
-);
+));
 
-const TableRow = ({ children }: { children: React.ReactNode }) => (
+TableHead.displayName = 'TableHead';
+
+const TableRow = React.memo(({ children }: { children: React.ReactNode }) => (
   <tr>
     {children}
   </tr>
-);
+));
 
-const TableCell = ({ children, isHeader = false }: { children: React.ReactNode; isHeader?: boolean }) => {
+TableRow.displayName = 'TableRow';
+
+const TableCell = React.memo(({ children, isHeader = false }: { children: React.ReactNode; isHeader?: boolean }) => {
   const Component = isHeader ? 'th' : 'td';
   return (
     <Component>
       {children}
     </Component>
   );
-};
+});
+
+TableCell.displayName = 'TableCell';
 
 const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
   content,
@@ -166,10 +409,13 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
 
   // 针对流式渲染优化的markdown组件配置
   const components = useMemo(() => ({
-    // 代码块处理
     code({ node, inline, className: codeClassName, children, ...props }: any) {
       const match = /language-(\w+)/.exec(codeClassName || '');
       const language = match ? match[1] : '';
+      
+      if (codeClassName === 'language-math math-inline' || codeClassName === 'language-math math-display') {
+        return <code className={codeClassName} {...props}>{children}</code>;
+      }
       
       if (!inline && language) {
         return (
@@ -185,10 +431,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
       return <InlineCode>{children}</InlineCode>;
     },
     
-    // 段落处理
     p: ({ children }: any) => <p>{children}</p>,
-    
-    // 标题处理 - 让CSS处理所有样式
     h1: ({ children }: any) => <h1>{children}</h1>,
     h2: ({ children }: any) => <h2>{children}</h2>,
     h3: ({ children }: any) => <h3>{children}</h3>,
@@ -196,7 +439,6 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     h5: ({ children }: any) => <h5>{children}</h5>,
     h6: ({ children }: any) => <h6>{children}</h6>,
     
-    // 列表处理 - 确保有序列表使用我们的自定义样式
     ul: ({ children }: any) => <ul>{children}</ul>,
     ol: ({ children, start, ...props }: any) => (
       <ol style={{ listStyle: 'none' }} {...props}>
@@ -205,10 +447,8 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     ),
     li: ({ children }: any) => <li>{children}</li>,
     
-    // 引用块处理
     blockquote: ({ children }: any) => <blockquote>{children}</blockquote>,
     
-    // 链接处理
     a: ({ href, children }: any) => (
       <a 
         href={href}
@@ -219,15 +459,11 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
       </a>
     ),
     
-    // 分割线
     hr: () => <hr />,
-    
-    // 强调文本
     strong: ({ children }: any) => <strong>{children}</strong>,
     em: ({ children }: any) => <em>{children}</em>,
     del: ({ children }: any) => <del>{children}</del>,
     
-    // 图片处理 - 限制尺寸并添加点击预览
     img: ({ src, alt, ...props }: any) => (
       <img
         src={src}
@@ -235,10 +471,8 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
         className="max-w-full h-auto max-h-48 object-cover rounded-lg cursor-pointer"
         onClick={() => {
           if (src && onImagePreview) {
-            // 使用图片预览回调函数
             onImagePreview(src, 0, [src]);
           } else if (src) {
-            // 如果没有预览回调，则在新窗口打开
             window.open(src, '_blank');
           }
         }}
@@ -246,7 +480,6 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
       />
     ),
     
-    // 表格处理
     table: ({ children }: any) => <Table>{children}</Table>,
     thead: ({ children }: any) => <TableHead>{children}</TableHead>,
     tbody: ({ children }: any) => <tbody>{children}</tbody>,
@@ -254,33 +487,23 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     th: ({ children }: any) => <TableCell isHeader>{children}</TableCell>,
     td: ({ children }: any) => <TableCell>{children}</TableCell>,
     
-  }), [isDark]);
+  }), [isDark, onImagePreview]);
 
-  // 流式渲染时，我们需要确保即使内容不完整也能正确渲染
+  // 优化的内容处理逻辑
   const processedContent = useMemo(() => {
     if (!content) return '';
     
-    // 首先移除思考标签内容，避免在markdown中渲染
-    let processedText = content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim();
+    // 根据内容复杂度和是否流式渲染选择处理策略
+    const isComplexMath = /\\(frac|sum|int|lim|binom|prod|sqrt|begin|end|align|matrix)\b/.test(content);
+    const hasMultipleMathBlocks = (content.match(/\$\$/g) || []).length > 2;
     
-    // 如果正在流式渲染，处理可能不完整的markdown
-    if (isStreaming) {
-      // 检查是否有未闭合的代码块
-      const codeBlockMatches = processedText.match(/```/g);
-      if (codeBlockMatches && codeBlockMatches.length % 2 === 1) {
-        // 有未闭合的代码块，暂时闭合它以避免渲染错误
-        return processedText + '\n```';
-      }
-      
-      // 检查是否有未闭合的内联代码
-      const inlineCodeMatches = processedText.match(/`/g);
-      if (inlineCodeMatches && inlineCodeMatches.length % 2 === 1) {
-        // 有未闭合的内联代码，暂时闭合它
-        return processedText + '`';
-      }
+    // 对于简单内容或流式渲染，使用轻量级处理
+    if (isStreaming || (!isComplexMath && !hasMultipleMathBlocks)) {
+      return processContentLightweight(content, isStreaming);
     }
     
-    return processedText;
+    // 对于复杂数学内容，使用完整处理
+    return processContentFull(content, isStreaming);
   }, [content, isStreaming]);
 
   return (
@@ -294,8 +517,19 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
       }}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[
+          rehypeRaw,
+          [rehypeKatex, {
+            throwOnError: false,
+            errorColor: '#cc0000',
+            strict: false,
+            trust: false,
+            macros: {
+              "\\f": "#1f(#2)"
+            }
+          }]
+        ]}
         components={components}
         skipHtml={false}
       >

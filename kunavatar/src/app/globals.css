@@ -567,17 +567,17 @@ html[data-sidebar-state="expanded"] .sidebar-text {
   overflow: hidden;
 }
 
-/* Electron 环境下的高度修复 - 使用更精确的选择器 */
-.electron-layout > .flex.h-screen {
+/* Electron 环境下的高度修复 - 仅在内联标题栏模式下扣减 2rem */
+.electron-layout.has-inline-titlebar > .flex.h-screen {
   height: calc(100vh - 2rem) !important; /* 只影响根级别的 flex h-screen 容器 */
 }
 
-.electron-layout .sidebar-container {
+.electron-layout.has-inline-titlebar .sidebar-container {
   height: calc(100vh - 2rem); /* 减去标题栏高度 (32px = 2rem) */
 }
 
-/* 修复聊天页面主内容区域的高度 */
-.electron-layout .flex.h-screen > .flex-1.flex.flex-col {
+/* 修复聊天页面主内容区域的高度，仅内联标题栏时生效 */
+.electron-layout.has-inline-titlebar .flex.h-screen > .flex-1.flex.flex-col {
   height: calc(100vh - 2rem); /* 主内容区域高度修复 */
   max-height: calc(100vh - 2rem);
 }
@@ -588,13 +588,13 @@ html[data-sidebar-state="expanded"] .sidebar-text {
   flex-shrink: 0; /* 防止输入区域被压缩 */
 }
 
-/* 修复移动端在 Electron 环境下的高度 */
+/* 修复移动端在 Electron 环境下的高度，仅内联标题栏时生效 */
 @media (max-width: 768px) {
-  .electron-layout .sidebar-container {
+  .electron-layout.has-inline-titlebar .sidebar-container {
     height: calc(100vh - 2rem);
   }
   
-  .electron-layout .flex.h-screen > .flex-1.flex.flex-col {
+  .electron-layout.has-inline-titlebar .flex.h-screen > .flex-1.flex.flex-col {
     height: calc(100vh - 2rem);
     max-height: calc(100vh - 2rem);
   }
@@ -727,8 +727,8 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
 .form-input-base {
   width: 100%;
   padding: 0.75rem 1rem;
-  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   background-color: var(--color-background-secondary);
   color: var(--color-foreground);
   transition: all 0.2s ease-in-out;
@@ -743,7 +743,7 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
 .form-input-base:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+  box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb));
   background-color: var(--color-background);
 }
 

@@ -57,6 +57,9 @@ export default function LoginPage() {
         // 保存访问令牌
         localStorage.setItem('accessToken', data.accessToken);
         
+        // 清除可能存在的旧设置缓存，确保登录后获取最新的用户设置
+        localStorage.removeItem('user-settings-cache-time');
+        
         // 使用 window.location.href 强制跳转，确保页面完全刷新
         // 这样可以避免React状态不一致的问题
         setTimeout(() => {
@@ -100,7 +103,7 @@ export default function LoginPage() {
             <div className="w-full space-y-6">
               {/* 品牌标题 */}
               <div className="text-center mb-6">
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2 text-white">
+                <h1 className="text-3xl lg:text-4xl font-bold mb-2 text-theme-foreground">
                   Kun Avatar
                 </h1>
                 <div className="w-16 h-1 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] mx-auto rounded-full mb-4"></div>

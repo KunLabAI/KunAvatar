@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import CustomTitleBar from './CustomTitleBar';
 import type { ElectronAPI } from '@/types/electron';
+import { useCleanMode } from '@/contexts/CleanModeContext';
 
 interface ElectronLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export function ElectronLayout({
   titleBarTitle = '',
   showTitleBarTitle = false
 }: ElectronLayoutProps) {
+  const { isCleanMode } = useCleanMode();
   // 使用状态来跟踪是否已挂载，避免水合错误
   const [isMounted, setIsMounted] = useState(false);
   const [isElectron, setIsElectron] = useState(false);
@@ -68,9 +70,13 @@ export function ElectronLayout({
 
   // Electron 环境中的完整布局
   return (
-    <div className={`electron-layout flex flex-col h-screen min-h-screen ${className}`}>
-      {/* 自定义标题栏 */}
-      {showTitleBar && (
+    <div
+      className={`electron-layout flex flex-col h-screen min-h-screen ${
+        showTitleBar && !isCleanMode ? 'has-inline-titlebar' : ''
+      } ${showTitleBar && isCleanMode ? 'has-overlay-titlebar' : ''} ${className}`}
+    >
+      {/* 自定义标题栏 - 仅在 Electron 环境且启用时显示，干净模式下隐藏 */}
+      {showTitleBar && !isCleanMode && (
         <CustomTitleBar 
           title={titleBarTitle}
           showTitle={showTitleBarTitle}
@@ -78,8 +84,18 @@ export function ElectronLayout({
         />
       )}
       
+      {/* 干净模式下的悬浮标题栏 */}
+      {showTitleBar && isCleanMode && (
+        <div className="fixed top-0 left-0 right-0 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
+          <CustomTitleBar 
+            title={titleBarTitle}
+            showTitle={showTitleBarTitle}
+          />
+        </div>
+      )}
+      
       {/* 主内容区域 */}
-      <div className="flex-1 overflow-hidden">
+      <div className={`flex-1 overflow-hidden`}>
         {children}
       </div>
     </div>

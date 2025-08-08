@@ -126,28 +126,28 @@ export function useModelToolValidation({
     }
   }, [chatMode, selectedAgent, selectedModel, enableTools, checkModelToolSupport, showWarning, showError]);
 
-  // 当模型或智能体切换时重置验证状态，并检查是否需要重置工具
+  // 当模型或智能体切换时重置验证状态，并自动检查工具支持
   useEffect(() => {
     resetValidationState();
     
-    // 如果工具已开启，需要检查新模型是否支持工具
-    if (enableTools) {
-      const currentModel = chatMode === 'agent' 
-        ? selectedAgent?.model?.base_model 
-        : selectedModel;
-        
-      if (!currentModel) {
-        // 如果没有选择模型，需要重置工具状态
+    // 自动检查当前模型的工具支持
+    const currentModel = chatMode === 'agent' 
+      ? selectedAgent?.model?.base_model 
+      : selectedModel;
+      
+    if (currentModel) {
+      // 主动检查新模型的工具支持能力
+      const supportsTools = checkModelToolSupport(currentModel);
+      
+      // 如果工具已开启但新模型不支持工具，需要重置工具状态
+      if (enableTools && !supportsTools) {
         setShouldResetTools(true);
-        console.log('🔄 未选择模型，需要重置工具状态');
-      } else {
-        // 有模型时，同步检查支持性
-        const supportsTools = checkModelToolSupport(currentModel);
-        if (!supportsTools) {
-          setShouldResetTools(true);
-          console.log(`🔄 模型 ${currentModel} 不支持工具，需要重置工具状态`);
-        }
+        console.log(`🔄 模型 ${currentModel} 不支持工具，需要重置工具状态`);
       }
+    } else if (enableTools) {
+      // 如果没有选择模型但工具已开启，需要重置工具状态
+      setShouldResetTools(true);
+      console.log('🔄 未选择模型，需要重置工具状态');
     }
   }, [selectedModel, selectedAgent?.model?.base_model, chatMode, enableTools, checkModelToolSupport, resetValidationState]);
 

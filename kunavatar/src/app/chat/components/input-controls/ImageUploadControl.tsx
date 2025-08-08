@@ -68,16 +68,7 @@ export function ImageUploadControl({
     return tooltip;
   };
 
-  // 确定状态指示器
-  const getStatusIndicator = () => {
-    if (modelSupportsVision === null) return undefined;
-    
-    return {
-      status: modelSupportsVision ? 'success' as const : 'error' as const,
-      position: 'top-right' as const,
-      tooltip: modelSupportsVision ? '模型支持图片识别' : '模型不支持图片识别',
-    };
-  };
+
 
   // 确定徽章
   const getBadge = () => {
@@ -109,7 +100,6 @@ export function ImageUploadControl({
         loading={isCheckingModel}
         tooltip={getTooltip()}
         badge={getBadge()}
-        statusIndicator={getStatusIndicator()}
       >
         <ImageIcon className="w-5 h-5" />
       </BaseControlButton>
