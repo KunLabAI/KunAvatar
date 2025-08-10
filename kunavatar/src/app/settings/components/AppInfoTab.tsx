@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Users, Globe, Mail, Package, Info, Code, Download, RefreshCw, CheckCircle, AlertCircle, Clock, ExternalLink } from 'lucide-react';
+import { Users, Globe, Mail, Package, Info, Code, Download, RefreshCw, CheckCircle, AlertCircle, History, ExternalLink } from 'lucide-react';
 import { useNotification } from '@/components/notification';
+import { MarkdownRenderer } from '../../chat/components/ui/MarkdownRenderer';
 
 
 
@@ -293,7 +294,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
         
         <div className="space-y-8">
         {/* 应用详情板块 */}
-        <div className="bg-theme-card rounded-lg p-6 shadow-sm border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-6 ">
           <h3 className="text-lg font-semibold text-theme-foreground mb-4">应用详情</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -356,7 +357,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
         </div>
 
         {/* 版本信息板块 */}
-        <div className="bg-theme-card rounded-lg p-6 shadow-sm border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-6">
           <h3 className="text-lg font-semibold text-theme-foreground mb-4">版本信息</h3>
 
           {/* 当前版本信息 */}
@@ -571,77 +572,51 @@ export function AppInfoTab({}: AppInfoTabProps) {
           {/* 更新日志 */}
           {isElectron && versionHistory.length > 0 && (
             <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
-              <h4 className="font-medium text-theme-foreground mb-3 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
+              <h4 className="font-medium text-theme-foreground mb-4 flex items-center gap-2">
+                <History className="w-4 h-4" />
                 更新日志
               </h4>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+              <div className="space-y-4 max-h-80 rounded-lg overflow-y-auto scrollbar-thin bg-theme-background">
                 {versionHistory.slice(0, 5).map((version, index) => {
-                  // 格式化日期
-                  const formatDate = (dateStr: string) => {
-                    try {
-                      const date = new Date(dateStr);
-                      return date.toLocaleDateString('zh-CN');
-                    } catch {
-                      return dateStr;
-                    }
-                  };
-
-                  // 解析发布说明为变更列表
-                  const parseReleaseNotes = (notes: string) => {
-                    if (!notes) return ['暂无详细说明'];
-                    
-                    // 尝试按行分割，过滤空行
-                    const lines = notes.split('\n').filter(line => line.trim());
-                    if (lines.length <= 1) {
-                      return [notes];
-                    }
-                    
-                    // 如果有多行，取前几行作为变更列表
-                    return lines.slice(0, 3).map(line => 
-                      line.replace(/^[-*•]\s*/, '').trim()
-                    );
-                  };
-
-                  const displayDate = formatDate(version.releaseDate || version.timestamp);
-                  const changes = parseReleaseNotes(version.releaseNotes || '');
-
                   return (
-                    <div key={index} className="border-l-2 border-theme-primary/20 pl-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-theme-foreground">v{version.version}</span>
-                        <span className="text-xs text-theme-foreground-muted">{displayDate}</span>
+                    <div key={index} className="relative">
+                      {/* 版本分隔线 */}
+                      {index > 0 && (
+                        <div className="absolute -top-2 left-0 right-0 h-px bg-theme-border/50"></div>
+                      )}
+                      
+                      <div className="bg-theme-background/50 rounded-lg p-4">
+                        {version.releaseNotes ? (
+                          <div className="changelog-content">
+                            <MarkdownRenderer content={version.releaseNotes} />
+                          </div>
+                        ) : (
+                          <div className="text-theme-foreground-muted">
+                            <p className="text-sm">暂无详细说明</p>
+                          </div>
+                        )}
+                        
+                        {/* 版本来源标签 */}
                         {version.source && (
-                          <span className="text-xs px-2 py-0.5 bg-theme-primary/10 text-theme-primary rounded">
-                            {version.source}
-                          </span>
+                          <div className="mt-3 flex justify-end">
+                            <span className="text-xs px-2 py-1 bg-theme-primary/10 text-theme-primary rounded-full border border-theme-primary/20">
+                              来源: {version.source}
+                            </span>
+                          </div>
                         )}
                       </div>
-                      <div className="text-sm text-theme-foreground-muted space-y-1">
-                        {changes.map((change: string, changeIndex: number) => (
-                          <div key={changeIndex} className="flex items-start gap-2">
-                            <span className="text-theme-primary mt-1">•</span>
-                            <span>{change}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {version.previousVersion && (
-                        <div className="text-xs text-theme-foreground-muted mt-1">
-                          从 v{version.previousVersion} 升级
-                        </div>
-                      )}
                     </div>
                   );
                 })}
               </div>
               
               {/* 查看完整更新日志链接 */}
-              <div className="mt-3 pt-3 border-t border-theme-border">
+              <div className="mt-4 pt-4 border-t border-theme-border">
                 <a 
                   href="https://github.com/KunLabAI/KunAvatar/releases" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200 flex items-center gap-2 text-sm"
+                  className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
                 >
                   <ExternalLink className="w-4 h-4" />
                   查看完整更新日志

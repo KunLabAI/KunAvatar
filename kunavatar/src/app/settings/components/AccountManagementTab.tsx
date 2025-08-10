@@ -330,7 +330,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
         {/* 用户基本信息 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 个人信息卡片 */}
-          <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+          <div className="bg-theme-card rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-theme-foreground">个人信息</h3>
               {!isEditing && (
@@ -425,7 +425,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
           </div>
 
           {/* 账户状态卡片 */}
-          <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+          <div className="bg-theme-card rounded-lg p-4">
             <h3 className="text-lg font-medium text-theme-foreground mb-4">账户状态</h3>
             
             <div className="space-y-3">
@@ -476,7 +476,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
         </div>
 
         {/* 密码修改 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-theme-foreground flex items-center gap-2">
               <Shield className="w-5 h-5" />

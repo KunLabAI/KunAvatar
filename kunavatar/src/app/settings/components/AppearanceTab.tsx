@@ -140,7 +140,7 @@ export function AppearanceTab({}: AppearanceTabProps) {
         </div>
         
         {/* 主题设置 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-medium text-theme-foreground mb-1">界面主题色</h3>
@@ -170,7 +170,7 @@ export function AppearanceTab({}: AppearanceTabProps) {
         </div>
 
         {/* 颜色方案 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-medium text-theme-foreground mb-1">元素主题色</h3>
@@ -198,7 +198,7 @@ export function AppearanceTab({}: AppearanceTabProps) {
         </div>
 
         {/* 聊天样式设置 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-medium text-theme-foreground mb-1">对话样式</h3>

@@ -130,7 +130,7 @@ export function InferenceEngineTab() {
         </div>
         
         {/* Ollama 板块 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-theme-card border border-theme-border flex items-center justify-center">

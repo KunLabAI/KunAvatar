@@ -132,54 +132,48 @@ export function LogManagementTab() {
           </h2>
         </div>
 
-        {/* 日志信息卡片 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
-          <h3 className="text-lg font-medium text-theme-foreground mb-4">日志信息</h3>
-          
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-theme-foreground-muted">日志文件路径</span>
-              <span className="text-theme-foreground text-sm font-mono bg-theme-background px-2 py-1 rounded">
-                {logPath || '获取中...'}
-              </span>
+        {/* 日志操作 */}
+        <div className="bg-theme-card rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-theme-foreground mb-1">日志操作</h3>
+              <p className="text-sm text-theme-foreground-muted">管理和查看应用运行日志</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={fetchLogs}
+                disabled={loading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                  loading
+                    ? 'bg-theme-background border border-theme-border text-theme-foreground-muted cursor-not-allowed'
+                    : 'bg-theme-primary hover:bg-theme-primary-hover text-white'
+                }`}
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? '刷新中...' : '刷新'}
+              </button>
+              
+              <button
+                onClick={exportLogs}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-theme-background border border-theme-border text-theme-foreground hover:bg-theme-background/80"
+              >
+                <Download className="w-4 h-4" />
+                导出
+              </button>
+              
+              <button
+                onClick={openLogFolder}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-theme-background border border-theme-border text-theme-foreground hover:bg-theme-background/80"
+              >
+                <FolderOpen className="w-4 h-4" />
+                打开文件夹
+              </button>
             </div>
           </div>
         </div>
 
-        {/* 操作按钮 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
-          <h3 className="text-lg font-medium text-theme-foreground mb-4">日志操作</h3>
-          
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={fetchLogs}
-              disabled={loading}
-              className="btn-base bg-theme-primary hover:bg-theme-primary-hover text-white px-4 py-2 flex items-center gap-2 disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? '刷新中...' : '刷新日志'}
-            </button>
-            
-            <button
-              onClick={exportLogs}
-              className="btn-base bg-green-500 hover:bg-green-600 text-white px-4 py-2 flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              导出日志
-            </button>
-            
-            <button
-              onClick={openLogFolder}
-              className="btn-base bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 flex items-center gap-2"
-            >
-              <FolderOpen className="w-4 h-4" />
-              打开文件夹
-            </button>
-          </div>
-        </div>
-
         {/* 日志内容 */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
+        <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-theme-foreground">日志内容</h3>
             <span className="text-sm text-theme-foreground-muted">

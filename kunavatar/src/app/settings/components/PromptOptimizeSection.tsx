@@ -61,10 +61,8 @@ export function PromptOptimizeSection({
 
 
 
-
-
   return (
-    <div className="rounded-lg p-6 border" style={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+    <div className="rounded-lg p-6 bg-theme-card">
       {/* 标题区域 */}
       <div className="flex items-center gap-3 mb-6">
         <Sparkles className="w-5 h-5"/>

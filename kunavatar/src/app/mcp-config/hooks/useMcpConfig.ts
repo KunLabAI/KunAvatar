@@ -21,7 +21,7 @@ export function useMcpConfig() {
   const [newServer, setNewServer] = useState<Omit<McpServer, 'id' | 'status' | 'created_at' | 'updated_at'>>({
     name: '',
     display_name: '',
-    type: 'stdio' as 'stdio' | 'sse' | 'streamable-http',
+    type: 'sse' as 'stdio' | 'sse' | 'streamable-http',
     description: '',
     enabled: true,
     command: '',
@@ -209,6 +209,62 @@ export function useMcpConfig() {
     }
   };
 
+  // 同步本地工具到数据库
+  const syncLocalTools = async () => {
+    // 立即将本地服务器状态设置为'connecting'以提供即时反馈
+    setServers(prev => prev.map(server => 
+      server.name === 'local' 
+        ? { ...server, status: 'connecting', errorMessage: undefined } 
+        : server
+    ));
+
+    try {
+      const response = await fetch('/api/mcp/tools?server=local&refresh=true', {
+        method: 'GET',
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // 更新本地服务器状态为已连接，并更新工具数量
+        setServers(prev => prev.map(server => 
+          server.name === 'local' 
+            ? { ...server, status: 'connected', toolCount: result.tools?.length || 0, errorMessage: undefined }
+            : server
+        ));
+        
+        // 重新加载服务器列表和工具列表
+        await loadServers();
+        if (selectedServer === 'local') {
+          await loadTools(selectedServer, true);
+        }
+        
+        // 显示成功通知
+        notification.success?.('本地工具同步成功', `已同步 ${result.tools?.length || 0} 个本地工具到数据库`);
+      } else {
+        // 更新本地服务器状态为错误
+        setServers(prev => prev.map(server => 
+          server.name === 'local' 
+            ? { ...server, status: 'error', errorMessage: result.error || '同步失败' }
+            : server
+        ));
+        
+        notification.error?.('本地工具同步失败', result.error || '未知错误');
+      }
+    } catch (error) {
+      console.error('同步本地工具失败:', error);
+      
+      // 更新本地服务器状态为错误
+      setServers(prev => prev.map(server => 
+        server.name === 'local' 
+          ? { ...server, status: 'error', errorMessage: '客户端请求失败' }
+          : server
+      ));
+      
+      notification.error?.('同步本地工具失败', error instanceof Error ? error.message : '未知错误');
+    }
+  };
+
   // 检查服务器是否已存在
   const checkServerExists = (serverName: string): boolean => {
     return servers.some(server => server.name === serverName);
@@ -355,6 +411,7 @@ export function useMcpConfig() {
     handleUseTool,
     handleAddServer,
     handleDeleteServer,
+    syncLocalTools,
     executionResult,
     setExecutionResult,
     usingToolId
