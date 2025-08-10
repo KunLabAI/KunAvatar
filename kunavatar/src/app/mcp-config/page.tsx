@@ -37,6 +37,7 @@ function McpConfigPageContent() {
     handleUseTool,
     handleAddServer,
     handleDeleteServer,
+    syncLocalTools,
     executionResult,
     setExecutionResult,
     usingToolId
@@ -267,6 +268,18 @@ function McpConfigPageContent() {
                             </button>
                             
                             <div className="flex items-center space-x-1">
+                              {server.type === 'stdio' && server.name === 'local' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    syncLocalTools();
+                                  }}
+                                  className="text-theme-foreground-muted hover:text-theme-primary p-1.5 rounded-full hover:bg-theme-primary/10 transition-colors"
+                                  title="同步本地工具到数据库"
+                                >
+                                  <RefreshCw className={`w-3.5 h-3.5 ${server.status === 'connecting' ? 'animate-spin' : ''}`} />
+                                </button>
+                              )}
                               {server.type !== 'stdio' && (
                                 <button
                                   onClick={(e) => {

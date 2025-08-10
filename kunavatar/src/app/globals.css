@@ -950,9 +950,6 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   border: 1px solid var(--color-border);
   border-radius: 1.5rem;
   backdrop-filter: blur(8px);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .steam-empty-icon {
@@ -961,9 +958,6 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
     rgba(var(--color-primary-rgb), 0.05) 100%);
   border: 1px solid rgba(var(--color-primary-rgb), 0.2);
   border-radius: 1.5rem;
-  box-shadow: 
-    0 4px 12px rgba(var(--color-primary-rgb), 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* 响应式网格增强 */
