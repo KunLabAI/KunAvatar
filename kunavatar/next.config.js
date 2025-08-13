@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['better-sqlite3'],
+  // 🔧 修复：明确指定需要的环境变量，确保在standalone模式下可用
+  // 注意：这些变量将在运行时由Electron主进程设置
+  env: {
+    DATABASE_PATH: process.env.DATABASE_PATH || '',
+    DATABASE_LOCK_PATH: process.env.DATABASE_LOCK_PATH || '',
+  },
   // 移除已废弃的 appDir 配置
   experimental: {
     // 优化服务器启动性能

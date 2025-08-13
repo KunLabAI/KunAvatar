@@ -10,6 +10,19 @@ export const getDatabasePath = (): string => {
     return process.env.DATABASE_PATH;
   }
   
+  // 🔧 修复：在生产环境中，检查是否在Windows用户数据目录中运行
+  // 这是Electron应用的典型特征
+  if (process.env.NODE_ENV === 'production' && process.platform === 'win32') {
+    const cwd = process.cwd();
+    // 检查是否在Electron应用的资源目录中
+    if (cwd.includes('\\resources\\app') || cwd.includes('/resources/app')) {
+      // 构建用户数据目录路径
+      const os = require('os');
+      const userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'kun-avatar');
+      return path.join(userDataPath, 'chat.db');
+    }
+  }
+  
   // 检查是否在Electron环境中
   if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
     // 在渲染进程中，无法直接访问electron模块，使用默认路径
@@ -50,6 +63,18 @@ export const getLockFilePath = (): string => {
   // 🔧 修复：优先使用环境变量中的锁文件路径（由Electron主进程设置）
   if (process.env.DATABASE_LOCK_PATH) {
     return process.env.DATABASE_LOCK_PATH;
+  }
+  
+  // 🔧 修复：在生产环境中，检查是否在Windows用户数据目录中运行
+  if (process.env.NODE_ENV === 'production' && process.platform === 'win32') {
+    const cwd = process.cwd();
+    // 检查是否在Electron应用的资源目录中
+    if (cwd.includes('\\resources\\app') || cwd.includes('/resources/app')) {
+      // 构建用户数据目录路径
+      const os = require('os');
+      const userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'kun-avatar');
+      return path.join(userDataPath, '.db-initialized');
+    }
   }
   
   const dbPath = getDatabasePath();

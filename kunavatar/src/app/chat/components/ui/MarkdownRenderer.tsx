@@ -3,12 +3,12 @@
 import React, { useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 // 导入 KaTeX CSS
 import 'katex/dist/katex.min.css';
@@ -257,7 +257,7 @@ const processContentFull = (content: string, isStreaming: boolean): string => {
   return processedText;
 };
 
-// 增强的代码块组件
+// 增强的代码块组件（支持折叠/展开、平滑过渡与滚动条样式）
 const CodeBlock = React.memo(({ 
   language, 
   children,
@@ -268,6 +268,26 @@ const CodeBlock = React.memo(({
   isDark?: boolean;
 }) => {
   const [copied, setCopied] = React.useState(false);
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const displayLanguage = language || 'text';
+  const lineCount = React.useMemo(() => (children ? children.split('\n').length : 0), [children]);
+  const isCollapsible = lineCount > 16;
+  const COLLAPSED_MAX = 'calc(1.5em * 16)';
+  const [isExpanded, setIsExpanded] = React.useState(!isCollapsible);
+  const [maxHeight, setMaxHeight] = React.useState<string>(isCollapsible ? COLLAPSED_MAX : 'none');
+  const userExpandStateRef = React.useRef<null | boolean>(null);
+
+  React.useEffect(() => {
+    // 内容变化：仅首次按行数决定默认展开；用户一旦手动操作后，保持用户选择
+    const collapsible = (children ? children.split('\n').length : 0) > 16;
+    if (userExpandStateRef.current == null) {
+      setIsExpanded(!collapsible);
+      setMaxHeight(collapsible ? COLLAPSED_MAX : 'none');
+    } else {
+      setMaxHeight(prev => (isExpanded ? 'none' : COLLAPSED_MAX));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [children]);
 
   const handleCopy = useCallback(async () => {
     if (typeof window === 'undefined' || !navigator.clipboard) return;
@@ -280,7 +300,97 @@ const CodeBlock = React.memo(({
     }
   }, [children]);
 
-  const displayLanguage = language || 'text';
+  const expand = useCallback(() => {
+    const el = contentRef.current;
+    if (!el) {
+      setIsExpanded(true);
+      setMaxHeight('none');
+      return;
+    }
+    const full = el.scrollHeight;
+    setIsExpanded(true);
+    setMaxHeight(full + 'px');
+    // 动画结束后解除高度限制
+    const timer = window.setTimeout(() => setMaxHeight('none'), 300);
+    userExpandStateRef.current = true;
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const collapse = useCallback(() => {
+    const el = contentRef.current;
+    if (!el) {
+      setIsExpanded(false);
+      setMaxHeight(COLLAPSED_MAX);
+      return;
+    }
+    // 先将高度锁定为当前完整高度，再在下一帧收起，产生顺滑过渡
+    const full = el.scrollHeight;
+    setMaxHeight(full + 'px');
+    requestAnimationFrame(() => {
+      setIsExpanded(false);
+      setMaxHeight(COLLAPSED_MAX);
+    });
+    userExpandStateRef.current = false;
+  }, []);
+
+  const toggleExpand = useCallback(() => {
+    if (isExpanded) {
+      collapse();
+    } else {
+      expand();
+    }
+  }, [isExpanded, expand, collapse]);
+
+  // 创建自定义主题，移除所有背景色
+  const customTheme = React.useMemo(() => {
+    const baseTheme = isDark ? oneDark : oneLight;
+    const customizedTheme = { ...baseTheme };
+    
+    // 遍历所有样式，移除背景色
+    Object.keys(customizedTheme).forEach(key => {
+      if (customizedTheme[key] && typeof customizedTheme[key] === 'object') {
+        customizedTheme[key] = {
+          ...customizedTheme[key],
+          background: 'transparent',
+          backgroundColor: 'transparent'
+        };
+      }
+    });
+    
+    return customizedTheme;
+  }, [isDark]);
+
+  // 高亮内容仅在代码或主题变化时重渲染，避免按钮状态引发重复高亮
+  const highlighted = React.useMemo(() => (
+    <SyntaxHighlighter
+      language={displayLanguage}
+      style={customTheme}
+      showLineNumbers={true}
+      wrapLines={true}
+      wrapLongLines={false}
+      PreTag="pre"
+      CodeTag="code"
+      className="markdown-code-pre"
+      customStyle={{
+        margin: 0,
+        padding: '1.25rem',
+        background: 'transparent',
+        fontSize: '0.875rem',
+        lineHeight: '1.6',
+      }}
+      lineNumberStyle={{
+        minWidth: '3em',
+        paddingRight: '1em',
+        color: isDark ? '#6b7280' : '#9ca3af',
+        borderRight: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+        marginRight: '1em',
+        textAlign: 'right',
+        userSelect: 'none',
+      }}
+    >
+      {children}
+    </SyntaxHighlighter>
+  ), [children, displayLanguage, isDark, customTheme]);
 
   return (
     <div className="markdown-code-block">
@@ -288,32 +398,52 @@ const CodeBlock = React.memo(({
         <span className="markdown-code-language">
           {displayLanguage}
         </span>
-        <button
-          onClick={handleCopy}
-          className={`markdown-code-copy-btn ${copied ? 'copied' : ''}`}
-          title={copied ? '已复制!' : '复制代码'}
-        >
-          {copied ? (
-            <Check className="w-4 h-4" />
-          ) : (
-            <Copy className="w-4 h-4" />
+        <div className="flex items-center gap-2 md:gap-3">
+          {isCollapsible && (
+            <button
+              onClick={toggleExpand}
+              className="markdown-code-copy-btn"
+              title={isExpanded ? '收起' : '展开查看完整代码'}
+            >
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
           )}
-        </button>
+          <button
+            onClick={handleCopy}
+            className={`markdown-code-copy-btn ${copied ? 'copied' : ''}`}
+            title={copied ? '已复制!' : '复制代码'}
+          >
+            {copied ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
       
-      <div className="markdown-code-content">
-        <SyntaxHighlighter
-          language={displayLanguage}
-          style={isDark ? oneDark : oneLight}
-          showLineNumbers={true}
-          wrapLines={true}
-          wrapLongLines={true}
-          customStyle={{
-            background: 'var(--color-card)',
-          }}
-        >
-          {children}
-        </SyntaxHighlighter>
+      <div 
+        className={`markdown-code-content relative transition-all duration-300 ease-in-out overflow-x-auto scrollbar-thin ${!isExpanded ? 'overflow-y-auto' : ''}`}
+        style={{ maxHeight, willChange: 'max-height', contain: 'layout paint style' as any }}
+        ref={contentRef}
+      >
+        {highlighted}
+
+        {/* 折叠时的底部渐隐与展开按钮 */}
+        {isCollapsible && !isExpanded && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-card)] to-transparent flex items-end justify-center">
+            <button
+              className="pointer-events-auto mb-2 px-2 py-1 text-xs rounded bg-theme-background/70 hover:bg-theme-background transition-colors"
+              onClick={toggleExpand}
+            >
+              展开查看完整代码
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -541,4 +671,14 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
 
 MarkdownRendererComponent.displayName = 'MarkdownRenderer';
 
-export const MarkdownRenderer = React.memo(MarkdownRendererComponent);
+// 使用精确的memo比较函数，避免不必要的重渲染
+export const MarkdownRenderer = React.memo(MarkdownRendererComponent, (prevProps, nextProps) => {
+  // 精确比较关键属性
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.className === nextProps.className &&
+    JSON.stringify(prevProps.style) === JSON.stringify(nextProps.style) &&
+    prevProps.onImagePreview === nextProps.onImagePreview
+  );
+});

@@ -121,23 +121,33 @@ export function useAutoScroll({ messages, isStreaming }: UseAutoScrollOptions): 
     }
   }, [findScrollContainer]);
 
-  // 监听滚动事件
+  // 监听滚动事件 - 使用节流优化性能
   useEffect(() => {
+    let ticking = false;
+    
     const scrollHandler = () => {
-      const container = findScrollContainer();
-      if (!container) return;
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const container = findScrollContainer();
+          if (!container) {
+            ticking = false;
+            return;
+          }
+          
+          const { scrollTop, scrollHeight, clientHeight } = container;
+          const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
 
-      // 如果用户向上滚动，则标记，以暂停自动滚动
-      if (distanceFromBottom > 100) {
-        userHasScrolledUp.current = true;
+          // 如果用户向上滚动，则标记，以暂停自动滚动
+          if (distanceFromBottom > 100) {
+            userHasScrolledUp.current = true;
+          }
+          
+          // 更新滚动位置状态
+          updateScrollPosition();
+          ticking = false;
+        });
+        ticking = true;
       }
-      
-      // 实时更新滚动位置状态
-      requestAnimationFrame(() => {
-        updateScrollPosition();
-      });
     };
 
     const scrollContainer = findScrollContainer();
@@ -149,23 +159,33 @@ export function useAutoScroll({ messages, isStreaming }: UseAutoScrollOptions): 
     }
   }, [findScrollContainer, updateScrollPosition]);
 
-  // 实时滚动处理 - 使用MutationObserver
+  // 实时滚动处理 - 使用MutationObserver，仅在流式传输时启用
   useEffect(() => {
+    if (!isStreaming) return;
+    
     const container = findScrollContainer();
     if (!container) return;
 
-    const observer = new MutationObserver((mutations) => {
+    let isScrolling = false;
+    
+    const observer = new MutationObserver(() => {
       // 只有在流式传输且用户未向上滚动时才触发
-      if (isStreaming && !userHasScrolledUp.current) {
+      if (!userHasScrolledUp.current && !isScrolling) {
+        isScrolling = true;
         // 使用 requestAnimationFrame 以获得更平滑的滚动效果
         requestAnimationFrame(() => {
           scrollToBottom('auto');
+          isScrolling = false;
         });
       }
     });
 
-    // 观察容器的子节点和子树变化
-    observer.observe(container, { childList: true, subtree: true });
+    // 观察容器的子节点变化，减少监听范围
+    observer.observe(container, { 
+      childList: true, 
+      subtree: true,
+      characterData: true // 监听文本内容变化
+    });
 
     return () => {
       observer.disconnect();

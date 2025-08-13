@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Bot, MessageCircle } from 'lucide-react';
 import { MessageList } from './MessageList';
 import Modal from '@/components/Modal';
@@ -157,23 +157,23 @@ function ChatInterface({
     images: string[];
   }>({ isOpen: false, imageUrl: '', imageIndex: 0, images: [] });
 
-  // 处理图片预览
-  const handleImagePreview = (imageUrl: string, imageIndex: number, images: string[]) => {
+  // 处理图片预览（稳定回调，避免子项重复渲染）
+  const handleImagePreview = useCallback((imageUrl: string, imageIndex: number, images: string[]) => {
     setImagePreviewModal({
       isOpen: true,
       imageUrl,
       imageIndex,
       images
     });
-  };
+  }, []);
 
   // 关闭图片预览
-  const handleCloseImagePreview = () => {
+  const handleCloseImagePreview = useCallback(() => {
     setImagePreviewModal({ isOpen: false, imageUrl: '', imageIndex: 0, images: [] });
-  };
+  }, []);
 
   // 删除消息的处理函数
-  const handleDeleteMessage = async (messageId: string) => {
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
     // 检查是否为临时ID（前端生成的ID）
     if (messageId.startsWith('msg_')) {
       alert('无法删除临时消息，请刷新页面后重试');
@@ -192,7 +192,7 @@ function ChatInterface({
       open: true,
       messageId: messageId,
     });
-  };
+  }, []);
 
   // 确认删除消息
   const confirmDeleteMessage = async () => {

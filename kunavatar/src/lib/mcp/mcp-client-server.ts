@@ -47,6 +47,19 @@ class McpServerClient {
    */
   async connect(): Promise<boolean> {
     try {
+      // 生产环境或显式禁用时，直接使用内置本地工具，避免外部进程弹窗
+      const disableExternal = process.env.MCP_DISABLE_EXTERNAL === '1' || process.env.NODE_ENV === 'production';
+      if (disableExternal) {
+        this.useLocalTools = true;
+        this.isConnected = true;
+        await this.refreshTools();
+        return true;
+      }
+
+      // 已连接则直接复用
+      if (this.isConnected) {
+        return true;
+      }
       // 首先尝试连接外部 MCP 服务器
       const serverPath = path.join(process.cwd(), 'src', 'lib', 'mcp', 'mcp-server.ts');
       
@@ -121,7 +134,8 @@ class McpServerClient {
    * 检查是否已连接
    */
   isClientConnected(): boolean {
-    return this.isConnected && this.client !== null;
+    // 使用本地工具或外部客户端任一可用即视为已连接，避免重复连接与外部进程弹窗
+    return this.isConnected;
   }
 
   /**

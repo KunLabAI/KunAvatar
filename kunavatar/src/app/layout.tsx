@@ -45,7 +45,7 @@ export default function RootLayout({
                 <DownloadManagerProvider>
                   <NotificationProvider>
                     <CleanModeProvider>
-                    <ElectronLayout className="min-h-screen">
+                    <ElectronLayout className="min-h-screen overflow-hidden">
                       {children}
                     </ElectronLayout>
                     <NotificationManager />

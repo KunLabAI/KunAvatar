@@ -72,6 +72,19 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Message[]>([]);
   const currentConversationIdRef = useRef<string | null>(null);
+  // 流式内容节流/合并相关引用，避免在一次渲染周期内触发过多 setState
+  const streamingUpdateRafRef = useRef<number | null>(null);
+  const pendingAssistantContentRef = useRef<string>('');
+  const targetAssistantMessageIdRef = useRef<string | null>(null);
+  const thinkingBufferRef = useRef<string>('');
+  const hasThinkingRef = useRef<boolean>(false);
+  const lastFlushedContentRef = useRef<string>('');
+  const streamingUpdateTimerRef = useRef<number | null>(null);
+  const isStreamingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
 
   const { chatMode, selectedModel, selectedAgent, enableTools = true, selectedTools = [], onTitleUpdate, onConversationCleared } = params;
   
@@ -335,6 +348,13 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
 
       // 同时添加用户消息和助手占位符
       setMessages(prev => [...prev, userMessage, assistantMessage]);
+
+      // 初始化流式内容缓冲与目标消息
+      targetAssistantMessageIdRef.current = assistantMessageId;
+      pendingAssistantContentRef.current = '';
+      thinkingBufferRef.current = '';
+      hasThinkingRef.current = false;
+      lastFlushedContentRef.current = '';
       
       // 构建消息内容，支持图片
       const userMessageContent = messageContent.trim();
@@ -414,6 +434,74 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       const decoder = new TextDecoder();
       let assistantContent = '';
       let currentTargetMessageId = assistantMessageId;
+
+      // 合并/节流：统一在 rAF 节点提交 setMessages，降低更新频率
+      const flushAssistantContent = () => {
+        const targetId = targetAssistantMessageIdRef.current;
+        if (!targetId) return;
+        const contentToFlush = pendingAssistantContentRef.current;
+        if (contentToFlush == null) return;
+
+        // 如果没有变化，跳过更新，避免无意义的 re-render
+        if (contentToFlush === lastFlushedContentRef.current) return;
+
+        // 读取当前消息实际内容，若一致则不更新
+        const current = messagesRef.current.find(m => m.id === targetId);
+        if (!current) {
+          // 目标消息已不存在（可能被清空对话），停止后续刷写
+          targetAssistantMessageIdRef.current = null;
+          return;
+        }
+        if (current.content === contentToFlush) {
+          lastFlushedContentRef.current = contentToFlush;
+          return;
+        }
+
+        setMessages(prev => {
+          let changed = false;
+          const next = prev.map(msg => {
+            if (msg.id === targetId) {
+              if (msg.content !== contentToFlush) {
+                changed = true;
+                return { ...msg, content: contentToFlush };
+              }
+            }
+            return msg;
+          });
+          if (changed) {
+            lastFlushedContentRef.current = contentToFlush;
+          }
+          return next;
+        });
+      };
+
+      const scheduleAssistantContentFlush = () => {
+        // 无目标或已停止流式，跳过
+        if (!targetAssistantMessageIdRef.current || !isStreamingRef.current) return;
+        // 内容未变化则不调度
+        if (pendingAssistantContentRef.current === lastFlushedContentRef.current) return;
+
+        // 在服务端或无 window 环境直接同步
+        if (typeof window === 'undefined') {
+          flushAssistantContent();
+          return;
+        }
+
+        // 基于时间的节流：最多每 ~100ms 刷新一次，避免深层次更新
+        const STREAM_FLUSH_INTERVAL_MS = 100;
+        if (streamingUpdateTimerRef.current == null) {
+          streamingUpdateTimerRef.current = window.setTimeout(() => {
+            streamingUpdateTimerRef.current = null;
+            // 使用 rAF 在下一帧执行，进一步平滑
+            if (streamingUpdateRafRef.current == null) {
+              streamingUpdateRafRef.current = window.requestAnimationFrame(() => {
+                streamingUpdateRafRef.current = null;
+                flushAssistantContent();
+              });
+            }
+          }, STREAM_FLUSH_INTERVAL_MS);
+        }
+      };
 
       try {
         while (true) {
@@ -506,15 +594,12 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                 const messageContent = parsed.message?.content || parsed.content;
                 if (messageContent) {
                   assistantContent += messageContent;
-                  
-                  // 更新当前目标助手消息的内容
-                  setMessages(prev => 
-                    prev.map(msg => 
-                      msg.id === currentTargetMessageId 
-                        ? { ...msg, content: assistantContent }
-                        : msg
-                    )
-                  );
+                  // 合并思考内容后再写入，保持与思考面板的一致性
+                  const combinedContent = hasThinkingRef.current
+                    ? `<think>\n${thinkingBufferRef.current}\n</think>\n\n${assistantContent}`
+                    : assistantContent;
+                  pendingAssistantContentRef.current = combinedContent;
+                  scheduleAssistantContentFlush();
                 }
 
                 // 处理统计信息（当done为true时）
@@ -560,67 +645,30 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
 
                 // 处理思考过程
                 if (parsed.type === 'thinking' && parsed.thinking) {
-                  setMessages(prev => 
-                    prev.map(msg => {
-                      if (msg.id === currentTargetMessageId) {
-                        // 检查是否已经有思考内容
-                        const existingContent = msg.content;
-                        const hasExistingThink = existingContent.includes('<think>');
-                        
-                        if (hasExistingThink) {
-                          // 如果已经有<think>标签，将新的思考内容追加到现有的思考内容中
-                          const thinkRegex = /(<think>[\s\S]*?)<\/think>/;
-                          const match = existingContent.match(thinkRegex);
-                          if (match) {
-                            const existingThinkContent = match[1];
-                            const newContent = existingContent.replace(
-                              thinkRegex, 
-                              `${existingThinkContent}\n\n${parsed.thinking}</think>`
-                            );
-                            return { ...msg, content: newContent };
-                          }
-                        } else {
-                          // 如果没有思考内容，在内容开头添加思考标签
-                          const newContent = `<think>\n${parsed.thinking}\n</think>\n\n${existingContent}`;
-                          return { ...msg, content: newContent };
-                        }
-                      }
-                      return msg;
-                    })
-                  );
+                  // 将思考内容缓冲，不立即 setState；与正文合并后再节流更新
+                  hasThinkingRef.current = true;
+                  if (thinkingBufferRef.current) {
+                    thinkingBufferRef.current = `${thinkingBufferRef.current}\n\n${parsed.thinking}`;
+                  } else {
+                    thinkingBufferRef.current = parsed.thinking;
+                  }
+                  const combinedContent = `<think>\n${thinkingBufferRef.current}\n</think>\n\n${assistantContent}`;
+                  pendingAssistantContentRef.current = combinedContent;
+                  scheduleAssistantContentFlush();
                   continue;
                 }
 
                 // 处理思考过程（兼容旧格式）
                 if (parsed.thinking) {
-                  setMessages(prev => 
-                    prev.map(msg => {
-                      if (msg.id === currentTargetMessageId) {
-                        // 检查是否已经有思考内容
-                        const existingContent = msg.content;
-                        const hasExistingThink = existingContent.includes('<think>');
-                        
-                        if (hasExistingThink) {
-                          // 如果已经有<think>标签，将新的思考内容追加到现有的思考内容中
-                          const thinkRegex = /(<think>[\s\S]*?)<\/think>/;
-                          const match = existingContent.match(thinkRegex);
-                          if (match) {
-                            const existingThinkContent = match[1];
-                            const newContent = existingContent.replace(
-                              thinkRegex, 
-                              `${existingThinkContent}\n\n${parsed.thinking}</think>`
-                            );
-                            return { ...msg, content: newContent };
-                          }
-                        } else {
-                          // 如果没有思考内容，在内容开头添加思考标签
-                          const newContent = `<think>\n${parsed.thinking}\n</think>\n\n${existingContent}`;
-                          return { ...msg, content: newContent };
-                        }
-                      }
-                      return msg;
-                    })
-                  );
+                  hasThinkingRef.current = true;
+                  if (thinkingBufferRef.current) {
+                    thinkingBufferRef.current = `${thinkingBufferRef.current}\n\n${parsed.thinking}`;
+                  } else {
+                    thinkingBufferRef.current = parsed.thinking;
+                  }
+                  const combinedContent = `<think>\n${thinkingBufferRef.current}\n</think>\n\n${assistantContent}`;
+                  pendingAssistantContentRef.current = combinedContent;
+                  scheduleAssistantContentFlush();
                 }
 
               } catch (parseError) {
@@ -649,6 +697,28 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       setMessages(prev => prev.filter(msg => msg.role !== 'assistant' || msg.content));
       
     } finally {
+      // 结束前做一次最终 flush，确保最后一批内容写入
+      if (streamingUpdateRafRef.current != null) {
+        if (typeof window !== 'undefined') {
+          window.cancelAnimationFrame(streamingUpdateRafRef.current);
+        }
+        streamingUpdateRafRef.current = null;
+      }
+      if (streamingUpdateTimerRef.current != null) {
+        if (typeof window !== 'undefined') {
+          clearTimeout(streamingUpdateTimerRef.current);
+        }
+        streamingUpdateTimerRef.current = null;
+      }
+      if (pendingAssistantContentRef.current && targetAssistantMessageIdRef.current) {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === targetAssistantMessageIdRef.current
+              ? { ...msg, content: pendingAssistantContentRef.current }
+              : msg
+          )
+        );
+      }
       setIsStreaming(false);
       abortControllerRef.current = null;
     }

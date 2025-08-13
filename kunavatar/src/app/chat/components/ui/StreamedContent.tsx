@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useRef, useEffect, useMemo, useCallback, useState } from 'react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface StreamedContentProps {
@@ -50,6 +50,9 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
 }) => {
   const prevContentRef = useRef('');
   const lastProcessedContentRef = useRef('');
+  const [displayContent, setDisplayContent] = useState('');
+  const lastUpdateTsRef = useRef(0);
+  const throttleTimerRef = useRef<number | null>(null);
 
   // 使用 useMemo 优化内容处理
   const processedContent = useMemo(() => {
@@ -61,6 +64,62 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
     lastProcessedContentRef.current = content;
     return removeThinkingContent(content);
   }, [content]);
+
+  // 流式 Markdown 渲染节流，减少 ReactMarkdown 重排压力
+  useEffect(() => {
+    const STREAM_THROTTLE_MS = 120;
+    const STREAM_MAX_WAIT_MS = 600;
+
+    // 非 markdown 或非流式，立即同步
+    if (!enableMarkdown || !isStreaming) {
+      if (throttleTimerRef.current) {
+        clearTimeout(throttleTimerRef.current);
+        throttleTimerRef.current = null;
+      }
+      setDisplayContent(processedContent);
+      lastUpdateTsRef.current = Date.now();
+      return;
+    }
+
+    const now = Date.now();
+    const prev = displayContent;
+    const next = processedContent;
+    if (next === prev) return;
+
+    const diff = next.slice(prev.length);
+    const hasBreakpoint = /[\n。！？.!?]|```/.test(diff);
+    const minDelta = prev.length < 1000 ? 16 : 64;
+    const shouldUpdateNow = hasBreakpoint || diff.length >= minDelta || (now - lastUpdateTsRef.current) >= STREAM_MAX_WAIT_MS;
+
+    if (shouldUpdateNow) {
+      if (throttleTimerRef.current) {
+        clearTimeout(throttleTimerRef.current);
+        throttleTimerRef.current = null;
+      }
+      setDisplayContent(next);
+      lastUpdateTsRef.current = now;
+    } else if (!throttleTimerRef.current) {
+      throttleTimerRef.current = window.setTimeout(() => {
+        setDisplayContent(prev2 => {
+          // 再次比较，避免竞态
+          if (processedContent !== prev2) {
+            lastUpdateTsRef.current = Date.now();
+            return processedContent;
+          }
+          return prev2;
+        });
+        throttleTimerRef.current = null;
+      }, STREAM_THROTTLE_MS);
+    }
+
+    return () => {
+      if (throttleTimerRef.current) {
+        clearTimeout(throttleTimerRef.current);
+        throttleTimerRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processedContent, isStreaming, enableMarkdown]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -79,7 +138,7 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
   if (enableMarkdown) {
     return (
       <MarkdownRenderer
-        content={processedContent}
+        content={displayContent || processedContent}
         isStreaming={isStreaming}
         className={className}
         style={style}
@@ -134,6 +193,17 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
 
 StreamedContentComponent.displayName = 'StreamedContent';
 
-const StreamedContent = React.memo(StreamedContentComponent);
+// 使用精确的memo比较函数，避免不必要的重渲染
+const StreamedContent = React.memo(StreamedContentComponent, (prevProps, nextProps) => {
+  // 精确比较关键属性
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.className === nextProps.className &&
+    prevProps.enableMarkdown === nextProps.enableMarkdown &&
+    JSON.stringify(prevProps.style) === JSON.stringify(nextProps.style) &&
+    prevProps.onImagePreview === nextProps.onImagePreview
+  );
+});
 
 export default StreamedContent;
