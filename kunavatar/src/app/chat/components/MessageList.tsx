@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { User, Copy, Axe, ChevronDown, ChevronUp, Check, Trash2 } from 'lucide-react';
 import { ToolCallPanel } from './tools/ToolCallPanel';
 import { useAgentData } from '../hooks/useAgentData';
@@ -11,6 +11,7 @@ import { ThinkingMode, hasThinkingContent } from './ui/ThinkingMode';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useChatStyle } from '../hooks/useChatStyle';
 import { StatsDisplay } from './ui/StatsDisplay';
+import { SelectableCopyWrapper } from './ui/SelectableCopyWrapper';
 // 消息类型定义
 interface Message {
   id: string;
@@ -66,6 +67,61 @@ interface MessageListProps {
   onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void; // 新增：图片预览回调
 }
 
+// 比较两条消息在渲染相关字段上的等价性（尽量轻量）
+const areMessagesRenderEqual = (prev: Message, next: Message): boolean => {
+  if (prev === next) return true;
+  if (!prev || !next) return false;
+  if (prev.id !== next.id) return false;
+  if (prev.role !== next.role) return false;
+  if (prev.model !== next.model) return false;
+  if (prev.content !== next.content) return false;
+  if (prev.thinking !== next.thinking) return false;
+  if (prev.tool_status !== next.tool_status) return false;
+  if (prev.total_duration !== next.total_duration) return false;
+  if (prev.load_duration !== next.load_duration) return false;
+  if (prev.prompt_eval_count !== next.prompt_eval_count) return false;
+  if (prev.prompt_eval_duration !== next.prompt_eval_duration) return false;
+  if (prev.eval_count !== next.eval_count) return false;
+  if (prev.eval_duration !== next.eval_duration) return false;
+
+  // 仅做引用或长度检查，避免深度比较开销
+  if (prev.images !== next.images) {
+    const prevLen = Array.isArray(prev.images) ? prev.images.length : 0;
+    const nextLen = Array.isArray(next.images) ? next.images.length : 0;
+    if (prevLen !== nextLen) return false;
+  }
+
+  if (prev.toolCalls !== next.toolCalls) {
+    const prevLen = Array.isArray(prev.toolCalls) ? prev.toolCalls.length : 0;
+    const nextLen = Array.isArray(next.toolCalls) ? next.toolCalls.length : 0;
+    if (prevLen !== nextLen) return false;
+  }
+
+  return true;
+};
+
+// 复用未变化的消息对象，稳定子项 props 引用，避免不必要重渲染
+const useStableMessages = (messages: Message[]): Message[] => {
+  const prevByIdRef = React.useRef<Map<string, Message>>(new Map());
+
+  const stable = useMemo(() => {
+    const prevById = prevByIdRef.current;
+    const nextById = new Map<string, Message>();
+
+    const result = messages.map((msg) => {
+      const prev = prevById.get(msg.id);
+      const nextMsg = prev && areMessagesRenderEqual(prev, msg) ? prev : msg;
+      nextById.set(msg.id, nextMsg);
+      return nextMsg;
+    });
+
+    prevByIdRef.current = nextById;
+    return result;
+  }, [messages]);
+
+  return stable;
+};
+
 const MessageListComponent = ({ 
   messages, 
   isStreaming, 
@@ -99,20 +155,25 @@ const MessageListComponent = ({
   // 使用样式控制hook
   const { chatStyle, displaySize, isLoaded: styleLoaded } = useChatStyle();
 
-  // 消息已经在useMessageSender中处理过了，直接使用
-  const processedMessages = messages;
+  // 复用未变化的消息，隔离已渲染内容，避免全量子项重渲染
+  const processedMessages = useStableMessages(messages);
 
   // 处理MCP图标点击
-  const handleMcpIconClick = (messageId: string) => {
+  const handleMcpIconClick = useCallback((messageId: string) => {
     setSelectedMessageId(messageId);
     setShowToolCallPanel(true);
-  };
+  }, []);
 
   // 关闭工具调用面板
-  const handleCloseToolCallPanel = () => {
+  const handleCloseToolCallPanel = useCallback(() => {
     setShowToolCallPanel(false);
     setSelectedMessageId(null);
-  };
+  }, []);
+
+  // 稳定删除回调，避免因函数引用变化导致子项重渲染
+  const stableOnDeleteMessage = useCallback((id: string) => {
+    onDeleteMessage?.(id);
+  }, [onDeleteMessage]);
 
   // 获取选中消息的工具调用信息
   const selectedMessage = selectedMessageId ? processedMessages.find(m => m.id === selectedMessageId) : null;
@@ -128,7 +189,7 @@ const MessageListComponent = ({
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && message === processedMessages[processedMessages.length - 1]}
                 onMcpIconClick={handleMcpIconClick}
-                onDeleteMessage={onDeleteMessage}
+                onDeleteMessage={stableOnDeleteMessage}
                 chatMode={chatMode}
                 selectedAgent={selectedAgent}
                 models={models}
@@ -478,30 +539,32 @@ const MessageItemComponent = ({
 
 
           {/* 消息内容 */}
-          <div className={isUser ? 'whitespace-pre-wrap' : `prose prose-sm max-w-none prose-theme`} style={isUser ? { wordBreak: 'normal', overflowWrap: 'break-word' } : {}}>
-            {message.content ? (
-              <div className={shouldCollapseUserMessage && !isUserMessageExpanded ? 'line-clamp-6' : ''}>
-                <StreamedContent
-                  content={message.content}
-                  isStreaming={isStreaming}
-                  enableMarkdown={!isUser} // 只有助手消息启用 Markdown，用户消息保持原始格式
-                  className={isUser ? 'text-theme-primary-foreground' : 'text-theme-foreground'}
-                  onImagePreview={onImagePreview}
-                />
-              </div>
-            ) : (isStreaming ? (
-              <div className="flex items-center space-x-1">
-                <div className="animate-pulse">loading</div>
-                <div className="flex space-x-1">
-                  <div className="w-1 h-1 bg-current rounded-full animate-bounce"></div>
-                  <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+          <SelectableCopyWrapper>
+            <div className={isUser ? 'whitespace-pre-wrap' : `prose prose-sm max-w-none prose-theme`} style={isUser ? { wordBreak: 'normal', overflowWrap: 'break-word' } : {}}>
+              {message.content ? (
+                <div className={shouldCollapseUserMessage && !isUserMessageExpanded ? 'line-clamp-6' : ''}>
+                  <StreamedContent
+                    content={message.content}
+                    isStreaming={isStreaming}
+                    enableMarkdown={!isUser} // 只有助手消息启用 Markdown，用户消息保持原始格式
+                    className={isUser ? 'text-theme-primary-foreground' : 'text-theme-foreground'}
+                    onImagePreview={onImagePreview}
+                  />
                 </div>
-              </div>
-            ) : (
-              <div className="text-theme-foreground-muted italic">消息内容为空</div>
-            ))}
-          </div>
+              ) : (isStreaming ? (
+                <div className="flex items-center space-x-1">
+                  <div className="animate-pulse">loading</div>
+                  <div className="flex space-x-1">
+                    <div className="w-1 h-1 bg-current rounded-full animate-bounce"></div>
+                    <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-theme-foreground-muted italic">消息内容为空</div>
+              ))}
+            </div>
+          </SelectableCopyWrapper>
 
           {/* 用户消息展开/折叠按钮 */}
           {shouldCollapseUserMessage && (
