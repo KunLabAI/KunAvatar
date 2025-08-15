@@ -1,6 +1,6 @@
 {
   "name": "kun-avatar-launcher",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "description": "KunAvatar 智能启动器",
   "main": "start.js",
