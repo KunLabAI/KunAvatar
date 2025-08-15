@@ -254,157 +254,154 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
       icon={modalIcon}
       maxWidth="2xl"
     >
-      <div className="flex flex-col">
+      <div className="max-h-[90vh] overflow-hidden flex flex-col">
         {/* 内容区域 - 可滚动 */}
-        <div className="flex-1 p-8 pb-6 space-y-8  overflow-y-auto scrollbar-thin h-[calc(90vh-120px)]">
-              {/* 基本信息 */}
-            <FormSection title="基本信息">
-              <FormInput 
-                label="模型别名" 
-                required 
-              >
-                <input
-                  type="text"
-                  value={formData.display_name}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, display_name: e.target.value }));
-                    // 清除该字段的验证错误
-                    if (errors.display_name) {
-                      setErrors(prev => ({ ...prev, display_name: undefined }));
-                    }
-                  }}
-                  className="form-input-base"
-                  placeholder="例如：我的自定义模型"
-                />
-                {errors.display_name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.display_name}</p>
-                )}
-              </FormInput>
-            </FormSection>
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-8">
+          {/* 基本信息 */}
+          <FormSection title="基本信息">
+            <FormInput 
+              label="模型别名" 
+              required 
+            >
+              <input
+                type="text"
+                value={formData.display_name}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, display_name: e.target.value }));
+                  // 清除该字段的验证错误
+                  if (errors.display_name) {
+                    setErrors(prev => ({ ...prev, display_name: undefined }));
+                  }
+                }}
+                className="form-input-base"
+                placeholder="例如：我的自定义模型"
+              />
+              {errors.display_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.display_name}</p>
+              )}
+            </FormInput>
+          </FormSection>
 
-            {/* 文件选择 */}
-            <FormSection title="模型文件">
-              <FormInput 
-                label="GGUF 文件路径" 
-                required 
-              >
-                <input
-                  type="text"
-                  value={formData.files[0]?.path || ''}
-                  onChange={(e) => {
-                    const path = e.target.value;
-                    // 清除该字段的验证错误
-                    if (errors.file_path) {
-                      setErrors(prev => ({ ...prev, file_path: undefined }));
-                    }
-                    
-                    if (path) {
-                      const fileName = path.split(/[/\\]/).pop() || 'unknown';
-                      const fileInfo: FileUploadInfo = {
-                        file: {} as File,
-                        name: fileName,
-                        size: 0,
-                        path: path,
-                        uploadStatus: 'completed',
-                        uploadProgress: 100
-                      };
-                      setFormData(prev => ({
-                        ...prev,
-                        files: [fileInfo]
-                      }));
-                    } else {
-                      setFormData(prev => ({
-                        ...prev,
-                        files: []
-                      }));
-                    }
-                  }}
-                  className="form-input-base"
-                  placeholder={getPlaceholderPath()}
-                />
-                {errors.file_path && (
-                  <p className="mt-1 text-sm text-red-600">{errors.file_path}</p>
-                )}
+          {/* 文件选择 */}
+          <FormSection title="模型文件">
+            <FormInput 
+              label="GGUF 文件路径" 
+              required 
+            >
+              <input
+                type="text"
+                value={formData.files[0]?.path || ''}
+                onChange={(e) => {
+                  const path = e.target.value;
+                  // 清除该字段的验证错误
+                  if (errors.file_path) {
+                    setErrors(prev => ({ ...prev, file_path: undefined }));
+                  }
+                  
+                  if (path) {
+                    const fileName = path.split(/[/\\]/).pop() || 'unknown';
+                    const fileInfo: FileUploadInfo = {
+                      file: {} as File,
+                      name: fileName,
+                      size: 0,
+                      path: path,
+                      uploadStatus: 'completed',
+                      uploadProgress: 100
+                    };
+                    setFormData(prev => ({
+                      ...prev,
+                      files: [fileInfo]
+                    }));
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      files: []
+                    }));
+                  }
+                }}
+                className="form-input-base"
+                placeholder={getPlaceholderPath()}
+              />
+              {errors.file_path && (
+                <p className="mt-1 text-sm text-red-600">{errors.file_path}</p>
+              )}
 
-                {/* 显示选中的文件 */}
-                {formData.files.length > 0 && (
-                  <div className="mt-3 p-3 bg-theme-background-secondary border border-theme-border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Folder className="w-4 h-4 text-theme-primary flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-theme-foreground truncate">
-                          {formData.files[0].name}
-                        </p>
-                        <p className="text-xs text-theme-foreground-muted font-mono break-all">
-                          {formData.files[0].path}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setFormData(prev => ({ ...prev, files: [] }))}
-                        className="p-1 text-theme-foreground-muted hover:text-theme-error transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+              {/* 显示选中的文件 */}
+              {formData.files.length > 0 && (
+                <div className="mt-3 p-3 bg-theme-background-secondary border border-theme-border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Folder className="w-4 h-4 text-theme-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-theme-foreground truncate">
+                        {formData.files[0].name}
+                      </p>
+                      <p className="text-xs text-theme-foreground-muted font-mono break-all">
+                        {formData.files[0].path}
+                      </p>
                     </div>
+                    <button
+                      onClick={() => setFormData(prev => ({ ...prev, files: [] }))}
+                      className="p-1 text-theme-foreground-muted hover:text-theme-error transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
-              </FormInput>
-            </FormSection>
+                </div>
+              )}
+            </FormInput>
+          </FormSection>
 
-            {/* 高级设置 */}
-            <FormSection title="高级设置">
-              <FormInput label="量化选项" hint="量化可以减少模型大小但可能影响质量">
-                <select
-                  value={formData.quantize || ''}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    quantize: e.target.value as any
-                  }))}
-                  className="form-input-base"
-                >
-                  {QUANTIZATION_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </FormInput>
-            </FormSection>
-          </div>
+          {/* 高级设置 */}
+          <FormSection title="高级设置">
+            <FormInput label="量化选项" hint="量化可以减少模型大小但可能影响质量">
+              <select
+                value={formData.quantize || ''}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  quantize: e.target.value as any
+                }))}
+                className="form-input-base"
+              >
+                {QUANTIZATION_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </FormInput>
+          </FormSection>
         </div>
-        
 
         {/* 底部操作按钮 - 固定 */}
-        <div className="flex-shrink-0 px-8 py-6 border-t border-theme-border">
-          <div className="flex justify-end items-center">        
-            <div className="flex gap-3">
-              <button
-                onClick={onCancel}
-                disabled={isUploading}
-                className="btn-base btn-secondary px-6 py-3"
-              >
-                取消
-              </button>
-              <button 
-                onClick={handleSave}
-                disabled={isUploading || formData.files.length === 0}
-                className="btn-base btn-primary px-6 py-3"
-              >
-                {isUploading ? (
-                  <>
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    创建中...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    创建模型
-                  </>
-                )}
-              </button>
-            </div>
+        <div className="p-8 flex justify-end items-center border-t border-theme-border">
+          <div className="flex gap-3">
+            <button
+              onClick={onCancel}
+              disabled={isUploading}
+              className="btn-base btn-secondary px-6 py-3"
+            >
+              取消
+            </button>
+            <button 
+              onClick={handleSave}
+              disabled={isUploading || formData.files.length === 0}
+              className="btn-base btn-primary px-6 py-3"
+            >
+              {isUploading ? (
+                <>
+                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  创建中...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4" />
+                  创建模型
+                </>
+              )}
+            </button>
           </div>
         </div>
+      </div>
     </ModalWrapper>
   );
 }

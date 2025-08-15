@@ -31,7 +31,8 @@ function sanitizeMessagesForLogging(messages: any[]): any[] {
 
 // 消息类型定义
 interface Message {
-  id: string;
+  id: string; // 数据库ID或临时ID
+  clientId?: string; // 稳定的前端Key，避免替换ID导致的重挂载
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: number;
@@ -39,6 +40,11 @@ interface Message {
   toolCalls?: any[];
   thinking?: string;
   images?: string[]; // 新增：图片数据数组
+  activeToolCall?: {
+    id: string;
+    name: string;
+    status: 'start' | 'executing' | 'complete';
+  };
 }
 
 interface UseMessageSenderReturn {
@@ -81,6 +87,7 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
   const lastFlushedContentRef = useRef<string>('');
   const streamingUpdateTimerRef = useRef<number | null>(null);
   const isStreamingRef = useRef<boolean>(false);
+  const lastUserMessageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     isStreamingRef.current = isStreaming;
@@ -328,18 +335,23 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       );
 
       // 创建用户消息
+      const userMessageId = generateMessageId();
       const userMessage: Message = {
-        id: generateMessageId(),
+        id: userMessageId,
+        clientId: userMessageId,
         role: 'user',
         content: messageContent.trim(),
         timestamp: Date.now(),
         ...(images && images.length > 0 && { images })
       };
+      // 记录本次发送的用户消息临时ID，便于服务端保存后替换为数据库ID
+      lastUserMessageIdRef.current = userMessage.id;
 
       // 创建助手消息占位符
       const assistantMessageId = generateMessageId();
       const assistantMessage: Message = {
         id: assistantMessageId,
+        clientId: assistantMessageId,
         role: 'assistant',
         content: '',
         timestamp: Date.now(),
@@ -532,10 +544,62 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                   continue;
                 }
                 
+                // 处理用户消息/助手消息保存事件（用数据库ID替换前端临时ID）
+                if (parsed.type === 'user_message_saved' && parsed.messageId) {
+                  const savedId = String(parsed.messageId);
+                  const oldId = lastUserMessageIdRef.current;
+                  if (oldId) {
+                    setMessages(prev => prev.map(m => m.id === oldId ? { ...m, id: savedId } : m));
+                    lastUserMessageIdRef.current = savedId;
+                  } else {
+                    // 回退：找最近的临时用户消息
+                    setMessages(prev => {
+                      for (let i = prev.length - 1; i >= 0; i--) {
+                        const m = prev[i];
+                        if (m.role === 'user' && m.id.startsWith('msg_')) {
+                          const copy = [...prev];
+                          copy[i] = { ...m, id: savedId } as Message;
+                          return copy;
+                        }
+                      }
+                      return prev;
+                    });
+                  }
+                  continue;
+                }
+
+                if (parsed.type === 'assistant_message_saved' && parsed.messageId) {
+                  const savedId = String(parsed.messageId);
+                  const oldAssistantId = targetAssistantMessageIdRef.current;
+                  if (oldAssistantId) {
+                    setMessages(prev => prev.map(m => m.id === oldAssistantId ? { ...m, id: savedId } : m));
+                    // 保持 clientId 不变，避免重挂载
+                    targetAssistantMessageIdRef.current = savedId;
+                    currentTargetMessageId = savedId;
+                  }
+                  continue;
+                }
+
                 // 处理工具调用开始
                 if (parsed.type === 'tool_call_start') {
                   console.log('🔧 工具调用开始:', parsed.tool_name);
-                  // 可以在这里添加工具调用状态更新
+                  
+                  // 更新当前助手消息的工具调用状态
+                  setMessages(prev => 
+                    prev.map(msg => {
+                      if (msg.id === assistantMessageId) {
+                        return { 
+                          ...msg, 
+                          activeToolCall: {
+                            id: parsed.tool_call_id,
+                            name: parsed.tool_name,
+                            status: 'executing'
+                          }
+                        };
+                      }
+                      return msg;
+                    })
+                  );
                   continue;
                 }
 
@@ -573,7 +637,11 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                           updatedToolCalls.push(toolCall);
                         }
                         
-                        return { ...msg, toolCalls: updatedToolCalls };
+                        return { 
+                          ...msg, 
+                          toolCalls: updatedToolCalls,
+                          activeToolCall: undefined // 清除活跃工具调用状态
+                        };
                       }
                       return msg;
                     })
@@ -587,6 +655,19 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                 // 处理工具调用错误
                 if (parsed.type === 'tool_call_error') {
                   console.log('🔧 工具调用错误:', parsed.tool_name);
+                  
+                  // 清除当前助手消息的工具调用状态
+                  setMessages(prev => 
+                    prev.map(msg => {
+                      if (msg.id === assistantMessageId) {
+                        return { 
+                          ...msg, 
+                          activeToolCall: undefined // 清除活跃工具调用状态
+                        };
+                      }
+                      return msg;
+                    })
+                  );
                   continue;
                 }
                 

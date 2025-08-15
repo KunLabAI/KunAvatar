@@ -63,7 +63,7 @@ export function ImageUploadControl({
       return '正在检测模型多模态支持...';
     }
     if (modelSupportsVision === false) {
-      return '当前模型不支持图片识别，请选择其他模型';
+      return '当前模型不支持图片识别';
     }
     return tooltip;
   };

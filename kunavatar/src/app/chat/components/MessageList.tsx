@@ -12,6 +12,7 @@ import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useChatStyle } from '../hooks/useChatStyle';
 import { StatsDisplay } from './ui/StatsDisplay';
 import { SelectableCopyWrapper } from './ui/SelectableCopyWrapper';
+
 // 消息类型定义
 interface Message {
   id: string;
@@ -29,6 +30,12 @@ interface Message {
   tool_status?: 'executing' | 'completed' | 'error';
   tool_execution_time?: number;
   tool_error?: string;
+  // 新增：实时工具调用状态字段
+  activeToolCall?: {
+    id: string;
+    name: string;
+    status: 'start' | 'executing' | 'complete';
+  };
   // Ollama统计信息字段
   total_duration?: number;
   load_duration?: number;
@@ -77,6 +84,14 @@ const areMessagesRenderEqual = (prev: Message, next: Message): boolean => {
   if (prev.content !== next.content) return false;
   if (prev.thinking !== next.thinking) return false;
   if (prev.tool_status !== next.tool_status) return false;
+  
+  // 比较activeToolCall字段
+  if (prev.activeToolCall !== next.activeToolCall) {
+    if (!prev.activeToolCall || !next.activeToolCall) return false;
+    if (prev.activeToolCall.id !== next.activeToolCall.id) return false;
+    if (prev.activeToolCall.name !== next.activeToolCall.name) return false;
+    if (prev.activeToolCall.status !== next.activeToolCall.status) return false;
+  }
   if (prev.total_duration !== next.total_duration) return false;
   if (prev.load_duration !== next.load_duration) return false;
   if (prev.prompt_eval_count !== next.prompt_eval_count) return false;
@@ -180,12 +195,12 @@ const MessageListComponent = ({
 
   return (
     <>
-      <div ref={scrollContainerRef} className="relative h-full overflow-y-auto scrollbar-thin">
-        <div className={`min-h-full ${displaySize === 'compact' ? 'p-2 space-y-2' : 'p-4 space-y-4'}`}>
+      <div ref={scrollContainerRef} className="relative h-full">
+        <div className={`min-h-full ${displaySize === 'compact' ? 'p-2 space-y-2' : 'space-y-4'}`}>
           {/* 消息列表 */}
           {processedMessages.map((message) => (
             <MessageItem
-                key={message.id}
+                key={(message as any).clientId || message.id}
                 message={message}
                 isStreaming={isStreaming && message.role === 'assistant' && message === processedMessages[processedMessages.length - 1]}
                 onMcpIconClick={handleMcpIconClick}
@@ -299,6 +314,12 @@ const MessageItemComponent = ({
   const hasToolCallsWithResults = message.toolCalls && message.toolCalls.length > 0 && 
     message.toolCalls.some(toolCall => toolCall.result !== null && toolCall.result !== undefined);
 
+  // 检查是否有活跃的工具调用
+  const hasActiveToolCall = message.activeToolCall && 
+    (message.activeToolCall.status === 'start' || message.activeToolCall.status === 'executing');
+
+
+
   // 复制消息内容
   const handleCopy = async () => {
     try {
@@ -365,13 +386,38 @@ const MessageItemComponent = ({
               agent={selectedAgent} 
               size="md" 
               className="flex-shrink-0"
+              hasActiveToolCall={isAssistant && hasActiveToolCall}
             />
           );
         } else {
           // 如果没有当前智能体信息，显示默认智能体头像
           return (
-            <div className="flex-shrink-0 w-8 h-8 bg-theme-primary rounded-full flex items-center justify-center">
+            <div className={`relative w-8 h-8 bg-theme-primary rounded-full flex items-center justify-center flex-shrink-0`}>
               <User className="w-4 h-4 text-theme-primary-foreground" />
+              {/* 工具调用动画覆盖在头像上 */}
+              {isAssistant && hasActiveToolCall && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg
+                    className="w-full h-full animate-spin"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    style={{ position: 'absolute', top: 0, left: 0 }}
+                  >
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r="14"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="87.96"
+                      strokeDashoffset="21.99"
+                      className="text-theme-primary opacity-80"
+                    />
+                  </svg>
+                  <div className="w-1.5 h-1.5 bg-theme-primary rounded-full animate-pulse" />
+                </div>
+              )}
             </div>
           );
         }
@@ -384,6 +430,7 @@ const MessageItemComponent = ({
             modelName={logoName}
             size="sm" 
             className="flex-shrink-0"
+            hasActiveToolCall={isAssistant && hasActiveToolCall}
           />
         );
       }
@@ -538,6 +585,8 @@ const MessageItemComponent = ({
 
 
 
+
+
           {/* 消息内容 */}
           <SelectableCopyWrapper>
             <div className={isUser ? 'whitespace-pre-wrap' : `prose prose-sm max-w-none prose-theme`} style={isUser ? { wordBreak: 'normal', overflowWrap: 'break-word' } : {}}>
@@ -546,7 +595,8 @@ const MessageItemComponent = ({
                   <StreamedContent
                     content={message.content}
                     isStreaming={isStreaming}
-                    enableMarkdown={!isUser} // 只有助手消息启用 Markdown，用户消息保持原始格式
+                    // 流式期间启用轻量Markdown，结束后启用完整Markdown
+                    enableMarkdown={!isUser}
                     className={isUser ? 'text-theme-primary-foreground' : 'text-theme-foreground'}
                     onImagePreview={onImagePreview}
                   />

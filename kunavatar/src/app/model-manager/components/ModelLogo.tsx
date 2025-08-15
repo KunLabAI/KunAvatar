@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { getModelLogoPath, getModelFamilyInitial, needsThemeAdaptation, getModelThemeColor } from '../../../lib/modelLogo';
 import { useThemeToggle } from '@/theme/contexts/ThemeContext';
+import { ToolCallAnimation } from '../../chat/components/ui/ToolCallAnimation';
 
 interface ModelLogoProps {
   modelName: string;
@@ -12,6 +13,7 @@ interface ModelLogoProps {
   imageSize?: number;
   className?: string;
   showFallback?: boolean;
+  hasActiveToolCall?: boolean;
 }
 
 const sizeClasses = {
@@ -38,7 +40,8 @@ export default function ModelLogo({
   containerSize: customContainerSize,
   imageSize: customImageSize,
   className = '',
-  showFallback = true 
+  showFallback = true,
+  hasActiveToolCall = false
 }: ModelLogoProps) {
   const [hasError, setHasError] = useState(false);
   const { isDark } = useThemeToggle();
@@ -48,6 +51,19 @@ export default function ModelLogo({
   
   // 检查是否需要主题适配
   const needsAdaptation = needsThemeAdaptation(modelName);
+  
+
+  
+  // 根据尺寸映射到动画组件的尺寸
+  const getAnimationSize = () => {
+    if (typeof size === 'number') {
+      if (size <= 32) return 'sm';
+      if (size <= 48) return 'md';
+      if (size <= 64) return 'lg';
+      return 'xl';
+    }
+    return size;
+  };
   const themeColor = needsAdaptation ? getModelThemeColor(modelName, isDark) : undefined;
   
   // 处理尺寸，优先使用自定义尺寸
@@ -75,6 +91,7 @@ export default function ModelLogo({
       transition-all 
       duration-300
       overflow-hidden
+      relative
       ${className}
     `}>
       {hasError && showFallback ? (
@@ -116,6 +133,10 @@ export default function ModelLogo({
           />
         </div>
       )}
+      <ToolCallAnimation 
+          isVisible={hasActiveToolCall} 
+          size={getAnimationSize()}
+        />
     </div>
   );
 }
