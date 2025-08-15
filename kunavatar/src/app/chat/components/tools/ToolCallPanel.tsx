@@ -206,23 +206,25 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
           <div className="flex flex-col" style={{ height: 'calc(85vh - 120px)' }}>
             {/* 工具导航（如果有多个工具） */}
             {showNavigation && (
-              <div className="flex items-center gap-2 p-3 border-b border-theme-border bg-theme-background-secondary">
-                {toolCalls.map((tool, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedTool(index)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      selectedTool === index 
-                        ? 'bg-theme-primary text-white' 
-                        : 'bg-theme-card hover:bg-theme-card-hover text-theme-foreground'
-                    }`}
-                  >
-                    {renderStatusIcon(tool.status)}
-                    <span className="truncate max-w-32">
-                      {tool.toolName || tool.function?.name || '未知工具'}
-                    </span>
-                  </button>
-                ))}
+              <div className="border-b border-theme-border bg-theme-background-secondary">
+                <div className="flex items-center gap-2 p-3 overflow-x-auto scrollbar-thin scrollbar-thumb-theme-border scrollbar-track-transparent">
+                  {toolCalls.map((tool, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedTool(index)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                        selectedTool === index 
+                          ? 'bg-theme-primary text-white' 
+                          : 'bg-theme-card hover:bg-theme-card-hover text-theme-foreground'
+                      }`}
+                    >
+                      {renderStatusIcon(tool.status)}
+                      <span className="truncate max-w-32">
+                        {tool.toolName || tool.function?.name || '未知工具'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

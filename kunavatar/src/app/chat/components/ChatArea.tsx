@@ -249,7 +249,7 @@ function ChatInterface({
   };
   return (
     <>
-      <div className="flex-1 overflow-auto scrollbar-thin p-4 min-h-0">
+      <div className="flex-1 overflow-auto scrollbar-thin p-2 min-h-0">
         <div className="max-w-4xl mx-auto h-full">
           {currentConversationId ? (
             // 有对话ID时显示消息列表

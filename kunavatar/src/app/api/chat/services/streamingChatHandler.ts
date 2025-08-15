@@ -68,8 +68,8 @@ export class StreamingChatHandler {
            let retryWithoutTools = false;
            
            try {
-             // 立即保存用户消息，确保时间顺序正确
-             StreamingChatHandler.saveUserMessageIfExists(chatRequest);
+            // 立即保存用户消息，确保时间顺序正确，并向前端回传数据库ID
+            StreamingChatHandler.saveUserMessageIfExists(chatRequest, streamController);
 
              // 使用流式API
              for await (const chunk of ollamaClient.chatStream(ollamaChatRequest)) {
@@ -299,7 +299,7 @@ export class StreamingChatHandler {
   /**
    * 保存用户消息（如果存在）
    */
-  private static saveUserMessageIfExists(chatRequest: StreamingChatRequest): void {
+  private static saveUserMessageIfExists(chatRequest: StreamingChatRequest, streamController: StreamController): void {
     if (!chatRequest.conversationId) return;
 
     const lastUserMessage = MessageStorageService.extractLastUserMessage(chatRequest.messages);
@@ -307,7 +307,7 @@ export class StreamingChatHandler {
       // 🎯 根据是否有agentId判断是否为智能体模式
       const isAgentMode = !!chatRequest.agentId;
       
-      MessageStorageService.saveUserMessage(
+      const savedUserId = MessageStorageService.saveUserMessage(
         chatRequest.conversationId,
         lastUserMessage.content,
         chatRequest.model,
@@ -316,6 +316,14 @@ export class StreamingChatHandler {
         isAgentMode,
         lastUserMessage.images // 传递图片数据
       );
+
+      // 发送用户消息保存事件
+      const savedEvent = {
+        type: 'user_message_saved',
+        messageId: savedUserId,
+        role: 'user',
+      };
+      StreamingChatHandler.safeEnqueue(streamController, `data: ${JSON.stringify(savedEvent)}\n\n`);
     }
   }
 
@@ -400,11 +408,31 @@ export class StreamingChatHandler {
       model: chatRequest.model,
       messages: messagesWithMemory,
       stream: true,
-      options: chatRequest.options
+      options: chatRequest.options,
+      // 🔧 确保工具配置传递给后续对话，支持多次工具调用
+      ...(chatRequest.enableTools && 
+          chatRequest.userSelectedTools.length > 0 && 
+          { tools: chatRequest.userSelectedTools })
     };
 
     let followUpMessage = '';
     for await (const followUpChunk of ollamaClient.chatStream(followUpRequest)) {
+      // 🔧 检查是否有新的工具调用（支持多次工具调用）
+      if (followUpChunk.message?.tool_calls && followUpChunk.message.tool_calls.length > 0) {
+        console.log('🔧 检测到后续工具调用，递归处理:', followUpChunk.message.tool_calls.map(tc => tc.function.name));
+        
+        // 递归处理新的工具调用
+        await StreamingChatHandler.handleToolCallsInStream(
+          followUpChunk.message.tool_calls,
+          chatRequest,
+          preToolMessage + followUpMessage, // 累积之前的消息内容
+          streamController
+        );
+        
+        // 工具调用处理完成后直接返回，避免重复保存消息
+        return;
+      }
+      
       if (followUpChunk.message?.content) {
         followUpMessage += followUpChunk.message.content;
       }
@@ -421,7 +449,7 @@ export class StreamingChatHandler {
           // 🎯 根据是否有agentId判断是否为智能体模式
           const isAgentMode = !!chatRequest.agentId;
           
-          MessageStorageService.saveAssistantMessage(
+          const savedAssistantId = MessageStorageService.saveAssistantMessage(
             chatRequest.conversationId,
             completeMessage,
             chatRequest.model,
@@ -430,6 +458,14 @@ export class StreamingChatHandler {
             MessageStorageService.extractStatsFromChunk(followUpChunk) || undefined,
             isAgentMode
           );
+
+          // 发送助手消息保存事件
+          const savedEvent = {
+            type: 'assistant_message_saved',
+            messageId: savedAssistantId,
+            role: 'assistant',
+          };
+          streamController.controller.enqueue(streamController.encoder.encode(`data: ${JSON.stringify(savedEvent)}\n\n`));
 
           // 检查是否需要生成标题
           StreamingChatHandler.checkAndGenerateTitle(
@@ -505,7 +541,7 @@ export class StreamingChatHandler {
         // 🎯 根据是否有agentId判断是否为智能体模式
         const isAgentMode = !!chatRequest.agentId;
 
-        MessageStorageService.saveAssistantMessage(
+        const savedAssistantId = MessageStorageService.saveAssistantMessage(
           chatRequest.conversationId,
           assistantMessage,
           chatRequest.model,
@@ -514,6 +550,14 @@ export class StreamingChatHandler {
           statsToSave || undefined,
           isAgentMode
         );
+
+        // 发送助手消息保存事件
+        const savedEvent = {
+          type: 'assistant_message_saved',
+          messageId: savedAssistantId,
+          role: 'assistant',
+        };
+        StreamingChatHandler.safeEnqueue(streamController, `data: ${JSON.stringify(savedEvent)}\n\n`);
 
         // 🚀 异步记忆生成：完全不阻塞对话响应
         if (chatRequest.conversationId && chatRequest.agentId) {
@@ -695,7 +739,7 @@ export class StreamingChatHandler {
       // 🎯 根据是否有agentId判断是否为智能体模式
       const isAgentMode = !!agentId;
       
-      MessageStorageService.saveAbortedAssistantMessage(
+      const savedId = MessageStorageService.saveAbortedAssistantMessage(
         conversationId,
         assistantMessage,
         model,
@@ -704,6 +748,18 @@ export class StreamingChatHandler {
         assistantStats || undefined,
         isAgentMode
       );
+
+      // 尝试发送保存事件（在中断场景，下游可能接收不到）
+      if (savedId != null) {
+        try {
+          const savedEvent = {
+            type: 'assistant_message_saved',
+            messageId: savedId,
+            role: 'assistant',
+          };
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(savedEvent)}\n\n`));
+        } catch {}
+      }
     }
 
     // 关闭控制器

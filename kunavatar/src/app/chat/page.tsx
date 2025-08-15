@@ -118,6 +118,11 @@ function ChatPageContent() {
     currentConversationId: null,
   });
 
+  // URL 参数处理去重标记，避免重复循环
+  const handledNewRef = useRef(false);
+  const handledModelParamRef = useRef(false);
+  const handledAgentParamRef = useRef(false);
+
   // 💬 消息发送管理
   const messageSender = useMessageSender({
     chatMode,
@@ -362,13 +367,16 @@ function ChatPageContent() {
         }
       }
     } else if (isNew) {
-      // 准备创建新对话 - 清空消息历史
-      console.log('准备创建新对话，清空消息历史');
-      setCurrentConversationId(null);
-      messageSender.clearMessages(); // 🔥 新增：清空消息历史
-      
-      // 🔥 新增：处理URL中的model参数
-      if (modelParam && models && models.length > 0) {
+      // 仅第一次进入 new 流程时清理一次本地状态，避免重复触发
+      if (!handledNewRef.current) {
+        console.log('准备创建新对话，清空消息历史');
+        setCurrentConversationId(null);
+        messageSender.clearMessages();
+        handledNewRef.current = true;
+      }
+
+      // 处理URL中的 model 参数（只处理一次）
+      if (modelParam && models && models.length > 0 && !handledModelParamRef.current) {
         const decodedModel = decodeURIComponent(modelParam);
         console.log('从URL参数指定模型:', decodedModel);
         
@@ -376,12 +384,17 @@ function ChatPageContent() {
         const modelExists = models.some(m => m.base_model === decodedModel);
         if (modelExists) {
           console.log('✅ 模型有效，切换到模型模式并选择模型:', decodedModel);
-          // 强制切换到模型模式
-          setChatMode('model', true); // 标记为用户操作，避免被自动逻辑覆盖
-          // 选择指定的模型
+          setChatMode('model', true);
           setSelectedModel(decodedModel);
-          // 清除智能体选择
           setSelectedAgent(null);
+          handledModelParamRef.current = true;
+          // 处理完成后移除 model 参数，避免重复处理，但保留 new 供后续使用
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('model');
+            const qs = url.searchParams.toString();
+            window.history.replaceState(null, '', url.pathname + (qs ? `?${qs}` : ''));
+          } catch {}
         } else {
           console.warn('⚠️ URL中指定的模型不存在:', decodedModel);
         }
@@ -396,7 +409,7 @@ function ChatPageContent() {
     const isNew = searchParams.get('new') === 'true';
     const agentParam = searchParams.get('agent');
     
-    if (isNew && agentParam && agents && agents.length > 0) {
+    if (isNew && agentParam && agents && agents.length > 0 && !handledAgentParamRef.current) {
       const agentId = parseInt(agentParam);
       const targetAgent = agents.find(agent => agent.id === agentId);
       
@@ -408,6 +421,15 @@ function ChatPageContent() {
         setSelectedAgent(targetAgent);
         // 设置智能体对应的模型
         setSelectedModel(targetAgent.model.base_model);
+        handledAgentParamRef.current = true;
+        // 处理完成后移除 agent/new 参数，避免重复处理
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('agent');
+          url.searchParams.delete('new');
+          const qs = url.searchParams.toString();
+          window.history.replaceState(null, '', url.pathname + (qs ? `?${qs}` : ''));
+        } catch {}
       } else {
         console.warn('未找到指定的智能体，ID:', agentId);
       }

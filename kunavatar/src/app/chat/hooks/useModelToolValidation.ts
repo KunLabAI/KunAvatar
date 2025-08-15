@@ -70,11 +70,24 @@ export function useModelToolValidation({
       return false;
     }
     
-    // 根据模型名称查找对应的模型信息
+    // 智能体模式下的特殊处理：如果传入的是智能体，直接使用其模型信息
+    if (chatMode === 'agent' && selectedAgent?.model) {
+      const agentModel = selectedAgent.model;
+      // 检查智能体模型的capabilities字段
+      const supportsTools = agentModel.capabilities?.includes('tools') || false;
+      
+      console.log(`智能体模型 ${agentModel.base_model || agentModel.display_name} 工具支持检测结果:`, supportsTools);
+      console.log('智能体模型capabilities:', agentModel.capabilities);
+      setModelSupportsTools(supportsTools);
+      return supportsTools;
+    }
+    
+    // 普通模式：根据模型名称查找对应的模型信息
     const modelInfo = availableModels.find(m => m.base_model === model);
     
     if (!modelInfo) {
       console.warn(`未找到模型 ${model} 的信息，假设不支持工具`);
+      console.log('可用模型列表:', availableModels.map(m => m.base_model));
       setModelSupportsTools(false);
       return false;
     }
@@ -85,27 +98,37 @@ export function useModelToolValidation({
     console.log(`模型 ${model} 工具支持检测结果:`, supportsTools);
     setModelSupportsTools(supportsTools);
     return supportsTools;
-  }, [availableModels]);
+  }, [availableModels, chatMode, selectedAgent]);
 
   // 处理工具开关切换
   const handleToolsToggle = useCallback((
     setEnableTools: (value: boolean) => void,
     setShowToolPanel?: (value: boolean) => void
   ): boolean => {
-    const currentModel = chatMode === 'agent' 
-      ? selectedAgent?.model?.base_model 
-      : selectedModel;
-
     const modeText = chatMode === 'agent' ? '智能体' : '模型';
 
-    if (!currentModel) {
-      showWarning?.('提示', `请先选择一个${modeText}`);
-      return false;
+    // 智能体模式下检查智能体是否存在
+    if (chatMode === 'agent') {
+      if (!selectedAgent) {
+        showWarning?.('提示', `请先选择一个${modeText}`);
+        return false;
+      }
+    } else {
+      // 模型模式下检查模型是否存在
+      if (!selectedModel) {
+        showWarning?.('提示', `请先选择一个${modeText}`);
+        return false;
+      }
     }
 
     if (!enableTools) {
       // 开启工具前检查模型支持
-      const supportsTools = checkModelToolSupport(currentModel);
+      // 在智能体模式下，传入智能体的模型名称；在模型模式下，传入选中的模型名称
+      const modelToCheck = chatMode === 'agent' 
+        ? selectedAgent?.model?.base_model || selectedAgent?.model?.display_name || ''
+        : selectedModel || '';
+        
+      const supportsTools = checkModelToolSupport(modelToCheck);
       if (!supportsTools) {
         showError?.(
           'MCP工具不可用', 

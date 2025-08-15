@@ -79,7 +79,7 @@ function useSidebarState() {
   return { isExpanded, toggleSidebar };
 }
 
-export function Sidebar({ conversations, chatMode, selectedAgent }: SidebarProps) {
+function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarProps) {
   const { isExpanded, toggleSidebar } = useSidebarState();
   const { isCleanMode } = useCleanMode();
   const pathname = usePathname();
@@ -313,3 +313,6 @@ export function Sidebar({ conversations, chatMode, selectedAgent }: SidebarProps
     </>
   );
 }
+
+// 使用 React.memo 避免无关状态变动导致的侧边栏重渲染（如消息流式更新）
+export const Sidebar = React.memo(SidebarComponent);

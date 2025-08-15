@@ -547,6 +547,18 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
         return <code className={codeClassName} {...props}>{children}</code>;
       }
       
+      // 流式渲染期间，保持原有代码块外观与功能，但禁用语法高亮
+      if (isStreaming && !inline && language) {
+        return (
+          <CodeBlock 
+            language={language}
+            isDark={isDark}
+          >
+            {String(children).replace(/\n$/, '')}
+          </CodeBlock>
+        );
+      }
+      
       if (!inline && language) {
         return (
           <CodeBlock 
@@ -617,7 +629,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     th: ({ children }: any) => <TableCell isHeader>{children}</TableCell>,
     td: ({ children }: any) => <TableCell>{children}</TableCell>,
     
-  }), [isDark, onImagePreview]);
+  }), [isDark, onImagePreview, isStreaming]);
 
   // 优化的内容处理逻辑
   const processedContent = useMemo(() => {
@@ -636,6 +648,21 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     return processContentFull(content, isStreaming);
   }, [content, isStreaming]);
 
+  // 流式渲染期间禁用 KaTeX，减少重排与计算开销
+  const rehypePluginsList = useMemo(() => {
+    const base: any[] = [rehypeRaw];
+    if (!isStreaming) {
+      base.push([rehypeKatex, {
+        throwOnError: false,
+        errorColor: '#cc0000',
+        strict: false,
+        trust: false,
+        macros: { "\\f": "#1f(#2)" }
+      }]);
+    }
+    return base;
+  }, [isStreaming]);
+
   return (
     <div 
       className={`markdown-renderer ${className}`}
@@ -648,18 +675,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[
-          rehypeRaw,
-          [rehypeKatex, {
-            throwOnError: false,
-            errorColor: '#cc0000',
-            strict: false,
-            trust: false,
-            macros: {
-              "\\f": "#1f(#2)"
-            }
-          }]
-        ]}
+        rehypePlugins={rehypePluginsList}
         components={components}
         skipHtml={false}
       >
