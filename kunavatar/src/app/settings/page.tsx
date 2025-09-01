@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePromptOptimizeSettings, useAvailableModels, useUserPermissions } from './hooks';
 import { Sidebar } from '../Sidebar';
@@ -36,6 +36,14 @@ function SettingsPageContent() {
   const initialTab = searchParams.get('tab') || 'account';
   const [activeTab, setActiveTab] = useState(initialTab);
   
+  // 控制是否显示日志管理标签
+  const [showLogsTab, setShowLogsTab] = useState(false);
+  
+  // 三击计数器和定时器
+  const clickCount = useRef(0);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const CLICK_DELAY = 500; // 500ms内的连续点击才算有效
+  
   const { settings, isLoaded, updateSetting } = usePromptOptimizeSettings();
   const { models: availableModels, isLoading: modelsLoading, error: modelsError } = useAvailableModels();
   const { isAdmin, loading: permissionsLoading } = useUserPermissions();
@@ -50,6 +58,48 @@ function SettingsPageContent() {
     const newUrl = `/settings?tab=${tab}`;
     window.history.replaceState(null, '', newUrl);
   };
+
+  // 处理标题点击事件（三击检测）
+  const handleTitleClick = () => {
+    clickCount.current++;
+    
+    // 清除之前的定时器
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+    }
+    
+    // 如果已经三击，显示日志标签
+    if (clickCount.current >= 3) {
+      setShowLogsTab(true);
+      clickCount.current = 0;
+      if (clickTimer.current) {
+        clearTimeout(clickTimer.current);
+        clickTimer.current = null;
+      }
+      return;
+    }
+    
+    // 设置定时器，在指定时间后重置计数
+    clickTimer.current = setTimeout(() => {
+      clickCount.current = 0;
+    }, CLICK_DELAY);
+  };
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (clickTimer.current) {
+        clearTimeout(clickTimer.current);
+      }
+    };
+  }, []);
+
+  // 如果当前标签页是日志管理且未解锁，则切换到账户管理
+  useEffect(() => {
+    if (activeTab === 'logs' && !showLogsTab) {
+      handleTabChange('account');
+    }
+  }, [activeTab, showLogsTab]);
 
   // 当模型列表加载完成且设置已加载时，自动设置默认模型
   useEffect(() => {
@@ -102,10 +152,21 @@ function SettingsPageContent() {
         <div className="min-h-screen bg-theme-background transition-colors duration-300">
           <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
-              <h1 className="text-2xl font-bold mb-6 text-theme-foreground">设置</h1>
+              <h1 
+                className="inline-block text-2xl font-bold mb-6 text-theme-foreground cursor-pointer select-none"
+                onClick={handleTitleClick}
+                title={showLogsTab ? "日志管理已解锁" : "连续点击三次解锁更多功能"}
+              >
+                设置
+              </h1>
               
               {/* 标签页导航 */}
-              <SettingsTabs activeTab={activeTab} onTabChange={handleTabChange} isAdmin={isAdmin} />
+              <SettingsTabs 
+                activeTab={activeTab} 
+                onTabChange={handleTabChange} 
+                isAdmin={isAdmin} 
+                showLogsTab={showLogsTab}
+              />
 
               {/* Tab内容区 */}
               {activeTab === 'account' && (
@@ -129,7 +190,8 @@ function SettingsPageContent() {
               {activeTab === 'appearance' && (
                 <AppearanceTab />
               )}
-              {activeTab === 'logs' && (
+              {/* 只有在 showLogsTab 为 true 时才渲染日志管理组件 */}
+              {activeTab === 'logs' && showLogsTab && (
                 <LogManagementTab />
               )}
               {activeTab === 'appinfo' && (

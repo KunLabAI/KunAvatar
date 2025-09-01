@@ -1,6 +1,6 @@
 {
   "name": "kun-avatar",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -31,7 +31,7 @@
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.0",
     "bcryptjs": "^3.0.2",
-    "better-sqlite3": "^11.5.0",
+    "better-sqlite3": "^12.2.0",
     "framer-motion": "^12.18.1",
     "jsonwebtoken": "^9.0.2",
     "katex": "^0.16.22",

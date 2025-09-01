@@ -17,14 +17,16 @@ interface SettingsTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   isAdmin: boolean;
+  // 控制是否显示“日志管理”标签（需通过隐藏手势解锁）
+  showLogsTab?: boolean;
 }
 
-export function SettingsTabs({ activeTab, onTabChange, isAdmin }: SettingsTabsProps) {
+export function SettingsTabs({ activeTab, onTabChange, isAdmin, showLogsTab = false }: SettingsTabsProps) {
   const [isElectron, setIsElectron] = useState(false);
 
   // 检查是否在Electron环境中
   useEffect(() => {
-    setIsElectron(typeof window !== 'undefined' && !!window.electronAPI);
+    setIsElectron(typeof window !== 'undefined' && !!(window as any).electronAPI);
   }, []);
 
   // 根据用户权限和环境过滤标签页
@@ -33,6 +35,8 @@ export function SettingsTabs({ activeTab, onTabChange, isAdmin }: SettingsTabsPr
     if (tab.adminOnly && !isAdmin) return false;
     // 检查Electron环境
     if (tab.electronOnly && !isElectron) return false;
+    // 受控隐藏“日志管理”标签
+    if (tab.key === 'logs' && !showLogsTab) return false;
     return true;
   });
 

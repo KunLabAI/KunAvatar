@@ -84,6 +84,17 @@ export interface ElectronAPI {
   maximize: () => Promise<{ success: boolean; isMaximized?: boolean; error?: string }>;
   close: () => Promise<{ success: boolean; error?: string }>;
   
+  // 截图覆盖窗口
+  createScreenshotOverlay: () => Promise<{ success: boolean; error?: string }>;
+  closeScreenshotOverlay: () => Promise<{ success: boolean; error?: string }>;
+  onScreenshotOverlayReady: (callback: () => void) => void;
+  onScreenshotSelection: (callback: (selection: { x: number; y: number; width: number; height: number }) => void) => void;
+  onScreenshotCancel: (callback: () => void) => void;
+  onScreenshotTaken: (callback: (imageDataUrl: string) => void) => void;
+  onScreenshotError: (callback: (error: string) => void) => void;
+  sendScreenshotSelection: (selection: { x: number; y: number; width: number; height: number }) => void;
+  sendScreenshotCancel: () => void;
+  
   // 窗口拖动区域设置
   setDragRegion: (selector: string) => void;
   removeDragRegion: (selector: string) => void;

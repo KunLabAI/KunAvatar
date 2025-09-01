@@ -15,7 +15,7 @@ English | [简体中文](./README.md)
 
 ## ✨ Project Overview
 
-KunAvatar is a lightweight locally deployed AI application that not only provides a complete AI conversation solution, but also has outstanding advantages in **memory systems**, **auxiliary models**, **MCP tool calling**, and **enterprise-level user management**.
+KunAvatar is a lightweight AI desktop client supporting local deployment, built with Ollama as its core inference engine. While fully retaining Ollama's native functionalities, the client further expands with a range of highly practical capabilities, including an RBAC permission system, multi-tenant management, and conversation memory functionality. It also supports MCP server tools and auxiliary models, accurately catering to the needs of users with high data privacy requirements while balancing functional practicality and data security.
 
 ### 🎯 Core Advantages
 
@@ -27,6 +27,10 @@ KunAvatar is a lightweight locally deployed AI application that not only provide
 - **📦 Out-of-the-box** - No complex configuration required, can be deployed and used locally out of the box(Currently only Windows is supported)
 
 Whether for personal use, team collaboration, or enterprise deployment, KunAvatar provides professional, secure, and intelligent AI interaction experience.
+
+###  Documentation
+
+- [KunAvatar Documentation](https://kunlabai.com/zh/docs)
 
 ## 🎯 Main Features
 
