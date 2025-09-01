@@ -7,7 +7,8 @@ import {
   MemoryControl,
   PromptOptimizeControl,
   ChatActionsControl,
-  ImageUploadControl
+  ImageUploadControl,
+  ScreenshotControl
 } from './input-controls';
 import { useModelVisionValidation } from '../hooks/useModelVisionValidation';
 import { ImagePreview } from './ImagePreview';
@@ -338,6 +339,28 @@ export function MessageInput({
     }
   }, [enableImageUpload, modelSupportsVision, disabled, maxImages, images.length, maxImageSize]);
 
+  // 处理截图
+  const handleScreenshotTaken = useCallback((imageDataUrl: string) => {
+    if (!enableImageUpload || !modelSupportsVision || disabled) return;
+
+    // 检查是否还能添加更多图片
+    if (images.length >= maxImages) {
+      alert(`最多只能上传 ${maxImages} 张图片`);
+      return;
+    }
+
+    try {
+      // 从data URL中提取base64数据
+      const base64Data = imageDataUrl.split(',')[1];
+      if (base64Data) {
+        setImages(prev => [...prev, base64Data]);
+      }
+    } catch (error) {
+      console.error('截图处理失败:', error);
+      alert('截图处理失败，请重试');
+    }
+  }, [enableImageUpload, modelSupportsVision, disabled, images.length, maxImages]);
+
   // 处理文本插入
   const handleInsertText = useCallback((text: string) => {
     if (onInsertText) {
@@ -454,6 +477,21 @@ export function MessageInput({
                   imageCount={images.length}
                   maxImages={maxImages}
                   tooltip={`上传图片 (${images.length}/${maxImages})`}
+                  isCheckingModel={isCheckingModel}
+                  modelSupportsVision={modelSupportsVision}
+                  onValidationError={(title: string, message: string) => {
+                    console.error(`${title}: ${message}`);
+                    alert(`${title}: ${message}`);
+                  }}
+                />
+              )}
+
+              {/* 截图控件 - 与图片上传功能并列布局 */}
+              {enableImageUpload && (
+                <ScreenshotControl
+                  onScreenshotTaken={handleScreenshotTaken}
+                  disabled={disabled || isStreaming}
+                  tooltip="截图"
                   isCheckingModel={isCheckingModel}
                   modelSupportsVision={modelSupportsVision}
                   onValidationError={(title: string, message: string) => {

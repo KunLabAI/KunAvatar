@@ -5,6 +5,7 @@ export { MemoryControl } from './MemoryControl';
 export { ChatActionsControl } from './ChatActionsControl';
 export { PromptOptimizeControl } from './PromptOptimizeControl';
 export { ImageUploadControl } from './ImageUploadControl';
+export { ScreenshotControl } from './ScreenshotControl';
 
 // 类型定义
 export type { ChatStyle, DisplaySize } from './types';
