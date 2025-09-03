@@ -327,12 +327,12 @@ export function AppInfoTab({}: AppInfoTabProps) {
                 <h3 className="font-medium text-theme-foreground">官方网站</h3>
               </div>
               <a 
-                href="https://kunpuai.com" 
+                href="https://kunlabai.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200 flex items-center gap-2"
               >
-                <span>kunpuai.com</span>
+                <span>kunlabai.com</span>
               </a>
             </div>
 

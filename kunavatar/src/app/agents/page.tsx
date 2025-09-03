@@ -231,7 +231,7 @@ function AgentsPageContent() {
           <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
               <div className="mb-8">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
                       智能体管理

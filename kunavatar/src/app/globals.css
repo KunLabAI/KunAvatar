@@ -963,19 +963,26 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
 /* 响应式网格增强 */
 .steam-grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: 1fr;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
 }
 
 @media (min-width: 768px) {
   .steam-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .steam-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (min-width: 1280px) {
   .steam-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
   }
 }
 

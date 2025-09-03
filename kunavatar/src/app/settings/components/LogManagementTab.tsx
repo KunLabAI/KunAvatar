@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FileText, Download, FolderOpen, RefreshCw, AlertCircle } from 'lucide-react';
 import { useNotification } from '@/components/notification';
-import type { ElectronAPI } from '@/types/electron';
 
 export function LogManagementTab() {
   const notification = useNotification();

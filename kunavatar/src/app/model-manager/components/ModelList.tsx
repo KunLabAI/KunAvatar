@@ -46,7 +46,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 xl:gap-5">
       {models.map((model, index) => (
         <div 
           key={model.id}
@@ -54,28 +54,29 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
           style={{ backgroundColor: 'var(--color-card)' }}
         >
           {/* 卡片头部 */}
-          <div className="p-6 flex-grow">
+          <div className="p-5 xl:p-4 flex-grow">
             {/* 模型名称和Logo */}
-            <div className="flex items-center gap-4 mb-4 ">
+            <div className="flex items-center gap-3 xl:gap-2 mb-4 xl:mb-3">
               <ModelLogoComponent 
                 modelName={model.family || model.base_model} 
                 containerSize={56} 
-                imageSize={32} 
+                imageSize={32}
+                className="xl:w-12 xl:h-12"
               />
               
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-theme-foreground truncate group-hover:text-theme-primary transition-colors duration-300">
+                <h3 className="text-lg xl:text-base font-bold text-theme-foreground truncate group-hover:text-theme-primary transition-colors duration-300">
                   {model.display_name || model.base_model}
                 </h3>
-                <p className="text-sm text-theme-foreground-muted mt-1 truncate" title={model.base_model}>
+                <p className="text-sm xl:text-xs text-theme-foreground-muted mt-1 truncate" title={model.base_model}>
                   {model.base_model}
                 </p>
               </div>
             </div>
             
             {/* 描述 */}
-            <div className="mb-4">
-              <p className="text-sm text-theme-foreground-secondary line-clamp-2 min-h-[2.5rem]">
+            <div className="mb-4 xl:mb-3">
+              <p className="text-sm xl:text-xs text-theme-foreground-secondary line-clamp-2 xl:line-clamp-3 min-h-[2.5rem] xl:min-h-[3rem]">
                 {model.description || '暂无描述'}
               </p>
             </div>
@@ -107,7 +108,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
           </div>
           
           {/* 卡片底部操作区 - 悬停显示 */}
-          <div className="bg-theme-background-secondary/50 px-2 pb-5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
+          <div className="bg-theme-background-secondary/50 px-2 pb-4 xl:pb-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
             <div className="flex items-center justify-evenly">
               {/* 开始对话按钮 */}
               <button
@@ -127,7 +128,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
               {/* 查看详情按钮 */}
               <button
                 onClick={() => onShowDetails(model)}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-primary transition-all duration-300"
+                className="flex items-center justify-center w-10 h-10 rounded-lg text-theme-foreground-muted hover:text-theme-info transition-all duration-300"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
                 }}
