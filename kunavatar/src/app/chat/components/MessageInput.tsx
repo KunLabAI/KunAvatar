@@ -491,7 +491,7 @@ export function MessageInput({
                 <ScreenshotControl
                   onScreenshotTaken={handleScreenshotTaken}
                   disabled={disabled || isStreaming}
-                  tooltip="截图"
+                  tooltip="截图(Alt+Z)"
                   isCheckingModel={isCheckingModel}
                   modelSupportsVision={modelSupportsVision}
                   onValidationError={(title: string, message: string) => {
