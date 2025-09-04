@@ -39,6 +39,11 @@ export function ScreenshotControl({
   useEffect(() => {
     const electronAPI = (window as any).electronAPI;
     
+    // 如果不在 Electron 环境中，直接返回
+    if (!electronAPI) {
+      return;
+    }
+    
     // 监听截图完成事件
     const handleScreenshotTaken = (imageDataUrl: string) => {
       console.log('收到截图完成事件，数据长度:', imageDataUrl.length);
@@ -76,7 +81,7 @@ export function ScreenshotControl({
     // 清理函数 - 移除所有截图相关的事件监听器
     return () => {
       console.log('清理截图事件监听器');
-      if (electronAPI.removeAllListeners) {
+      if (electronAPI && electronAPI.removeAllListeners) {
         electronAPI.removeAllListeners('screenshot-selection');
         electronAPI.removeAllListeners('screenshot-cancel');
         electronAPI.removeAllListeners('screenshot-taken');

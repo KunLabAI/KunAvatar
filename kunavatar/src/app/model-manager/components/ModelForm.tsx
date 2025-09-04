@@ -116,19 +116,6 @@ export default function ModelForm({ model, onSave, onCancel }: ModelFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-theme-foreground block">
-                描述
-              </label>
-              <TextArea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                placeholder="简单描述一下模型的特点和用途..."
-              />
-              <p className="text-xs text-theme-foreground-muted">选填：描述模型的主要用途和特点</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-theme-foreground block">
                 标签
               </label>
               <div className="bg-theme-background border-2 border-theme-border rounded-2xl p-4 focus-within:border-theme-primary transition-all duration-200 hover:border-theme-primary/50">

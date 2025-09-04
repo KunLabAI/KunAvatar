@@ -724,6 +724,7 @@ function ChatPageContent() {
           isCreatingConversation={isCreatingConversation}
           messageSender={messageSender}
           models={models}
+          onClearChat={handleClearChat}
         />
 
         {/* ⌨️ 输入区域 */}

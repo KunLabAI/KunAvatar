@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { User, Copy, Axe, ChevronDown, ChevronUp, Check, Trash2 } from 'lucide-react';
+import { User, Copy, Axe, ChevronDown, ChevronUp, Check, Trash2, Eraser, AlertTriangle } from 'lucide-react';
 import { ToolCallPanel } from './tools/ToolCallPanel';
 import { useAgentData } from '../hooks/useAgentData';
 import ModelLogo from '@/app/model-manager/components/ModelLogo';
@@ -12,6 +12,7 @@ import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useChatStyle } from '../hooks/useChatStyle';
 import { StatsDisplay } from './ui/StatsDisplay';
 import { SelectableCopyWrapper } from './ui/SelectableCopyWrapper';
+import Modal from '@/components/Modal';
 
 // 消息类型定义
 interface Message {
@@ -72,6 +73,7 @@ interface MessageListProps {
   conversation?: any | null; // 新增：对话信息
   onDeleteMessage?: (messageId: string) => void; // 添加删除消息回调
   onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void; // 新增：图片预览回调
+  onClearChat?: () => void; // 新增：清空对话回调
 }
 
 // 比较两条消息在渲染相关字段上的等价性（尽量轻量）
@@ -147,10 +149,12 @@ const MessageListComponent = ({
   models,
   conversation, // 新增：对话信息
   onDeleteMessage,
-  onImagePreview // 新增：图片预览回调
+  onImagePreview, // 新增：图片预览回调
+  onClearChat // 新增：清空对话回调
 }: MessageListProps) => {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [showToolCallPanel, setShowToolCallPanel] = useState(false);
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
   
   // 获取智能体信息（仅用于其他用途，不再用于状态管理）
   const { agents } = useAgentData();
@@ -183,6 +187,22 @@ const MessageListComponent = ({
   const handleCloseToolCallPanel = useCallback(() => {
     setShowToolCallPanel(false);
     setSelectedMessageId(null);
+  }, []);
+
+  // 处理清空对话点击
+  const handleClearClick = useCallback(() => {
+    setShowClearConfirmModal(true);
+  }, []);
+
+  // 确认清空对话
+  const handleConfirmClear = useCallback(() => {
+    setShowClearConfirmModal(false);
+    onClearChat?.();
+  }, [onClearChat]);
+
+  // 取消清空
+  const handleCancelClear = useCallback(() => {
+    setShowClearConfirmModal(false);
   }, []);
 
   // 稳定删除回调，避免因函数引用变化导致子项重渲染
@@ -248,6 +268,17 @@ const MessageListComponent = ({
                   <ChevronDown className="w-4 h-4" />
                 </button>
               )}
+              
+              {/* 清空对话按钮 */}
+              {onClearChat && (
+                <button
+                  onClick={handleClearClick}
+                  className="w-10 h-10 bg-red-500/80 hover:bg-red-500 hover:border-red-400 rounded-full transition-all duration-200 flex items-center justify-center hover:scale-110 backdrop-blur-sm text-white"
+                  title="清空当前对话"
+                >
+                  <Eraser className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -261,6 +292,29 @@ const MessageListComponent = ({
           message={selectedMessage}
         />
       )}
+
+      {/* 确认清空对话的Modal */}
+      <Modal
+        open={showClearConfirmModal}
+        onClose={handleCancelClear}
+        title="确认清空对话"
+        icon={<AlertTriangle className="text-yellow-500" />}
+        actions={[
+          {
+            label: '取消',
+            onClick: handleCancelClear,
+            variant: 'secondary',
+          },
+          {
+            label: '确认清空',
+            onClick: handleConfirmClear,
+            variant: 'danger',
+            autoFocus: true,
+          },
+        ]}
+      >
+        确定要清空当前对话吗？此操作将删除所有聊天记录，且无法撤销。
+      </Modal>
     </>
   );
 };

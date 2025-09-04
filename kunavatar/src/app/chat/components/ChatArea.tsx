@@ -54,6 +54,7 @@ interface ChatAreaProps {
   isCreatingConversation: boolean;
   messageSender: UseMessageSenderReturn;
   models: any[]; // 添加models参数
+  onClearChat?: () => void; // 添加清空对话回调
 }
 
 export function ChatArea({
@@ -67,6 +68,7 @@ export function ChatArea({
   isCreatingConversation,
   messageSender,
   models, // 添加models参数
+  onClearChat, // 添加清空对话回调
 }: ChatAreaProps) {
   // 检查是否已选择模型或Agent
   const hasSelection = chatMode === 'model' ? !!selectedModel : !!selectedAgent;
@@ -89,6 +91,7 @@ export function ChatArea({
           isCreatingConversation={isCreatingConversation}
           messageSender={messageSender}
           models={models} // 传递models参数
+          onClearChat={onClearChat} // 传递清空对话回调
         />
       )}
     </div>
@@ -128,6 +131,7 @@ function ChatInterface({
   currentConversation, // 添加conversation参数
   messageSender,
   models, // 添加models参数
+  onClearChat, // 添加清空对话回调
 }: {
   chatMode: ChatMode;
   selectedModel: string;
@@ -139,6 +143,7 @@ function ChatInterface({
   isCreatingConversation: boolean;
   messageSender: UseMessageSenderReturn;
   models: any[]; // 添加models类型
+  onClearChat?: () => void; // 添加清空对话回调类型
 }) {
   // 删除确认弹窗状态
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
@@ -266,6 +271,7 @@ function ChatInterface({
                 conversation={currentConversation} // 传递conversation参数
                 onDeleteMessage={handleDeleteMessage}
                 onImagePreview={handleImagePreview} // 添加图片预览回调
+                onClearChat={onClearChat} // 传递清空对话回调
               />
             </div>
           ) : (
