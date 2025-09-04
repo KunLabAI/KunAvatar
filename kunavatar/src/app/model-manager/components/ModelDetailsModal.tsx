@@ -149,20 +149,6 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
                   />
                 </div>
               </div>
-              
-              {/* 模型描述 */}
-              <div className="mt-4">
-                <InfoRow 
-                  label="模型描述" 
-                  value={model.description ? (
-                    <div 
-                      className="text-theme-foreground leading-relaxed text-sm"
-                    >
-                      {model.description}
-                    </div>
-                  ) : null} 
-                />
-              </div>
             </div>
 
             {/* 高级配置 */}

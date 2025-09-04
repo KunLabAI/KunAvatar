@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Code, Eye, Sparkles, FileText, Download } from 'lucide-react';
+import { X, Code, Eye, Sparkles, FileText, Download, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OllamaModel } from '@/lib/ollama';
 import { ModelSelector } from '@/components/ModelSelector';
-import { SystemPromptEditor } from './SystemPromptEditor';
+import { usePromptOptimizeSettings } from '../../settings/hooks/usePromptOptimizeSettings';
+
 
 interface ModelfileFormProps {
   onSave: (modelfileData: ModelfileData) => void;
@@ -38,35 +39,7 @@ export interface ModelfileData {
 }
 
 // 参数预设
-const PARAMETER_PRESETS = {
-  creative: {
-    name: '创意型',
-    temperature: 1.0,
-    top_p: 0.9,
-    top_k: 40,
-    repeat_penalty: 1.1,
-    num_ctx: 4096,
-    num_predict: -1,
-  },
-  balanced: {
-    name: '平衡型', 
-    temperature: 0.7,
-    top_p: 0.9,
-    top_k: 40,
-    repeat_penalty: 1.1,
-    num_ctx: 4096,
-    num_predict: -1,
-  },
-  precise: {
-    name: '精确型',
-    temperature: 0.3,
-    top_p: 0.7,
-    top_k: 20,
-    repeat_penalty: 1.2,
-    num_ctx: 4096,
-    num_predict: -1,
-  },
-};
+
 
 // 系统提示词模板
 const SYSTEM_TEMPLATES = {
@@ -88,6 +61,45 @@ const FormSection = ({ title, children }: { title: string; children: React.React
   <div className="space-y-6">
     <h3 className="section-title !text-theme-foreground-muted">{title}</h3>
     {children}
+  </div>
+);
+
+const CollapsibleFormSection = ({ 
+  title, 
+  children, 
+  isCollapsed, 
+  onToggle 
+}: { 
+  title: string; 
+  children: React.ReactNode;
+  isCollapsed: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="space-y-6">
+    <button
+      onClick={onToggle}
+      className="flex items-center justify-between w-full text-left group"
+    >
+      <h3 className="section-title !text-theme-foreground-muted group-hover:text-theme-foreground transition-colors">{title}</h3>
+      <ChevronDown 
+        className={`w-5 h-5 text-theme-foreground-muted transition-transform duration-200 ${
+          isCollapsed ? '' : 'rotate-180'
+        }`} 
+      />
+    </button>
+    <AnimatePresence>
+      {!isCollapsed && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="overflow-hidden"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 );
 
@@ -128,7 +140,14 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
     system_prompt: '',
     template: '',
     license: '',
-    parameters: PARAMETER_PRESETS.balanced,
+    parameters: {
+      temperature: 0.7,
+      top_p: 0.9,
+      top_k: 40,
+      repeat_penalty: 1.1,
+      num_ctx: 4096,
+      num_predict: -1,
+    },
     description: '',
     tags: [],
   });
@@ -136,6 +155,14 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
   const [showPreview, setShowPreview] = useState(false);
   const [currentTag, setCurrentTag] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isParametersCollapsed, setIsParametersCollapsed] = useState(true);
+  const [isAdvancedCollapsed, setIsAdvancedCollapsed] = useState(true);
+  const [isSystemPromptExpanded, setIsSystemPromptExpanded] = useState(false);
+  const [isTemplateExpanded, setIsTemplateExpanded] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  
+  // 提示词优化设置
+  const { settings } = usePromptOptimizeSettings();
 
   // 添加ESC键退出弹窗功能
   useEffect(() => {
@@ -213,6 +240,56 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
     loadAvailableModels();
   }, []);
 
+  // 提示词优化处理函数
+  const handleOptimizePrompt = async () => {
+    const textToOptimize = formData.system_prompt?.trim();
+    if (!textToOptimize || isOptimizing) return;
+    
+    // 检查设置是否启用
+    if (!settings.promptEnabled || !settings.promptModel) {
+      alert('请先在设置中配置提示词优化功能');
+      return;
+    }
+    
+    setIsOptimizing(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('/api/prompt-optimize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          text: textToOptimize,
+          model: settings.promptModel,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || '优化失败';
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || '优化失败');
+      }
+      
+      // 更新系统提示词内容
+      setFormData(prev => ({ ...prev, system_prompt: data.optimizedText }));
+    } catch (error) {
+      console.error('优化提示词失败:', error);
+      
+      // 显示具体的错误信息
+      const errorMessage = error instanceof Error ? error.message : '优化失败';
+      alert(`提示词优化失败：${errorMessage}`);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
   // 生成 Modelfile 内容
   const generateModelfile = () => {
     let modelfile = `# Generated Modelfile for ${formData.display_name}\n\n`;
@@ -269,13 +346,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
     return Object.keys(newErrors).length === 0;
   };
 
-  // 应用参数预设
-  const applyParameterPreset = (presetKey: keyof typeof PARAMETER_PRESETS) => {
-    setFormData(prev => ({
-      ...prev,
-      parameters: { ...PARAMETER_PRESETS[presetKey] }
-    }));
-  };
+
 
   // 应用系统提示词模板
   const applySystemTemplate = (templateKey: keyof typeof SYSTEM_TEMPLATES) => {
@@ -330,7 +401,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
   return (
     <AnimatePresence>
       <motion.div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-start z-50 p-4 pt-8"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -413,15 +484,6 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   </FormInput>
                 </div>
 
-                <FormInput label="描述">
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="form-input-base h-20 resize-none"
-                    placeholder="描述此模型的功能和用途..."
-                  />
-                </FormInput>
-
                 <FormInput label="标签" >
                   <div className="space-y-3">
                     <input
@@ -473,35 +535,65 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   </div>
 
                   <FormInput label="提示词内容" >
-                    <SystemPromptEditor
-                      value={formData.system_prompt || ''}
-                      onChange={(value) => setFormData(prev => ({ ...prev, system_prompt: value }))}
-                      placeholder="定义模型的角色和行为..."
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={formData.system_prompt || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, system_prompt: e.target.value }))}
+                        className="form-input-base resize-none"
+                        style={{ 
+                          maxHeight: isSystemPromptExpanded ? '60rem' : '8rem', 
+                          minHeight: '8rem' 
+                        }}
+                        rows={isSystemPromptExpanded ? 60 : 8}
+                        placeholder="定义模型的角色和行为..."
+                      />
+                      {/* 提示词优化按钮 */}
+                      <button
+                        type="button"
+                        onClick={handleOptimizePrompt}
+                        disabled={!formData.system_prompt?.trim() || isOptimizing || !settings.promptEnabled || !settings.promptModel}
+                        className="absolute top-4 right-14 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={
+                          isOptimizing 
+                            ? "正在优化..." 
+                            : !formData.system_prompt?.trim() 
+                            ? "请先输入提示词内容" 
+                            : !settings.promptEnabled || !settings.promptModel
+                            ? "请先在设置中配置提示词优化"
+                            : "优化当前提示词"
+                        }
+                      >
+                        {isOptimizing ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                      </button>
+                      {/* 展开/收起按钮 */}
+                      <button
+                        type="button"
+                        onClick={() => setIsSystemPromptExpanded(!isSystemPromptExpanded)}
+                        className="absolute top-4 right-4 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10"
+                        title={isSystemPromptExpanded ? '收起' : '展开'}
+                      >
+                        {isSystemPromptExpanded ? (
+                          <Minimize2 className="w-4 h-4" />
+                        ) : (
+                          <Maximize2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </FormInput>
                 </div>
               </FormSection>
 
               {/* 模型参数 */}
-              <FormSection title="模型参数">
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium text-theme-foreground mb-3 block">参数预设</label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {Object.entries(PARAMETER_PRESETS).map(([key, preset]) => (
-                        <button
-                          key={key}
-                          onClick={() => applyParameterPreset(key as keyof typeof PARAMETER_PRESETS)}
-                          className="p-4 text-left rounded-lg border border-theme-border bg-theme-card hover:bg-theme-card-hover transition-colors duration-200"
-                        >
-                          <div className="font-medium text-theme-foreground">{preset.name}</div>
-                          <div className="text-sm text-theme-foreground-muted mt-1"></div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CollapsibleFormSection 
+                title="模型参数" 
+                isCollapsed={isParametersCollapsed}
+                onToggle={() => setIsParametersCollapsed(!isParametersCollapsed)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                           <FormInput label="Temperature" hint="创造性程度 (0.0-2.0)">
                         <input
                           type="number"
@@ -589,18 +681,40 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       />
                     </FormInput>
                   </div>
-                </div>
-              </FormSection>
+              </CollapsibleFormSection>
 
               {/* 高级设置 */}
-              <FormSection title="高级设置">
+              <CollapsibleFormSection 
+                title="高级设置" 
+                isCollapsed={isAdvancedCollapsed}
+                onToggle={() => setIsAdvancedCollapsed(!isAdvancedCollapsed)}
+              >
                 <FormInput label="对话模板" >
-                  <textarea
-                    value={formData.template}
-                    onChange={(e) => setFormData(prev => ({ ...prev, template: e.target.value }))}
-                    className="form-input-base h-24 resize-none font-mono text-sm"
-                    placeholder={`{{ if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant`}
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={formData.template}
+                      onChange={(e) => setFormData(prev => ({ ...prev, template: e.target.value }))}
+                      className="form-input-base resize-none font-mono text-sm"
+                      style={{ 
+                        height: isTemplateExpanded ? '60rem' : '10rem',
+                        minHeight: '10rem'
+                      }}
+                      rows={isTemplateExpanded ? 60 : 6}
+                      placeholder={`{{ if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant`}
+                    />
+                    <button
+                       type="button"
+                       onClick={() => setIsTemplateExpanded(!isTemplateExpanded)}
+                       className="absolute top-2 right-4 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10"
+                       title={isTemplateExpanded ? '收起' : '展开'}
+                     >
+                       {isTemplateExpanded ? (
+                         <Minimize2 className="w-4 h-4" />
+                       ) : (
+                         <Maximize2 className="w-4 h-4" />
+                       )}
+                     </button>
+                  </div>
                 </FormInput>
 
                 <FormInput label="许可证" >
@@ -611,7 +725,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                     placeholder="指定模型的许可证..."
                   />
                 </FormInput>
-              </FormSection>
+              </CollapsibleFormSection>
             </div>
 
             {/* 底部操作 */}

@@ -73,14 +73,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 </p>
               </div>
             </div>
-            
-            {/* 描述 */}
-            <div className="mb-4 xl:mb-3">
-              <p className="text-sm xl:text-xs text-theme-foreground-secondary line-clamp-2 xl:line-clamp-3 min-h-[2.5rem] xl:min-h-[3rem]">
-                {model.description || '暂无描述'}
-              </p>
-            </div>
-            
+                        
             {/* 标签 */}
             <div className="flex flex-wrap gap-2">
               {model.tags && model.tags.length > 0 ? (

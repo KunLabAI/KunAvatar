@@ -6,7 +6,6 @@ import {
   ToolControl,
   MemoryControl,
   PromptOptimizeControl,
-  ChatActionsControl,
   ImageUploadControl,
   ScreenshotControl
 } from './input-controls';
@@ -402,15 +401,6 @@ export function MessageInput({
           <div className="relative flex flex-col bg-theme-background/50 overflow-visible">
             {/* 文本输入区域 */}
             <div className="flex items-end overflow-visible">        
-              {/* 左侧：提示词优化控件 */}
-              <div className="flex-shrink-0 p-3 overflow-visible">
-                <PromptOptimizeControl
-                  currentText={message}
-                  onTextChange={setMessage}
-                  disabled={disabled || !hasSelection}
-                />
-              </div>
-              
               {/* 主输入区域 */}
               <div className="flex-1 relative">
                 <textarea
@@ -431,43 +421,18 @@ export function MessageInput({
                 
                 {/* 字符计数指示器（可选） */}
                 {(message.length > 0 || images.length > 0) && (
-                  <div className="absolute bottom-2 right-12 text-xs text-theme-foreground-muted pointer-events-none">
+                  <div className="absolute bottom-2 right-4 text-xs text-theme-foreground-muted pointer-events-none">
                     {message.length > 0 && `${message.length}字符`}
                     {message.length > 0 && images.length > 0 && ' • '}
                     {images.length > 0 && `${images.length}张图片`}
                   </div>
                 )}
               </div>
-              
-              {/* 右侧：发送按钮 */}
-              <div className="flex-shrink-0 p-3 flex items-center">
-                {/* 发送按钮 */}
-                <button
-                  onClick={isStreaming ? handleStopGeneration : handleSendMessage}
-                  disabled={!isStreaming && (!message.trim() && images.length === 0) || !hasSelection}
-                  className={`
-                    w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200
-                    ${isStreaming
-                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
-                      : (message.trim() || images.length > 0) && hasSelection
-                        ? 'bg-theme-primary hover:bg-theme-primary/90 text-theme-primary-foreground shadow-sm'
-                        : 'text-theme-foreground-muted cursor-not-allowed'
-                    }
-                  `}
-                  title={isStreaming ? "停止生成" : "发送消息 (Enter)"}
-                >
-                  {isStreaming ? (
-                    <Circle className="w-4 h-4 fill-current" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
             </div>
           </div>
           {/* 控件栏 */}
-          <div className="flex items-center justify-between px-2 py-2 overflow-visible">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between p-2 overflow-visible">
+            <div className="flex items-center">
               {/* 图片上传控件 - 默认显示，点击时验证模型支持 */}
               {enableImageUpload && (
                 <ImageUploadControl
@@ -528,13 +493,36 @@ export function MessageInput({
               )}
             </div>
             
-            {/* 右侧：清除对话按钮 */}
-            <div className="flex items-center">
-              {onClearChat && (
-                <ChatActionsControl
-                  onClearChat={onClearChat}
-                />
-              )}
+            {/* 右侧：用户操作区域（提示词优化 + 发送按钮） */}
+            <div className="flex items-center gap-2">
+              {/* 提示词优化控件 */}
+              <PromptOptimizeControl
+                currentText={message}
+                onTextChange={setMessage}
+                disabled={disabled || !hasSelection}
+              />
+              
+              {/* 发送按钮 */}
+              <button
+                onClick={isStreaming ? handleStopGeneration : handleSendMessage}
+                disabled={!isStreaming && (!message.trim() && images.length === 0) || !hasSelection}
+                className={`
+                  w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200
+                  ${isStreaming
+                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
+                    : (message.trim() || images.length > 0) && hasSelection
+                      ? 'bg-theme-primary hover:bg-theme-primary/90 text-theme-primary-foreground shadow-sm'
+                      : 'text-theme-foreground-muted cursor-not-allowed'
+                  }
+                `}
+                title={isStreaming ? "停止生成" : "发送消息 (Enter)"}
+              >
+                {isStreaming ? (
+                  <Circle className="w-4 h-4 fill-current" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
         </div>
