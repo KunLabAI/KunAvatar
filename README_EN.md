@@ -283,6 +283,8 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENS
 - [Model Context Protocol](https://modelcontextprotocol.io/) - Tool calling protocol standard
 - All contributors and users for their support
 
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kunlabai-kunavatar-badge.png)](https://mseep.ai/app/kunlabai-kunavatar)
+
 ## 📞 Contact Us
 
 - **Project Homepage**: [GitHub Repository](https://github.com/KunLabAI/kun-avatar)
@@ -297,5 +299,6 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENS
 **If this project helps you, please give us a ⭐️**
 
 Made with ❤️ by KunLab Team
+
 
 </div>
