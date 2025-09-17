@@ -57,10 +57,10 @@ export default function ModelForm({ model, onSave, onCancel }: ModelFormProps) {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const newTag = currentTag.trim();
-      if (newTag && !tags.includes(newTag)) {
+      if (newTag && !tags.includes(newTag) && tags.length < 6) {
         setTags([...tags, newTag]);
+        setCurrentTag('');
       }
-      setCurrentTag('');
     }
   };
 
@@ -118,35 +118,37 @@ export default function ModelForm({ model, onSave, onCancel }: ModelFormProps) {
               <label className="text-sm font-medium text-theme-foreground block">
                 标签
               </label>
-              <div className="bg-theme-background border-2 border-theme-border rounded-2xl p-4 focus-within:border-theme-primary transition-all duration-200 hover:border-theme-primary/50">
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {tags.map((tag) => (
-                      <div 
-                        key={tag} 
-                        className="inline-flex items-center gap-2 bg-theme-primary text-white text-sm px-3 py-2 rounded-full"
+              <div className="relative">
+                <div className="form-input-base min-h-[42px] flex flex-wrap items-center gap-1 p-2">
+                  {tags.map((tag, index) => (
+                    <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-theme-primary text-theme-primary-foreground rounded text-xs">
+                      {tag}
+                      <button
+                        onClick={() => removeTag(tag)}
+                        className="hover:bg-theme-primary-hover rounded-full w-4 h-4 flex items-center justify-center transition-colors"
                       >
-                        <span>{tag}</span>
-                        <button 
-                          onClick={() => removeTag(tag)} 
-                          className="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-0.5 transition-colors duration-200"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <input
-                  type="text"
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  placeholder={tags.length === 0 ? "输入标签后按回车添加..." : "继续添加标签..."}
-                  className="w-full bg-transparent outline-none text-theme-foreground placeholder-theme-foreground-muted"
-                />
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder={tags.length === 0 ? "按回车或逗号添加标签，最多6个" : "添加标签..."}
+                    value={currentTag}
+                    onChange={(e) => setCurrentTag(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    onBlur={() => {
+                      const newTag = currentTag.trim();
+                      if (newTag && !tags.includes(newTag) && tags.length < 6) {
+                        setTags([...tags, newTag]);
+                        setCurrentTag('');
+                      }
+                    }}
+                    maxLength={20}
+                    className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-theme-foreground placeholder-theme-foreground-muted"
+                  />
+                </div>
               </div>
-              <p className="text-xs text-theme-foreground-muted">按回车或逗号添加标签，便于分类和搜索</p>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 {
   "name": "kun-avatar",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -53,6 +53,7 @@
     "three": "^0.178.0",
     "typescript": "^5",
     "uuid": "^11.1.0",
+    "vditor": "^3.11.2",
     "zod": "^3.22.0"
   },
   "devDependencies": {

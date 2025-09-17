@@ -21,6 +21,10 @@ export { roleOperations, permissionOperations, userRoleOperations, rolePermissio
 export { authTokenOperations } from './auth-tokens';
 // MCP工具调用功能已迁移到messages表
 
+// 导出笔记模块
+export { getNoteOperations } from './notes';
+export const noteOperations = getNoteOperations();
+
 // 导出新的模块
 // export * from './agents'; // This was wrong
 
@@ -34,6 +38,7 @@ import { agentOperations } from './agents';
 import { userOperations } from './users';
 import { roleOperations, permissionOperations, userRoleOperations, rolePermissionOperations } from './roles';
 import { authTokenOperations } from './auth-tokens';
+import { getNoteOperations } from './notes';
 
 
 
@@ -89,6 +94,17 @@ export const dbOperations = {
   updateMemorySettings: memoryOperations.updateMemorySettings,
   deleteMemorySettings: memoryOperations.deleteMemorySettings,
   shouldTriggerMemory: memoryOperations.shouldTriggerMemory,
+
+  // 笔记相关操作
+  createNote: (userId: string, noteData: any) => getNoteOperations().createNote(userId, noteData),
+  getNoteById: (noteId: number) => getNoteOperations().getNoteById(noteId),
+  getUserNotes: (userId: string, options: any) => getNoteOperations().getUserNotes(userId, options),
+  getPublicNotes: (options: any) => getNoteOperations().getPublicNotes(options),
+  updateNote: (noteId: number, userId: string, updateData: any) => getNoteOperations().updateNote(noteId, userId, updateData),
+  deleteNote: (noteId: number, userId: string) => getNoteOperations().deleteNote(noteId, userId),
+  checkNoteAccess: (noteId: number, userId: string, permission?: 'read' | 'write') => getNoteOperations().checkNoteAccess(noteId, userId, permission),
+  shareNote: (noteId: number, ownerId: string, shareData: any) => getNoteOperations().shareNote(noteId, ownerId, shareData),
+  unshareNote: (shareId: number, ownerId: string) => getNoteOperations().unshareNote(shareId, ownerId),
 
   // 系统设置相关操作已迁移到用户设置 (user-settings)
 };

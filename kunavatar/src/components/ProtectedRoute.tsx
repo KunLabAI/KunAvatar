@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import Loading from './Loading';
 
 interface ProtectedRouteProps {
@@ -10,15 +11,18 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
   redirectTo?: string;
   showLoadingOnAuth?: boolean; // 新增：是否在认证时显示加载界面
+  requiredPermission?: string; // 新增：需要的权限
 }
 
 export function ProtectedRoute({ 
   children, 
   requireAuth = true, 
   redirectTo = '/login',
-  showLoadingOnAuth = false // 默认不显示加载界面，实现隐式检测
+  showLoadingOnAuth = false, // 默认不显示加载界面，实现隐式检测
+  requiredPermission // 新增：需要的权限
 }: ProtectedRouteProps) {
   const { user, loading, initialized } = useAuth();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
   const [hasToken, setHasToken] = useState<boolean | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -102,6 +106,18 @@ export function ProtectedRoute({
           <h2 className="text-xl font-semibold text-theme-foreground mb-2">需要登录</h2>
           <p className="text-theme-foreground-muted mb-4">请登录后访问此页面</p>
           <p className="text-sm text-theme-foreground-muted">正在跳转到登录页面...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果需要特定权限但用户没有该权限
+  if (requiredPermission && user && !hasPermission(requiredPermission)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">权限不足</h1>
+          <p className="text-gray-600">您没有访问此页面的权限。</p>
         </div>
       </div>
     );

@@ -11,7 +11,8 @@ import {
   BrainCircuit,
   Bot,
   MessageSquareText,
-  History
+  History,
+  Notebook
 } from 'lucide-react';
 import { Conversation } from '@/lib/database';
 import { useCleanMode } from '@/contexts/CleanModeContext';
@@ -242,6 +243,25 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
               智能体管理
             </span>
           </Link>
+          
+          <Link
+             href="/notes"
+             className={`sidebar-nav-item sidebar-button group relative flex items-center gap-3 p-3 rounded-lg ${
+               pathname.startsWith('/notes') 
+                 ? 'text-theme-primary' 
+                 : 'text-theme-foreground-muted hover:text-theme-foreground'
+             }`}
+           >
+             <div className="sidebar-icon-container">
+               <Notebook className={`w-5 h-5 flex-shrink-0 ${
+                 pathname.startsWith('/notes') ? 'text-theme-primary' : ''
+               }`} />
+             </div>
+             <span className="sidebar-text text-sm">笔记</span>
+             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
+               笔记
+             </span>
+           </Link>
         </nav>
       </div>
 

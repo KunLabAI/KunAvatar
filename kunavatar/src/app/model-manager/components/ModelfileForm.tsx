@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Code, Eye, Sparkles, FileText, Download, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Code, Sparkles, DiamondPlus, Download, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OllamaModel } from '@/lib/ollama';
 import { ModelSelector } from '@/components/ModelSelector';
+import { NoteSelector } from '@/components/NoteSelector';
 import { usePromptOptimizeSettings } from '../../settings/hooks/usePromptOptimizeSettings';
+import { useNotesForSelection } from '@/hooks/useNotes';
 
 
 interface ModelfileFormProps {
@@ -41,21 +43,14 @@ export interface ModelfileData {
 // 参数预设
 
 
-// 系统提示词模板
-const SYSTEM_TEMPLATES = {
-  assistant: {
-    name: '通用助手',
-    content: '你是一个有用、无害、诚实的AI助手。请用中文回答问题，提供准确和有帮助的信息。',
-  },
-  translator: {
-    name: '翻译助手',
-    content: '你是一个专业的翻译助手。请准确翻译用户提供的文本，保持原意不变，语言自然流畅。',
-  },
-  programmer: {
-    name: '编程助手',
-    content: '你是一个专业的编程助手。请提供清晰、准确的代码解答和技术建议。代码应该遵循最佳实践，并包含必要的注释。',
-  },
-};
+// 笔记接口定义
+interface Note {
+  id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const FormSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-6">
@@ -134,6 +129,10 @@ const FormInput = ({
 export default function ModelfileForm({ onSave, onCancel, customModels = [] }: ModelfileFormProps) {
   const [availableModels, setAvailableModels] = useState<OllamaModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [selectedNoteId, setSelectedNoteId] = useState<string>('');
+  
+  // 使用笔记选择hook
+  const { notes, loading: isLoadingNotes } = useNotesForSelection();
   const [formData, setFormData] = useState<ModelfileData>({
     display_name: '',
     base_model: '',
@@ -348,12 +347,18 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
 
 
 
-  // 应用系统提示词模板
-  const applySystemTemplate = (templateKey: keyof typeof SYSTEM_TEMPLATES) => {
-    setFormData(prev => ({
-      ...prev,
-      system_prompt: SYSTEM_TEMPLATES[templateKey].content
-    }));
+  // 处理笔记选择
+  const handleNoteChange = (noteId: string) => {
+    setSelectedNoteId(noteId);
+    if (noteId && noteId !== '') {
+      const selectedNote = notes.find(note => note.id.toString() === noteId);
+      if (selectedNote) {
+        setFormData(prev => ({
+          ...prev,
+          system_prompt: selectedNote.content
+        }));
+      }
+    }
   };
 
   // 处理标签
@@ -361,13 +366,13 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const newTag = currentTag.trim();
-      if (newTag && !formData.tags?.includes(newTag)) {
+      if (newTag && !formData.tags?.includes(newTag) && (formData.tags || []).length < 6) {
         setFormData(prev => ({
           ...prev,
           tags: [...(prev.tags || []), newTag]
         }));
+        setCurrentTag('');
       }
-      setCurrentTag('');
     }
   };
 
@@ -427,17 +432,6 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setShowPreview(!showPreview)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
-                    showPreview 
-                      ? 'bg-theme-primary text-white shadow-md' 
-                      : 'bg-theme-card text-theme-foreground hover:bg-theme-card-hover border border-theme-border'
-                  }`}
-                >
-                  <Eye className="w-4 h-4" />
-                  预览
-                </button>
-                <button
                   onClick={onCancel}
                   className="w-10 h-10 rounded-full bg-theme-card hover:bg-theme-card-hover flex items-center justify-center text-theme-foreground-muted hover:text-theme-foreground transition-all duration-200 border border-theme-border"
                 >
@@ -484,34 +478,40 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   </FormInput>
                 </div>
 
-                <FormInput label="标签" >
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={currentTag}
-                      onChange={(e) => setCurrentTag(e.target.value)}
-                      onKeyDown={handleTagKeyDown}
-                      className="form-input-base"
-                      placeholder="按回车或逗号添加标签"
-                    />
-                    {formData.tags && formData.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {formData.tags.map(tag => (
-                          <span 
-                            key={tag}
-                            className="tag-base tag-primary"
+                <FormInput label="标签">
+                  <div className="relative">
+                    <div className="form-input-base min-h-[42px] flex flex-wrap items-center gap-1 p-2">
+                      {formData.tags && formData.tags.map((tag, index) => (
+                        <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-theme-primary text-theme-primary-foreground rounded text-xs">
+                          {tag}
+                          <button
+                            onClick={() => removeTag(tag)}
+                            className="hover:bg-theme-primary-hover rounded-full w-4 h-4 flex items-center justify-center transition-colors"
                           >
-                            {tag}
-                            <button 
-                              onClick={() => removeTag(tag)}
-                              className="text-theme-primary hover:text-theme-primary-hover transition-colors"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                      <input
+                        type="text"
+                        placeholder={(!formData.tags || formData.tags.length === 0) ? "按回车或逗号添加标签，最多6个" : "添加标签..."}
+                        value={currentTag}
+                        onChange={(e) => setCurrentTag(e.target.value)}
+                        onKeyDown={handleTagKeyDown}
+                        onBlur={() => {
+                          const newTag = currentTag.trim();
+                          if (newTag && !formData.tags?.includes(newTag) && (formData.tags?.length || 0) < 6) {
+                            setFormData(prev => ({
+                              ...prev,
+                              tags: [...(prev.tags || []), newTag]
+                            }));
+                            setCurrentTag('');
+                          }
+                        }}
+                        maxLength={20}
+                        className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-theme-foreground placeholder-theme-foreground-muted"
+                      />
+                    </div>
                   </div>
                 </FormInput>
               </FormSection>
@@ -519,20 +519,15 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
               {/* 系统提示词 */}
               <FormSection title="系统提示词">
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-theme-foreground mb-3 block">快速模板</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {Object.entries(SYSTEM_TEMPLATES).map(([key, template]) => (
-                        <button
-                          key={key}
-                          onClick={() => applySystemTemplate(key as keyof typeof SYSTEM_TEMPLATES)}
-                          className="p-3 text-left rounded-lg border border-theme-border bg-theme-card hover:bg-theme-card-hover transition-colors duration-200"
-                        >
-                          <div className="font-medium text-theme-foreground text-sm">{template.name}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <FormInput label="选择笔记">
+                    <NoteSelector
+                      notes={notes}
+                      selectedNoteId={selectedNoteId}
+                      onNoteChange={handleNoteChange}
+                      disabled={isLoadingNotes}
+                      loading={isLoadingNotes}
+                    />
+                  </FormInput>
 
                   <FormInput label="提示词内容" >
                     <div className="relative">
@@ -700,43 +695,72 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                         minHeight: '10rem'
                       }}
                       rows={isTemplateExpanded ? 60 : 6}
-                      placeholder={`{{ if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant`}
+                      placeholder={`{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+`}
                     />
+                    
                     <button
-                       type="button"
-                       onClick={() => setIsTemplateExpanded(!isTemplateExpanded)}
-                       className="absolute top-2 right-4 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10"
-                       title={isTemplateExpanded ? '收起' : '展开'}
-                     >
-                       {isTemplateExpanded ? (
-                         <Minimize2 className="w-4 h-4" />
-                       ) : (
-                         <Maximize2 className="w-4 h-4" />
-                       )}
-                     </button>
+                      type="button"
+                      onClick={() => setIsTemplateExpanded(!isTemplateExpanded)}
+                      className="absolute top-4 right-4 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10"
+                      title={isTemplateExpanded ? '收起' : '展开'}
+                    >
+                      {isTemplateExpanded ? (
+                        <Minimize2 className="w-4 h-4" />
+                      ) : (
+                        <Maximize2 className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </FormInput>
 
-                <FormInput label="许可证" >
+                <FormInput label="许可证">
                   <textarea
-                    value={formData.license}
+                    value={formData.license || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, license: e.target.value }))}
-                    className="form-input-base h-20 resize-none"
-                    placeholder="指定模型的许可证..."
+                    className="form-input-base resize-none"
+                    rows={4}
+                    placeholder="请输入许可证信息..."
                   />
                 </FormInput>
               </CollapsibleFormSection>
             </div>
 
-            {/* 底部操作 */}
+            {/* 预览区域 */}
+            {showPreview && (
+              <div className="border-t border-theme-border bg-theme-background-subtle">
+                <div className="p-8 space-y-4">
+                  <h3 className="section-title !text-theme-foreground-muted">Modelfile 预览</h3>
+                  <div className="bg-theme-background border border-theme-border rounded-lg p-4 font-mono text-sm text-theme-foreground whitespace-pre-wrap max-h-96 overflow-y-auto">
+                    {generateModelfile()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 底部操作按钮 - 固定 */}
             <div className="p-8 flex justify-between items-center border-t border-theme-border">
-              <button
-                onClick={downloadModelfile}
-                className="btn-base btn-secondary px-6 py-3"
-              >
-                <Download className="w-4 h-4" />
-                下载 Modelfile
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="btn-base btn-secondary px-4 py-2"
+                >
+                  {showPreview ? '隐藏预览' : '预览 Modelfile'}
+                </button>
+                <button
+                  onClick={downloadModelfile}
+                  disabled={!formData.display_name.trim()}
+                  className="btn-base btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4" />
+                  下载 Modelfile
+                </button>
+              </div>
               <div className="flex gap-3">
                 <button
                   onClick={onCancel}
@@ -744,38 +768,17 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                 >
                   取消
                 </button>
-                <button
+                <button 
                   onClick={handleSave}
+                  disabled={!formData.display_name.trim()}
                   className="btn-base btn-primary px-6 py-3"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <DiamondPlus className="w-4 h-4" />
                   创建模型
                 </button>
               </div>
             </div>
           </div>
-
-          {/* 右侧预览区域 */}
-          {showPreview && (
-            <motion.div 
-              className="w-96 border-l border-theme-border bg-theme-background-secondary"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-            >
-              <div className="p-6 border-b border-theme-border">
-                <h3 className="card-title !text-theme-foreground-secondary flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Modelfile 预览
-                </h3>
-              </div>
-              <div className="p-6 h-full overflow-y-auto scrollbar-thin">
-                <pre className="text-sm font-mono text-theme-foreground whitespace-pre-wrap break-words">
-                  {generateModelfile()}
-                </pre>
-              </div>
-            </motion.div>
-          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

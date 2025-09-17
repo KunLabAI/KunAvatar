@@ -544,5 +544,9 @@ function ConversationsPageContent() {
 }
 
 export default function ConversationsPage() {
-  return <ConversationsPageContent />;
+  return (
+    <ProtectedRoute requiredPermission="conversations:read">
+      <ConversationsPageContent />
+    </ProtectedRoute>
+  );
 }

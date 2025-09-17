@@ -33,7 +33,7 @@ function ModelManagerPageContent() {
   const [processingType, setProcessingType] = useState<'create' | 'update' | 'delete' | 'modelfile' | 'sync' | 'general'>('general');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<CustomModel | null>(null);
-  const [hasPermissionError, setHasPermissionError] = useState(false);
+
 
   // 使用路由进行客户端跳转
   const router = useRouter();
@@ -81,12 +81,7 @@ function ModelManagerPageContent() {
         }
       } else {
         console.error('加载模型失败:', data.error);
-        // 如果是权限不足错误，设置特殊状态而不是显示通知
-        if (response.status === 403) {
-          setHasPermissionError(true);
-        } else {
-          notification.error('加载模型列表失败', data.error);
-        }
+        notification.error('加载模型列表失败', data.error);
       }
     } catch (error) {
       console.error('加载模型失败:', error);
@@ -321,36 +316,7 @@ function ModelManagerPageContent() {
     loadModels(false); 
   }, []); 
 
-  // 如果有权限错误，显示权限不足页面
-  if (hasPermissionError) {
-    return (
-      <ProtectedRoute>
-        <div className="flex h-screen bg-theme-background">
-          <Sidebar conversations={conversations} />
-              <div className="mb-6">
-                  <svg className="w-10 h-10 text-theme-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold text-theme-foreground mb-4">权限不足</h2>
-              <p className="text-theme-foreground-muted mb-6">
-                您没有访问模型管理功能的权限。请联系管理员为您分配相应的权限。
-              </p>
-              <div className="space-y-3">
-                <p className="text-sm text-theme-foreground-muted">
-                  需要权限：<span className="font-mono bg-theme-card px-2 py-1 rounded">models:read</span>
-                </p>
-                <button
-                  onClick={() => router.push('/')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200"
-                >
-                  返回首页
-                </button>
-              </div>
-      </ProtectedRoute>
-    );
-  }
+
 
   if (isLoading) {
     return (
@@ -543,5 +509,9 @@ function ModelManagerPageContent() {
 }
 
 export default function ModelManagerPage() {
-  return <ModelManagerPageContent />;
+  return (
+    <ProtectedRoute requiredPermission="models:read">
+      <ModelManagerPageContent />
+    </ProtectedRoute>
+  );
 }
