@@ -1,4 +1,3 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kunlabai-kunavatar-badge.png)](https://mseep.ai/app/kunlabai-kunavatar)
 
 <div align="center">
 
@@ -286,6 +285,8 @@ Kun-Avatar/
 - [Next.js](https://nextjs.org/) - 强大的React框架
 - [Model Context Protocol](https://modelcontextprotocol.io/) - 工具调用协议标准
 - 所有贡献者和用户的支持
+
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kunlabai-kunavatar-badge.png)](https://mseep.ai/app/kunlabai-kunavatar)
 
 ## 📞 联系我们
 
