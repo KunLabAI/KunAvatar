@@ -352,5 +352,9 @@ function AgentsPageContent() {
 }
 
 export default function AgentsPage() {
-  return <AgentsPageContent />;
+  return (
+    <ProtectedRoute requiredPermission="agents:read">
+      <AgentsPageContent />
+    </ProtectedRoute>
+  );
 }

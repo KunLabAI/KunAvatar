@@ -75,28 +75,74 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
             </div>
                         
             {/* 标签 */}
-            <div className="flex flex-wrap gap-2">
-              {model.tags && model.tags.length > 0 ? (
-                model.tags.slice(0, 3).map((tag, index) => (
-                  <span 
-                    key={index} 
-                    className="px-2 py-1 bg-theme-primary/10 text-theme-primary text-xs rounded-full flex items-center transition-colors duration-300"
-                  >
-                    <Tag className="w-3 h-3 mr-1"/>
-                    {tag}
+            <div className="relative">
+              <div 
+                className="flex gap-2 overflow-hidden"
+                ref={(el) => {
+                  if (el && model.tags && model.tags.length > 0) {
+                    // 检查是否需要显示+N
+                    const containerWidth = el.offsetWidth;
+                    const children = Array.from(el.children) as HTMLElement[];
+                    let totalWidth = 0;
+                    let visibleCount = 0;
+                    
+                    for (let i = 0; i < children.length; i++) {
+                      const child = children[i];
+                      if (child.classList.contains('tag-item')) {
+                        totalWidth += child.offsetWidth + 8; // 8px for gap
+                        if (totalWidth <= containerWidth - 60) { // 60px reserved for +N
+                          visibleCount++;
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    
+                    // 更新显示状态
+                    const hiddenCount = model.tags.length - visibleCount;
+                    const plusElement = el.querySelector('.plus-indicator') as HTMLElement;
+                    if (plusElement) {
+                      if (hiddenCount > 0) {
+                        plusElement.style.display = 'inline-flex';
+                        plusElement.textContent = `+${hiddenCount}`;
+                      } else {
+                        plusElement.style.display = 'none';
+                      }
+                    }
+                    
+                    // 隐藏超出的标签
+                    children.forEach((child, index) => {
+                      if (child.classList.contains('tag-item')) {
+                        if (index >= visibleCount) {
+                          (child as HTMLElement).style.display = 'none';
+                        } else {
+                          (child as HTMLElement).style.display = 'inline-flex';
+                        }
+                      }
+                    });
+                  }
+                }}
+              >
+                {model.tags && model.tags.length > 0 ? (
+                  <>
+                    {model.tags.map((tag, index) => (
+                      <span 
+                        key={index} 
+                        className="tag-item px-2 py-1 bg-theme-primary text-theme-primary-foreground text-xs rounded transition-colors duration-300 flex-shrink-0"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    <span className="plus-indicator px-2 py-1 bg-theme-background-tertiary text-theme-foreground-muted text-xs rounded flex-shrink-0" style={{display: 'none'}}>
+                    </span>
+                  </>
+                ) : (
+                  <span className="px-2 py-1 bg-theme-background-tertiary text-theme-foreground-muted text-xs rounded flex items-center flex-shrink-0">
+                    <AlertCircle className="w-3 h-3 mr-1"/>
+                    无标签
                   </span>
-                ))
-              ) : (
-                <span className="px-2 py-1 bg-theme-background-tertiary text-theme-foreground-muted text-xs rounded-full flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1"/>
-                  无标签
-                </span>
-              )}
-              {model.tags && model.tags.length > 3 && (
-                <span className="px-2 py-1 bg-theme-background-tertiary text-theme-foreground-muted text-xs rounded-full">
-                  +{model.tags.length - 3}
-                </span>
-              )}
+                )}
+              </div>
             </div>
           </div>
           

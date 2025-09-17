@@ -374,7 +374,41 @@ const executeInitialization = (db: Database.Database) => {
     CREATE INDEX IF NOT EXISTS idx_conversation_memories_importance ON conversation_memories(importance_score DESC);
     CREATE INDEX IF NOT EXISTS idx_conversation_memories_created_at ON conversation_memories(created_at DESC);
 
+    -- 笔记系统表
+    CREATE TABLE IF NOT EXISTS notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL, -- Markdown格式内容
+      user_id TEXT NOT NULL,
+      is_public BOOLEAN DEFAULT FALSE, -- 是否公开
+      tags TEXT, -- JSON格式存储标签数组
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    );
 
+    -- 笔记分享表（用于权限控制）
+    CREATE TABLE IF NOT EXISTS note_shares (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      note_id INTEGER NOT NULL,
+      shared_with_user_id TEXT, -- 分享给特定用户（可选）
+      shared_with_role_id TEXT, -- 分享给特定角色（可选）
+      permission TEXT NOT NULL DEFAULT 'read' CHECK (permission IN ('read', 'write')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (note_id) REFERENCES notes (id) ON DELETE CASCADE,
+      FOREIGN KEY (shared_with_user_id) REFERENCES users (id) ON DELETE CASCADE,
+      FOREIGN KEY (shared_with_role_id) REFERENCES roles (id) ON DELETE CASCADE
+    );
+
+    -- 笔记系统索引
+    CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
+    CREATE INDEX IF NOT EXISTS idx_notes_title ON notes(title);
+    CREATE INDEX IF NOT EXISTS idx_notes_is_public ON notes(is_public);
+    CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_note_shares_note_id ON note_shares(note_id);
+    CREATE INDEX IF NOT EXISTS idx_note_shares_user_id ON note_shares(shared_with_user_id);
+    CREATE INDEX IF NOT EXISTS idx_note_shares_role_id ON note_shares(shared_with_role_id);
 
     -- 用户管理系统索引
     CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -470,7 +504,7 @@ const executeInitialization = (db: Database.Database) => {
   insertRole.run(adminRoleId, 'admin', '管理员', '系统管理员，拥有大部分管理权限', 1);
   insertRole.run(userRoleId, 'user', '普通用户', '普通用户，拥有基本权限', 1);
 
-  // 创建完整权限列表（33个权限）
+  // 创建完整权限列表（39个权限）
   const permissions = [
     // 用户管理权限 (5个)
     ['users:read', '查看用户', '查看用户信息的权限', 'users', 'read'],
@@ -522,6 +556,14 @@ const executeInitialization = (db: Database.Database) => {
     ['settings:read', '查看设置', '查看系统设置', 'settings', 'read'],
     ['settings:update', '更新设置', '更新系统设置', 'settings', 'update'],
     ['settings:manage', '管理设置', '完全管理系统设置', 'settings', 'manage'],
+
+    // 笔记管理权限 (6个)
+    ['notes:read', '查看笔记', '查看笔记的权限', 'notes', 'read'],
+    ['notes:create', '创建笔记', '创建新笔记的权限', 'notes', 'create'],
+    ['notes:update', '更新笔记', '更新笔记的权限', 'notes', 'update'],
+    ['notes:delete', '删除笔记', '删除笔记的权限', 'notes', 'delete'],
+    ['notes:share', '分享笔记', '分享笔记的权限', 'notes', 'share'],
+    ['notes:manage', '管理笔记', '完全管理笔记的权限', 'notes', 'manage']
   ];
 
   permissions.forEach(([name, displayName, description, resource, action]) => {

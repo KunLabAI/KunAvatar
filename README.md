@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="200" height="200" />
+<img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="128" height="128" />
 
 # KunAvatar
 
@@ -39,6 +39,7 @@ KunAvatar 是一款支持本地部署的轻量级 AI 桌面客户端，以 Ollam
 - **多模型支持** - 兼容所有 Ollama 模型，支持模型热切换
 - **上下文记忆** - 智能记忆管理，保持长对话的连贯性
 - **对话历史** - 完整的对话记录和搜索功能
+- **多模态支持** - 支持图片进行上下文对话
 
 ### 🧠 高级记忆系统
 - **智能上下文管理** - 自动分析对话内容，提取关键信息

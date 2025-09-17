@@ -1013,6 +1013,91 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Vditor 内容区域样式 - 确保预览与编辑器样式一致 */
+.vditor-content-area {
+  padding: 1.5rem 2rem;
+  min-height: 400px;
+  background-color: var(--color-background);
+  border-radius: 0 0 0.75rem 0.75rem;
+  position: relative;
+}
+
+.vditor-preview-wrapper {
+  width: 100%;
+  max-width: none;
+}
+
+.vditor-preview-content {
+  width: 100%;
+  max-width: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
+  color: var(--color-foreground);
+}
+
+/* 确保vditor预览区域的样式与编辑器一致 */
+.vditor-content-area .vditor-reset {
+  background-color: transparent !important;
+  color: var(--color-foreground) !important;
+  font-family: inherit !important;
+  line-height: 1.6 !important;
+}
+
+/* 深色主题下的vditor内容区域 */
+.dark .vditor-content-area {
+  background-color: var(--color-background-secondary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .vditor-content-area {
+    padding: 1rem 1.5rem;
+    min-height: 300px;
+  }
+}
+
+/* 强制Vditor编辑器中的列表样式 */
+.vditor .vditor-wysiwyg .vditor-reset ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  margin-left: 0 !important;
+  padding-left: 2em !important;
+}
+
+.vditor .vditor-wysiwyg .vditor-reset ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  margin-left: 0 !important;
+  padding-left: 2em !important;
+}
+
+.vditor .vditor-wysiwyg .vditor-reset li {
+  display: list-item !important;
+  list-style: inherit !important;
+}
+
+/* 确保嵌套列表也正确显示 */
+.vditor .vditor-wysiwyg .vditor-reset ul ul {
+  list-style-type: circle !important;
+}
+
+.vditor .vditor-wysiwyg .vditor-reset ol ol {
+  list-style-type: lower-alpha !important;
+}
+
+/* 确保列表样式正确显示 */
+.vditor-content-area .vditor-reset ul {
+  list-style-type: disc !important;
+}
+
+.vditor-content-area .vditor-reset ol {
+  list-style-type: decimal !important;
+}
+
+.vditor-content-area .vditor-reset li {
+  display: list-item !important;
+}
+
 /* 登录注册页面响应式布局优化 */
 /* 小于1440px：注册/登录窗口在页面中间 */
 /* 大于1440px：注册/登录窗口在页面右侧（左侧2/3黑洞动画，右侧1/3表单） */

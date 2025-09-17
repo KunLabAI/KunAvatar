@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="200" height="200" />
+<img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="128" height="128" />
 
 # KunAvatar
 

@@ -47,6 +47,7 @@ const getResourceDisplayName = (resource: string): string => {
     models: '🧠 模型管理',
     settings: '⚙️ 系统设置',
     system: '🔧 系统管理',
+    notes: '📝 笔记管理',
   };
   return resourceNames[resource] || resource;
 };
