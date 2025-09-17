@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kunlabai-kunavatar-badge.png)](https://mseep.ai/app/kunlabai-kunavatar)
+
 <div align="center">
 
 <img src="./banner/logoiconbg.png" alt="KunAvatar Logo" width="128" height="128" />
