@@ -11,7 +11,7 @@ import { ThinkingMode, hasThinkingContent } from './ui/ThinkingMode';
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useChatStyle } from '../hooks/useChatStyle';
 import { StatsDisplay } from './ui/StatsDisplay';
-import { SelectableCopyWrapper } from './ui/SelectableCopyWrapper';
+import { SelectableCopyWrapper } from './ui/ContentSelectionToolbar';
 import Modal from '@/components/Modal';
 
 // 消息类型定义
@@ -74,6 +74,8 @@ interface MessageListProps {
   onDeleteMessage?: (messageId: string) => void; // 添加删除消息回调
   onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void; // 新增：图片预览回调
   onClearChat?: () => void; // 新增：清空对话回调
+  onQuickNote?: (selectedText: string) => void; // 新增：快速笔记回调
+  isQuickNotePanelOpen?: boolean; // 新增：快速笔记面板状态
 }
 
 // 比较两条消息在渲染相关字段上的等价性（尽量轻量）
@@ -150,7 +152,9 @@ const MessageListComponent = ({
   conversation, // 新增：对话信息
   onDeleteMessage,
   onImagePreview, // 新增：图片预览回调
-  onClearChat // 新增：清空对话回调
+  onClearChat, // 新增：清空对话回调
+  onQuickNote, // 新增：快速笔记回调
+  isQuickNotePanelOpen // 新增：快速笔记面板状态
 }: MessageListProps) => {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [showToolCallPanel, setShowToolCallPanel] = useState(false);
@@ -232,6 +236,7 @@ const MessageListComponent = ({
                 chatStyle={chatStyle}
                 displaySize={displaySize}
                 onImagePreview={onImagePreview}
+                onQuickNote={onQuickNote} // 新增：传递快速笔记回调
               />
           ))}
           
@@ -241,7 +246,7 @@ const MessageListComponent = ({
 
         {/* 滚动按钮 */}
         {showScrollButtons && (
-          <div className="group fixed bottom-40 right-12 z-50 flex flex-col gap-1 p-2">
+          <div className={`group ${isQuickNotePanelOpen ? 'fixed bottom-40 right-[52%]' : 'fixed bottom-40 right-12'} z-50 flex flex-col gap-1 p-2`}>
             {/* 悬浮触发区域 - 透明但可交互 */}
             <div className="absolute inset-0 w-16 h-full -right-2"></div>
             
@@ -334,7 +339,8 @@ const MessageItemComponent = ({
   conversation, // 新增：对话信息
   chatStyle,
   displaySize,
-  onImagePreview
+  onImagePreview,
+  onQuickNote // 新增：快速笔记回调
 }: { 
   message: Message; 
   isStreaming: boolean;
@@ -347,6 +353,7 @@ const MessageItemComponent = ({
   chatStyle: 'conversation' | 'assistant';
   displaySize: 'fullscreen' | 'compact';
   onImagePreview?: (imageUrl: string, imageIndex: number, images: string[]) => void;
+  onQuickNote?: (selectedText: string) => void; // 新增：快速笔记回调
 }) => {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
@@ -642,7 +649,7 @@ const MessageItemComponent = ({
 
 
           {/* 消息内容 */}
-          <SelectableCopyWrapper>
+          <SelectableCopyWrapper onQuickNote={onQuickNote}>
             <div className={isUser ? 'whitespace-pre-wrap' : `prose prose-sm max-w-none prose-theme`} style={isUser ? { wordBreak: 'normal', overflowWrap: 'break-word' } : {}}>
               {message.content ? (
                 <div className={shouldCollapseUserMessage && !isUserMessageExpanded ? 'line-clamp-6' : ''}>

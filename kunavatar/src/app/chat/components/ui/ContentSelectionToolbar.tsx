@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, NotebookPen } from 'lucide-react';
 
 interface SelectableCopyWrapperProps {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  onQuickNote?: (selectedText: string) => void;
 }
 
 interface CopyButtonPosition {
@@ -18,6 +19,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
   children,
   className,
   style,
+  onQuickNote,
 }) => {
   const [copyButton, setCopyButton] = useState<CopyButtonPosition>({
     x: 0,
@@ -26,6 +28,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
     selectedText: '',
   });
   const [isCopied, setIsCopied] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const copyButtonRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -77,7 +80,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
       
       // 计算复制按钮的位置（相对于容器）
       const x = rect.left - containerRect.left + rect.width / 2;
-      const y = rect.top - containerRect.top - 40; // 在选中文字上方40px
+      const y = rect.top - containerRect.top - 50; // 在选中文字上方50px，增加间距
 
       setCopyButton({
         x,
@@ -95,7 +98,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
         }
       }
     }, 10); // 10ms延迟
-  }, [copyButton.selectedText]);
+  }, [copyButton.selectedText, isHovering]);
 
   // 处理复制操作
   const handleCopy = useCallback(async () => {
@@ -105,10 +108,12 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
       await navigator.clipboard.writeText(copyButton.selectedText);
       setIsCopied(true);
       
-      // 2秒后隐藏按钮
+      // 2秒后隐藏按钮（如果没有悬停）
       hideTimeoutRef.current = setTimeout(() => {
-        setCopyButton(prev => ({ ...prev, visible: false }));
-        setIsCopied(false);
+        if (!isHovering) {
+          setCopyButton(prev => ({ ...prev, visible: false }));
+          setIsCopied(false);
+        }
       }, 2000);
     } catch (error) {
       // 降级方案：使用传统的复制方法
@@ -122,14 +127,44 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
         setIsCopied(true);
         
         hideTimeoutRef.current = setTimeout(() => {
-          setCopyButton(prev => ({ ...prev, visible: false }));
-          setIsCopied(false);
+          if (!isHovering) {
+            setCopyButton(prev => ({ ...prev, visible: false }));
+            setIsCopied(false);
+          }
         }, 2000);
       } catch (fallbackError) {
         // 复制失败，静默处理
       }
     }
   }, [copyButton.selectedText]);
+
+  // 处理快速笔记操作
+  const handleQuickNote = useCallback(() => {
+    if (!copyButton.selectedText || !onQuickNote) return;
+    
+    onQuickNote(copyButton.selectedText);
+    // 隐藏工具条
+    setCopyButton(prev => ({ ...prev, visible: false }));
+  }, [copyButton.selectedText, onQuickNote]);
+
+  // 处理工具条悬停
+  const handleToolbarMouseEnter = useCallback(() => {
+    setIsHovering(true);
+    // 清除隐藏定时器
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  }, []);
+
+  const handleToolbarMouseLeave = useCallback(() => {
+    setIsHovering(false);
+    // 延迟隐藏工具条
+    hideTimeoutRef.current = setTimeout(() => {
+      setCopyButton(prev => ({ ...prev, visible: false }));
+      setIsCopied(false);
+    }, 1000); // 1秒后隐藏
+  }, []);
 
   // 处理点击外部区域隐藏按钮
   const handleClickOutside = useCallback((event: MouseEvent) => {
@@ -176,17 +211,19 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
       {copyButton.visible && (
         <div
           ref={copyButtonRef}
-          className="absolute z-50 animate-in fade-in-0 zoom-in-95 duration-200"
+          className="absolute z-50 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300"
           style={{
             left: `${copyButton.x}px`,
             top: `${copyButton.y}px`,
-            transform: 'translateX(-40%) translateY(-40%)',
+            transform: 'translateX(-50%)',
           }}
+          onMouseEnter={handleToolbarMouseEnter}
+          onMouseLeave={handleToolbarMouseLeave}
         >
-          <div className="bg-theme-background border border-theme-border rounded-lg shadow-lg p-1">
+          <div className="bg-theme-background/95 backdrop-blur border border-theme-border rounded-lg p-1 flex items-center hover:shadow-sm transition-all duration-200">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 p-2 text-sm text-theme-foreground hover:bg-theme-muted rounded-md transition-colors"
+              className="flex items-center gap-2 p-2.5 text-sm text-theme-foreground hover:bg-theme-primary/10 hover:text-theme-primary rounded-md transition-all duration-200 hover:scale-105 active:scale-95"
               title={isCopied ? "已复制" : "复制选中文字"}
             >
               {isCopied ? (
@@ -199,6 +236,15 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
                 </>
               )}
             </button>
+            {onQuickNote && (
+              <button
+                onClick={handleQuickNote}
+                className="flex items-center gap-2 p-2.5 text-sm text-theme-foreground hover:bg-theme-primary/10 hover:text-theme-primary rounded-md transition-all duration-200 hover:scale-105 active:scale-95"
+                title="快速笔记"
+              >
+                <NotebookPen className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       )}
