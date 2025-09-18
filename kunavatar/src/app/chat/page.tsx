@@ -6,6 +6,7 @@ import { Sidebar } from '../Sidebar';
 import { ChatHeader, ChatArea } from './components';
 import { MessageInput } from './components/MessageInput';
 import { ToolSettings } from './components/tools/ToolSettings';
+import QuickNotePanel from './components/ui/QuickNotePanel';
 import { 
   useModelData, 
   useAgentData, 
@@ -84,6 +85,8 @@ function ChatPageContent() {
   // 🎛️ 面板状态管理
   const [showToolPanel, setShowToolPanel] = useState(false);
   const [showMemoryPanel, setShowMemoryPanel] = useState(false);
+  const [isQuickNotePanelOpen, setIsQuickNotePanelOpen] = useState(false);
+  const [quickNoteSelectedText, setQuickNoteSelectedText] = useState('');
 
   // 🔧 工具状态管理
   const [enableTools, setEnableTools] = useState(false);
@@ -496,6 +499,17 @@ function ChatPageContent() {
     }
   };
 
+  // 📝 快速笔记功能函数
+  const handleQuickNote = useCallback((selectedText: string) => {
+    setQuickNoteSelectedText(selectedText);
+    setIsQuickNotePanelOpen(true);
+  }, []);
+
+  const handleCloseQuickNote = useCallback(() => {
+    setIsQuickNotePanelOpen(false);
+    setQuickNoteSelectedText('');
+  }, []);
+
   // 🔧 工具功能函数
 
 
@@ -675,10 +689,14 @@ function ChatPageContent() {
       />
 
       {/* 🎯 主聊天区域 */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* 📋 顶部选择栏 */}
-        <div className={isCleanMode ? 'mt-4' : ''}>
-        <ChatHeader
+      <div className="flex-1 flex min-w-0 relative">
+        {/* 主内容区域 - 包含顶部、聊天区域和输入框 */}
+        <div className={`flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
+          isQuickNotePanelOpen ? 'w-1/2' : 'w-full'
+        }`}>
+          {/* 📋 顶部选择栏 */}
+          <div className={isCleanMode ? 'mt-4' : ''}>
+          <ChatHeader
           currentConversation={currentConversation}
           chatMode={chatMode}
           onModeChange={setChatMode}
@@ -710,10 +728,10 @@ function ChatPageContent() {
           }}
           onCreateNewConversation={handleCreateNewConversation}
         />
-        </div>
+          </div>
 
-        {/* 💬 聊天消息区域 */}
-        <ChatArea
+          {/* 💬 聊天消息区域 */}
+          <ChatArea
           chatMode={chatMode}
           selectedModel={selectedModel}
           selectedAgent={selectedAgent}
@@ -725,10 +743,12 @@ function ChatPageContent() {
           messageSender={messageSender}
           models={models}
           onClearChat={handleClearChat}
-        />
+          onQuickNote={handleQuickNote}
+          isQuickNotePanelOpen={isQuickNotePanelOpen}
+          />
 
-        {/* ⌨️ 输入区域 */}
-        <div className="relative">
+          {/* ⌨️ 输入区域 */}
+          <div className="relative pb-4">
           <MessageInput
             chatMode={chatMode}
             selectedModel={selectedModel}
@@ -774,23 +794,34 @@ function ChatPageContent() {
             
             // 模型数据（用于多模态验证）
             availableModels={models || []}
+            
+            // 快速笔记面板状态
+            isQuickNotePanelOpen={isQuickNotePanelOpen}
           />
 
-          {/* 🔧 工具面板 - 修复的数据传递 */}
-          <ToolSettings
-            enableTools={enableTools}
-            selectedTools={selectedTools}
-            allTools={allTools}
-            onToolSelection={handleToolSelection}
-            showToolPanel={showToolPanel}
-            showMemoryPanel={showMemoryPanel}
-            onToggleToolPanel={handleToggleToolPanel}
-            onToggleMemoryPanel={handleToggleMemoryPanel}
-            onInsertText={handleInsertText}
-            conversationId={currentConversationId}
-            selectedAgentId={chatMode === 'agent' ? selectedAgent?.id : undefined}
-          />
+            {/* 🔧 工具面板 - 修复的数据传递 */}
+            <ToolSettings
+              enableTools={enableTools}
+              selectedTools={selectedTools}
+              allTools={allTools}
+              onToolSelection={handleToolSelection}
+              showToolPanel={showToolPanel}
+              showMemoryPanel={showMemoryPanel}
+              onToggleToolPanel={handleToggleToolPanel}
+              onToggleMemoryPanel={handleToggleMemoryPanel}
+              onInsertText={handleInsertText}
+              conversationId={currentConversationId}
+              selectedAgentId={chatMode === 'agent' ? selectedAgent?.id : undefined}
+            />
+          </div>
         </div>
+
+        {/* 📝 快速笔记面板 */}
+        <QuickNotePanel
+          isOpen={isQuickNotePanelOpen}
+          onClose={handleCloseQuickNote}
+          selectedText={quickNoteSelectedText}
+        />
       </div>
     </div>
   );

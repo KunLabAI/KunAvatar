@@ -68,6 +68,9 @@ interface MessageInputProps {
   
   // 模型数据（用于多模态验证）
   availableModels?: any[];
+  
+  // 快速笔记面板状态
+  isQuickNotePanelOpen?: boolean;
 }
 
 export function MessageInput({
@@ -106,6 +109,8 @@ export function MessageInput({
   
   // 模型数据
   availableModels = [],
+  
+  // 快速笔记面板状态
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -396,7 +401,7 @@ export function MessageInput({
         />
         
         {/* 整合的输入组件：控件栏 + 输入框 */}
-        <div className="bg-theme-card border border-theme-border rounded-xl shadow-sm overflow-visible">
+        <div className="bg-theme-card border border-theme-border rounded-xl overflow-visible">
          {/* 输入区域 */}
           <div className="relative flex flex-col bg-theme-background/50 overflow-visible">
             {/* 文本输入区域 */}

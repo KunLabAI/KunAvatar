@@ -55,6 +55,8 @@ interface ChatAreaProps {
   messageSender: UseMessageSenderReturn;
   models: any[]; // 添加models参数
   onClearChat?: () => void; // 添加清空对话回调
+  onQuickNote?: (selectedText: string) => void; // 快速笔记回调
+  isQuickNotePanelOpen?: boolean; // 快速笔记面板状态
 }
 
 export function ChatArea({
@@ -69,6 +71,8 @@ export function ChatArea({
   messageSender,
   models, // 添加models参数
   onClearChat, // 添加清空对话回调
+  onQuickNote, // 快速笔记回调
+  isQuickNotePanelOpen, // 快速笔记面板状态
 }: ChatAreaProps) {
   // 检查是否已选择模型或Agent
   const hasSelection = chatMode === 'model' ? !!selectedModel : !!selectedAgent;
@@ -92,6 +96,8 @@ export function ChatArea({
           messageSender={messageSender}
           models={models} // 传递models参数
           onClearChat={onClearChat} // 传递清空对话回调
+          onQuickNote={onQuickNote} // 传递快速笔记回调
+          isQuickNotePanelOpen={isQuickNotePanelOpen} // 传递快速笔记面板状态
         />
       )}
     </div>
@@ -132,6 +138,8 @@ function ChatInterface({
   messageSender,
   models, // 添加models参数
   onClearChat, // 添加清空对话回调
+  onQuickNote, // 添加快速笔记回调
+  isQuickNotePanelOpen, // 快速笔记面板状态
 }: {
   chatMode: ChatMode;
   selectedModel: string;
@@ -144,6 +152,8 @@ function ChatInterface({
   messageSender: UseMessageSenderReturn;
   models: any[]; // 添加models类型
   onClearChat?: () => void; // 添加清空对话回调类型
+  onQuickNote?: (selectedText: string) => void; // 添加快速笔记回调类型
+  isQuickNotePanelOpen?: boolean; // 快速笔记面板状态类型
 }) {
   // 删除确认弹窗状态
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
@@ -254,7 +264,7 @@ function ChatInterface({
   };
   return (
     <>
-      <div className="flex-1 overflow-auto scrollbar-thin p-2 min-h-0">
+      <div className="flex-1 overflow-auto scrollbar-thin p-2 min-h-0 relative">
         <div className="max-w-4xl mx-auto h-full">
           {currentConversationId ? (
             // 有对话ID时显示消息列表
@@ -272,6 +282,8 @@ function ChatInterface({
                 onDeleteMessage={handleDeleteMessage}
                 onImagePreview={handleImagePreview} // 添加图片预览回调
                 onClearChat={onClearChat} // 传递清空对话回调
+                onQuickNote={onQuickNote} // 传递快速笔记回调
+                isQuickNotePanelOpen={isQuickNotePanelOpen} // 传递快速笔记面板状态
               />
             </div>
           ) : (

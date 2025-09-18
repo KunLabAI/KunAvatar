@@ -206,7 +206,7 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
 
   return (
     <>
-      <div className={`vditor-wrapper ${className}`}>
+      <div className={`vditor-wrapper scrollbar-thin ${className}`}>
         <div ref={vditorRef} style={{ minHeight: height }} />
       </div>
       <style dangerouslySetInnerHTML={{
@@ -215,6 +215,35 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
             border: 1px solid var(--theme-border);
             border-radius: 8px;
             overflow: hidden;
+          }
+          
+          /* 编辑器内容区域滚动条样式 */
+          .vditor-wrapper .vditor-wysiwyg,
+          .vditor-wrapper .vditor-content {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+          }
+          
+          .vditor-wrapper .vditor-wysiwyg::-webkit-scrollbar,
+          .vditor-wrapper .vditor-content::-webkit-scrollbar {
+            width: 4px;
+          }
+          
+          .vditor-wrapper .vditor-wysiwyg::-webkit-scrollbar-track,
+          .vditor-wrapper .vditor-content::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .vditor-wrapper .vditor-wysiwyg::-webkit-scrollbar-thumb,
+          .vditor-wrapper .vditor-content::-webkit-scrollbar-thumb {
+            background-color: rgba(155, 155, 155, 0.5);
+            border-radius: 20px;
+            border: transparent;
+          }
+          
+          .vditor-wrapper .vditor-wysiwyg::-webkit-scrollbar-thumb:hover,
+          .vditor-wrapper .vditor-content::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(155, 155, 155, 0.8);
           }
           
           .vditor-wrapper .vditor--dark {
