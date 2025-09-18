@@ -98,32 +98,9 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
             accept: 'image/*',
             multiple: false,
             fieldName: 'file',
-            url: '/api/notes/toolsimage',
-            success: (editor: HTMLElement, msg: string) => {
-              try {
-                console.log('收到上传响应:', msg);
-                const response = JSON.parse(msg);
-                console.log('解析后的响应:', response);
-                
-                if (response.code === 0 && response.data?.succMap) {
-                  // 获取第一个成功上传的文件URL
-                  const urls = Object.values(response.data.succMap);
-                  if (urls.length > 0 && vditorInstance.current) {
-                    const imageUrl = urls[0] as string;
-                    console.log('图片上传成功:', imageUrl);
-                    // 使用HTML标签插入图片，支持尺寸控制
-                    vditorInstance.current.insertValue(`<img src="${imageUrl}" alt="image" style="max-width: 100%; height: auto;" width="500" />`);
-                  }
-                } else {
-                  console.error('图片上传失败:', response.msg || '未知错误', '完整响应:', response);
-                }
-              } catch (error) {
-                console.error('解析上传响应失败:', error, '原始响应:', msg);
-              }
-            },
-            error: (msg: string) => {
-              console.error('图片上传错误:', msg);
-            }
+            url: '/api/notes/toolsimage'
+            // 移除自定义success回调，让Vditor使用默认处理
+            // Vditor会自动解析返回的JSON并插入Markdown格式的图片
           },
 
           after: () => {

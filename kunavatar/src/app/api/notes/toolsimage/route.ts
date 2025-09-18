@@ -53,16 +53,15 @@ export async function POST(request: NextRequest) {
     // 返回文件URL
     const fileUrl = `/uploads/images/${fileName}`;
     
-    // 返回JSON格式，包含图片URL
+    // 根据Vditor文档，返回简单的JSON格式，包含图片URL
+    // Vditor默认期望的格式是 {"data": {"succMap": {"filename": "url"}}}
     return NextResponse.json({
-      code: 0,
       data: {
         errFiles: [],
         succMap: {
           [fileName]: fileUrl
         }
-      },
-      msg: ''
+      }
     });
 
   } catch (error) {

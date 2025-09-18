@@ -98,15 +98,9 @@ export async function setupElectronDatabase(): Promise<void> {
     // 1. 设置环境变量
     setupElectronDatabaseEnv();
     
-    // 2. 检查是否需要初始化
-    const needsInit = shouldInitializeDatabase();
-    
-    if (needsInit) {
-      console.log('📦 数据库需要初始化...');
-      await initElectronDatabase();
-    } else {
-      console.log('✅ 数据库已存在，跳过初始化');
-    }
+    // 2. 总是执行数据库初始化（包括版本升级检查）
+    console.log('📦 执行数据库初始化和版本检查...');
+    await initElectronDatabase();
     
     console.log('🎉 Electron数据库环境设置完成');
   } catch (error) {

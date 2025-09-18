@@ -2,6 +2,7 @@
 
 import React, { Component, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { safeNavigate } from '@/lib/security/url-validator';
 
 interface Props {
   children: ReactNode;
@@ -119,9 +120,7 @@ export function useAuthErrorHandler() {
       localStorage.removeItem('refreshToken');
       
       // 跳转到登录页面
-      setTimeout(() => {
-        window.location.href = '/login?error=auth_expired';
-      }, 100);
+      safeNavigate('/login?error=auth_expired', 100);
     }
   };
 

@@ -9,6 +9,7 @@ import { Note } from '@/lib/database/notes';
 import { Sidebar } from '@/app/Sidebar';
 import { formatTime } from '@/lib/utils/time';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import Modal from '@/components/Modal';
 
 const NoteDetailPage = () => {
   const router = useRouter();
@@ -22,6 +23,7 @@ const NoteDetailPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   
   // 分享状态
   const [shareUrl, setShareUrl] = useState('');
@@ -251,11 +253,7 @@ const NoteDetailPage = () => {
                       </button>
                     )}
                     <button
-                      onClick={() => {
-                        if (confirm('此操作不可撤销。确定要删除这篇笔记吗？')) {
-                          handleDelete();
-                        }
-                      }}
+                      onClick={() => setDeleteModalOpen(true)}
                       disabled={deleting}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                     >
@@ -386,8 +384,44 @@ const NoteDetailPage = () => {
           </main>
         </div>
       </div>
-    </div>
-  );
+      
+      {/* 删除确认Modal */}
+      <Modal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="删除笔记"
+        actions={[
+          {
+            label: '取消',
+            onClick: () => setDeleteModalOpen(false),
+            variant: 'secondary'
+          },
+          {
+            label: '确定删除',
+            onClick: () => {
+              setDeleteModalOpen(false);
+              handleDelete();
+            },
+            variant: 'danger'
+          }
+        ]}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+          </div>
+          <div>
+            <p className="text-theme-foreground mb-2">
+              此操作不可撤销。确定要删除这篇笔记吗？
+            </p>
+            <p className="text-sm text-theme-foreground-muted">
+              笔记标题：{note?.title}
+            </p>
+          </div>
+        </div>
+      </Modal>
+     </div>
+   );
 };
 
 export default function NoteDetailPageWrapper() {

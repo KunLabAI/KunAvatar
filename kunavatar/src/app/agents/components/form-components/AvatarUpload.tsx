@@ -101,7 +101,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       const blob = await response.blob();
       formData.append('avatar', blob, `avatar_${Date.now()}.jpg`);
       
-      const uploadResponse = await fetch('/api/upload/avatar', {
+      const uploadResponse = await fetch('/api/uploads/avatar', {
         method: 'POST',
         body: formData,
       });

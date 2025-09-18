@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    // 确保upload目录存在 - 兼容Electron环境
-    const uploadDir = join(process.cwd(), 'public', 'upload');
+    // 确保uploads目录存在 - 兼容Electron环境
+    const uploadDir = join(process.cwd(), 'public', 'uploads', 'avatars');
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
     }
@@ -40,9 +40,9 @@ export async function POST(request: NextRequest) {
     // 保存文件
     await writeFile(filepath, buffer);
     
-    // 返回文件URL - 在Electron环境下使用API路由
-    const staticUrl = `/upload/${filename}`;
-    const apiUrl = `/api/upload/${filename}`;
+    // 返回文件URL - 使用新的uploads路径
+    const staticUrl = `/uploads/avatars/${filename}`;
+    const apiUrl = `/api/uploads/avatars/${filename}`;
     
     // 为Electron环境提供base64备选方案
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;

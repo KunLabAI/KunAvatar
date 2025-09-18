@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { safeNavigateToLogin } from '@/lib/security/url-validator';
 
 /**
  * 处理认证错误的工具函数
@@ -13,9 +14,7 @@ export function useAuthErrorHandler() {
   const handleAuthError = useCallback(() => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    setTimeout(() => {
-      window.location.href = '/login';
-    }, 100);
+    safeNavigateToLogin(100);
   }, []);
 
   return { handleAuthError };
