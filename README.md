@@ -285,6 +285,8 @@ Kun-Avatar/
 - [Model Context Protocol](https://modelcontextprotocol.io/) - 工具调用协议标准
 - 所有贡献者和用户的支持
 
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kunlabai-kunavatar-badge.png)](https://mseep.ai/app/kunlabai-kunavatar)
+
 ## 📞 联系我们
 
 - **项目主页**: [GitHub Repository](https://github.com/KunLabAI/kun-avatar)

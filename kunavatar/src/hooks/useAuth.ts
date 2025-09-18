@@ -2,6 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { safeNavigateToLogin } from '@/lib/security/url-validator';
 
 interface User {
   id: string;
@@ -48,29 +49,9 @@ export function useAuthState() {
     localStorage.removeItem('refreshToken');
     setUser(null);
     
-    // 检查是否在Electron环境中
-    const isElectron = typeof window !== 'undefined' && window.electronAPI;
-    
-    setTimeout(async () => {
-      if (isElectron) {
-        // Electron环境：使用IPC重新加载到登录页面
-        try {
-          const result = await window.electronAPI!.reloadToLogin();
-          if (!result.success) {
-            console.error('Electron跳转失败:', result.error);
-            // 如果Electron跳转失败，回退到普通跳转
-            window.location.href = '/login';
-          }
-        } catch (error) {
-          console.error('Electron跳转出错:', error);
-          // 如果Electron跳转出错，回退到普通跳转
-          window.location.href = '/login';
-        }
-      } else {
-        // 浏览器环境：使用 window.location.href 强制跳转，避免React Router状态问题
-        window.location.href = '/login';
-      }
-    }, 100);
+    // 使用安全导航函数跳转到登录页面
+    const electronAPI = typeof window !== 'undefined' ? window.electronAPI : undefined;
+    safeNavigateToLogin(100, electronAPI);
   };
 
   const login = (token: string) => {

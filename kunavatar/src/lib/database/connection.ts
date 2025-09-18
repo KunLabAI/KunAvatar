@@ -1,8 +1,6 @@
 import Database from 'better-sqlite3';
-import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import defaultPrompts from '../../config/default-prompts.json';
 import { getDatabasePath, getLockFilePath } from './db-path';
 
 // 🔧 修复：使用全局变量和单例模式来确保数据库只初始化一次
@@ -495,14 +493,16 @@ const executeInitialization = (db: Database.Database) => {
   const insertRole = db.prepare('INSERT OR IGNORE INTO roles (id, name, display_name, description, is_system) VALUES (?, ?, ?, ?, ?)');
   const insertPermission = db.prepare('INSERT OR IGNORE INTO permissions (id, name, display_name, description, resource, action) VALUES (?, ?, ?, ?, ?, ?)');
 
-  // 创建系统角色（三级角色体系）
-  const superAdminRoleId = crypto.randomUUID();
-  const adminRoleId = crypto.randomUUID();
-  const userRoleId = crypto.randomUUID();
+  // 创建系统角色（三级角色体系）- 使用固定ID避免重复创建
+  const SYSTEM_ROLE_IDS = {
+    superadmin: 'system-role-superadmin-fixed-uuid',
+    admin: 'system-role-admin-fixed-uuid',
+    user: 'system-role-user-fixed-uuid'
+  };
   
-  insertRole.run(superAdminRoleId, 'superadmin', '超级管理员', '拥有系统所有权限的超级管理员角色', 1);
-  insertRole.run(adminRoleId, 'admin', '管理员', '系统管理员，拥有大部分管理权限', 1);
-  insertRole.run(userRoleId, 'user', '普通用户', '普通用户，拥有基本权限', 1);
+  insertRole.run(SYSTEM_ROLE_IDS.superadmin, 'superadmin', '超级管理员', '拥有系统所有权限的超级管理员角色', 1);
+  insertRole.run(SYSTEM_ROLE_IDS.admin, 'admin', '管理员', '系统管理员，拥有大部分管理权限', 1);
+  insertRole.run(SYSTEM_ROLE_IDS.user, 'user', '普通用户', '普通用户，拥有基本权限', 1);
 
   // 创建完整权限列表（39个权限）
   const permissions = [
@@ -571,20 +571,18 @@ const executeInitialization = (db: Database.Database) => {
   });
 
   // 为超级管理员角色分配所有权限
-  const superAdminRole = db.prepare('SELECT id FROM roles WHERE name = ?').get('superadmin') as { id: string } | undefined;
   const allPermissions = db.prepare('SELECT id FROM permissions').all() as { id: string }[];
   
-  if (superAdminRole && allPermissions.length > 0) {
+  if (allPermissions.length > 0) {
     const insertRolePermission = db.prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
     allPermissions.forEach(permission => {
-      insertRolePermission.run(superAdminRole.id, permission.id);
+      insertRolePermission.run(SYSTEM_ROLE_IDS.superadmin, permission.id);
     });
     console.log(`✅ 已为超级管理员角色分配 ${allPermissions.length} 个权限。`);
   }
 
   // 为管理员角色分配部分权限（除了系统管理权限）
-  const adminRole = db.prepare('SELECT id FROM roles WHERE name = ?').get('admin') as { id: string } | undefined;
-  if (adminRole && allPermissions.length > 0) {
+  if (allPermissions.length > 0) {
     const adminPermissions = db.prepare(`
       SELECT id FROM permissions 
       WHERE name NOT IN ('system:admin', 'permissions:manage', 'roles:delete', 'users:delete')
@@ -592,7 +590,7 @@ const executeInitialization = (db: Database.Database) => {
     const insertRolePermission = db.prepare('INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
     
     adminPermissions.forEach(permission => {
-      insertRolePermission.run(adminRole.id, permission.id);
+      insertRolePermission.run(SYSTEM_ROLE_IDS.admin, permission.id);
     });
     
     console.log(`✅ 已为管理员角色分配 ${adminPermissions.length} 个权限。`);

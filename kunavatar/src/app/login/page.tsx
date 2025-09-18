@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, LogIn, Info } from 'lucide-react';
 import BlackHoleAnimation from '@/components/BlackHoleAnimation';
+import { validateRedirectUrl } from '@/lib/security/url-validator';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -63,8 +64,10 @@ export default function LoginPage() {
         // 使用 window.location.href 强制跳转，确保页面完全刷新
         // 这样可以避免React状态不一致的问题
         setTimeout(() => {
-          const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/chat';
-          window.location.href = redirectTo;
+          // 🔧 安全修复：验证重定向 URL 以防止开放重定向攻击和 XSS
+          const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+          const safeRedirectTo = validateRedirectUrl(redirectParam, '/chat');
+          window.location.href = safeRedirectTo;
         }, 300);
       } else {
         setError(data.error || '登录失败');

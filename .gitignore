@@ -36,6 +36,7 @@ out/
 package-lock.json.*
 package-lock.json
 
-upload/
-uploads/
 electron/
+
+# 上传的文件
+kunavatar/public/uploads/

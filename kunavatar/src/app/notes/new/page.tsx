@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Unlock, Lock } from 'lucide-react';
+import { ArrowLeft, Save, Unlock, Lock, AlertTriangle } from 'lucide-react';
 import { useNotification } from '@/components/notification';
 import VditorEditor from '@/components/notes/VditorEditor';
 import { Sidebar } from '@/app/Sidebar';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import Modal from '@/components/Modal';
 
 // FormInput组件，与ModelfileForm保持一致的样式
 const FormInput = ({ 
@@ -46,6 +47,7 @@ const NewNotePage = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
 
 
@@ -132,15 +134,19 @@ const NewNotePage = () => {
     }
   };
 
-  // 返回笔记列表
+  // 返回按钮处理
   const handleBack = () => {
     if (title.trim() || content.trim()) {
-      if (confirm('确定要离开吗？未保存的内容将丢失。')) {
-        router.push('/notes');
-      }
+      setConfirmModalOpen(true);
     } else {
-      router.push('/notes');
+      router.back();
     }
+  };
+
+  // 确认离开
+  const confirmLeave = () => {
+    setConfirmModalOpen(false);
+    router.back();
   };
 
   return (
@@ -270,6 +276,32 @@ const NewNotePage = () => {
           </main>
         </div>
       </div>
+
+      {/* 确认离开Modal */}
+       <Modal
+         open={confirmModalOpen}
+         onClose={() => setConfirmModalOpen(false)}
+         title="确认离开"
+         icon={<AlertTriangle className="w-6 h-6 text-theme-warning" />}
+         actions={[
+           {
+             label: '取消',
+             onClick: () => setConfirmModalOpen(false),
+             variant: 'secondary',
+           },
+           {
+             label: '确定离开',
+             onClick: confirmLeave,
+             variant: 'danger',
+             autoFocus: true,
+           },
+         ]}
+         width={380}
+       >
+         <span>
+           您有未保存的内容，确定要离开吗？
+         </span>
+       </Modal>
     </div>
   );
 };

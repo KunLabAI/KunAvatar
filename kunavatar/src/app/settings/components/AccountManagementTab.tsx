@@ -7,6 +7,7 @@ import { useNotification } from '@/components/notification';
 import { formatTime } from '@/lib/utils/time';
 import { PageLoading } from '@/components/Loading';
 import type { ElectronAPI } from '@/types/electron';
+import { safeNavigateToLogin } from '@/lib/security/url-validator';
 
 interface UserInfo {
   id: number;
@@ -88,9 +89,8 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           notification.error('认证失败', '登录已过期，请重新登录');
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 500);
+          // 🔧 安全修复：使用安全导航函数替换直接的 window.location.href
+          safeNavigateToLogin(500);
           return;
         }
         throw new Error('获取用户信息失败');
@@ -172,46 +172,17 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
       // 显示成功消息
       notification.success('退出成功', '您已成功退出登录');
       
-      // 检查是否在Electron环境中
-      const isElectron = typeof window !== 'undefined' && window.electronAPI;
-      
-      setTimeout(async () => {
-        if (isElectron && window.electronAPI) {
-          // Electron环境：使用IPC重新加载到登录页面
-          try {
-            const result = await window.electronAPI.reloadToLogin();
-            if (!result.success) {
-              console.error('Electron跳转失败:', result.error);
-              // 如果Electron跳转失败，回退到普通跳转
-              window.location.href = '/login';
-            }
-          } catch (error) {
-            console.error('Electron跳转出错:', error);
-            // 如果Electron跳转出错，回退到普通跳转
-            window.location.href = '/login';
-          }
-        } else {
-          // 浏览器环境：使用 window.location.href 强制跳转到登录页面
-          window.location.href = '/login';
-        }
-      }, 500); // 给通知一点时间显示
+      // 🔧 安全修复：使用安全导航函数替换不安全的导航逻辑
+      // 检查是否在Electron环境中并传递给安全导航函数
+      const electronAPI = typeof window !== 'undefined' ? window.electronAPI : undefined;
+      safeNavigateToLogin(500, electronAPI);
     } catch (error) {
       console.error('退出登录失败:', error);
       notification.error('退出失败', '退出登录时发生错误');
       
       // 即使出错也要跳转到登录页
-      const isElectron = typeof window !== 'undefined' && window.electronAPI;
-      setTimeout(async () => {
-        if (isElectron && window.electronAPI) {
-          try {
-            await window.electronAPI.reloadToLogin();
-          } catch (electronError) {
-            window.location.href = '/login';
-          }
-        } else {
-          window.location.href = '/login';
-        }
-      }, 1000);
+      const electronAPI = typeof window !== 'undefined' ? window.electronAPI : undefined;
+      safeNavigateToLogin(1000, electronAPI);
     }
   };
 
