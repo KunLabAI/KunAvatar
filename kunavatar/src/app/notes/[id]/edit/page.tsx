@@ -8,6 +8,7 @@ import VditorEditor from '@/components/notes/VditorEditor';
 import Modal from '@/components/Modal';
 import { Sidebar } from '@/app/Sidebar';
 import { Conversation } from '@/lib/database';
+import { useI18n } from '@/contexts/I18nContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // FormInput 组件
@@ -55,6 +56,7 @@ const EditNotePage = () => {
   const params = useParams();
   const noteId = params.id as string;
   const { success, error } = useNotification();
+  const { t } = useI18n(); // 多语言支持
 
   // 状态管理
   const [note, setNote] = useState<Note | null>(null);
@@ -103,7 +105,7 @@ const EditNotePage = () => {
         
         // 检查是否为笔记所有者
         if (!noteData.is_owner) {
-          error('无权限', '只有笔记作者可以编辑');
+          error(t('notes.messages.noPermission'), t('notes.messages.noPermissionDesc'));
           router.push(`/notes/${noteId}`);
           return;
         }
@@ -114,11 +116,11 @@ const EditNotePage = () => {
         setIsPublished(noteData.is_public);
         setTags(parseTags(noteData.tags));
       } else {
-        error('获取笔记失败', data.error);
+        error(t('notes.messages.fetchFailed'), data.error);
         router.push('/notes');
       }
     } catch (err) {
-      error('获取笔记失败', '网络错误，请稍后重试');
+      error(t('notes.messages.fetchFailed'), t('notes.messages.fetchFailedDesc'));
       router.push('/notes');
     } finally {
       setLoading(false);
@@ -158,12 +160,12 @@ const EditNotePage = () => {
   // 保存笔记
   const handleSave = async () => {
     if (!title.trim()) {
-      error('请输入标题', '标题不能为空');
+      error(t('notes.validation.titleRequired'), t('notes.validation.titleEmpty'));
       return;
     }
 
     if (!content.trim()) {
-      error('请输入内容', '笔记内容不能为空');
+      error(t('notes.validation.contentRequired'), t('notes.validation.contentEmpty'));
       return;
     }
 
@@ -172,7 +174,7 @@ const EditNotePage = () => {
       const token = localStorage.getItem('accessToken');
       
       if (!token) {
-        error('认证失败', '请重新登录');
+        error(t('notes.messages.authFailed'), t('notes.messages.authFailedDesc'));
         router.push('/login');
         return;
       }
@@ -194,7 +196,7 @@ const EditNotePage = () => {
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        error('认证失败', '请重新登录');
+        error(t('notes.messages.authFailed'), t('notes.messages.authFailedDesc'));
         router.push('/login');
         return;
       }
@@ -202,13 +204,13 @@ const EditNotePage = () => {
       const data = await response.json();
 
       if (data.success) {
-        success('笔记更新成功', '正在跳转到笔记列表页面');
+        success(t('notes.messages.updateSuccess'), t('notes.messages.updateSuccessDesc'));
         router.push('/notes');
       } else {
-        error('更新失败', data.error || '未知错误');
+        error(t('notes.messages.updateFailed'), data.error || t('notes.messages.updateFailedUnknown'));
       }
     } catch (err) {
-      error('更新失败', '网络错误，请稍后重试');
+      error(t('notes.messages.updateFailed'), t('notes.messages.updateFailedDesc'));
     } finally {
       setSaving(false);
     }
@@ -284,7 +286,7 @@ const EditNotePage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                      编辑笔记
+                      {t('notes.edit.title')}
                     </h1>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
@@ -299,12 +301,12 @@ const EditNotePage = () => {
                       {isPublished ? (
                         <>
                           <Unlock className="w-4 h-4" />
-                          公开笔记
+                          {t('notes.create.publicNote')}
                         </>
                       ) : (
                         <>
                           <Lock className="w-4 h-4" />
-                          我的笔记
+                          {t('notes.create.privateNote')}
                         </>
                       )}
                     </button>
@@ -313,7 +315,7 @@ const EditNotePage = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      返回
+                      {t('notes.actions.back')}
                     </button>
                     <button
                       onClick={handleSave}
@@ -321,7 +323,7 @@ const EditNotePage = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-lg hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                     >
                       <Save className="w-4 h-4" />
-                      {saving ? '保存中...' : '保存笔记'}
+                      {saving ? t('notes.edit.savingButton') : t('notes.edit.saveButton')}
                     </button>
                   </div>
                 </div>
@@ -333,10 +335,10 @@ const EditNotePage = () => {
                   <div className="flex gap-6">
                     {/* 笔记标题 */}
                     <div className="flex-1">
-                      <FormInput label="笔记标题" required>
+                      <FormInput label={t('notes.create.titleField')} required>
                         <input
                           type="text"
-                          placeholder="输入笔记标题..."
+                          placeholder={t('notes.create.titlePlaceholder')}
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           className="form-input-base"
@@ -347,7 +349,7 @@ const EditNotePage = () => {
 
                     {/* 标签管理 */}
                      <div className="flex-1">
-                       <FormInput label="标签">
+                       <FormInput label={t('notes.create.tagsField')}>
                          <div className="relative">
                            <div className="form-input-base min-h-[42px] flex flex-wrap items-center gap-1 p-2">
                              {tags.map((tag, index) => (
@@ -363,7 +365,7 @@ const EditNotePage = () => {
                              ))}
                              <input
                                type="text"
-                               placeholder={tags.length === 0 ? "按回车或逗号添加标签，最多6个" : "添加标签..."}
+                               placeholder={tags.length === 0 ? t('notes.create.tagsPlaceholder') : t('notes.create.tagsAddPlaceholder')}
                                value={tagInput}
                                onChange={(e) => setTagInput(e.target.value)}
                                onKeyDown={handleTagInputKeyDown}
@@ -384,8 +386,8 @@ const EditNotePage = () => {
                     <VditorEditor
                       value={content}
                       onChange={setContent}
-                      placeholder="开始编写你的笔记内容..."
-                      height="calc(100vh - 400px)"
+                      placeholder={t('notes.create.contentPlaceholder')}
+                      height="calc(100vh - 288px)"
                     />
                   </div>
                 </div>
@@ -400,23 +402,23 @@ const EditNotePage = () => {
     <Modal
       open={showConfirmModal}
       onClose={handleCancelLeave}
-      title="确认离开"
+      title={t('notes.confirmModal.leaveTitle')}
       icon="⚠️"
       actions={[
         {
-          label: '取消',
+          label: t('notes.confirmModal.cancel'),
           onClick: handleCancelLeave,
           variant: 'secondary'
         },
         {
-          label: '确定离开',
+          label: t('notes.confirmModal.confirmLeave'),
           onClick: handleConfirmLeave,
           variant: 'primary',
           autoFocus: true
         }
       ]}
     >
-      <p>确定要离开吗？未保存的更改将丢失。</p>
+      <p>{t('notes.confirmModal.leaveContent')}</p>
     </Modal>
     </>
   );

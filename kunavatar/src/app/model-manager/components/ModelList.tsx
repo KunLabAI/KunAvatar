@@ -3,6 +3,7 @@
 import { CustomModel } from '@/lib/database/custom-models';
 import { SlidersHorizontal, Pencil, Trash2, Tag, ServerOff, AlertCircle, MessageCircle } from 'lucide-react';
 import ModelLogoComponent from '@/app/model-manager/components/ModelLogo';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ModelListProps {
   models: CustomModel[];
@@ -16,12 +17,14 @@ interface ModelListProps {
 
 
 export default function ModelList({ models, isLoading, onEdit, onDelete, onShowDetails, onStartChat }: ModelListProps) {
+  const { t } = useI18n();
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-theme-border border-t-theme-primary"></div>
-          <p className="text-theme-foreground-muted">正在加载模型...</p>
+          <p className="text-theme-foreground-muted">{t('settings.models.modelList.loading')}</p>
         </div>
       </div>
     );
@@ -35,9 +38,9 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
             <ServerOff className="w-10 h-10 text-theme-foreground-muted" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-theme-foreground mb-2">未找到任何模型</h3>
+            <h3 className="text-xl font-semibold text-theme-foreground mb-2">{t('settings.models.modelList.empty.title')}</h3>
             <p className="text-theme-foreground-secondary max-w-md">
-              尝试同步Ollama或调整搜索和过滤条件。您也可以创建自定义模型配置。
+              {t('settings.models.modelList.empty.description')}
             </p>
           </div>
         </div>
@@ -139,7 +142,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 ) : (
                   <span className="px-2 py-1 bg-theme-background-tertiary text-theme-foreground-muted text-xs rounded flex items-center flex-shrink-0">
                     <AlertCircle className="w-3 h-3 mr-1"/>
-                    无标签
+                    {t('settings.models.modelList.tags.noTags')}
                   </span>
                 )}
               </div>
@@ -159,7 +162,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '';
                 }}
-                title="开始对话"
+                title={t('settings.models.modelList.actions.startChat')}
               >
                 <MessageCircle className="w-5 h-5" />
               </button>
@@ -174,7 +177,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '';
                 }}
-                title="查看详情"
+                title={t('settings.models.modelList.actions.viewDetails')}
               >
                 <SlidersHorizontal className="w-5 h-5" />
               </button>
@@ -189,7 +192,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '';
                 }}
-                title="编辑"
+                title={t('settings.models.modelList.actions.edit')}
               >
                 <Pencil className="w-5 h-5" />
               </button>
@@ -204,7 +207,7 @@ export default function ModelList({ models, isLoading, onEdit, onDelete, onShowD
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '';
                 }}
-                title="删除"
+                title={t('settings.models.modelList.actions.delete')}
               >
                 <Trash2 className="w-5 h-5" />
               </button>

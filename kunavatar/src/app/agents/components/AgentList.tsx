@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AgentAvatar } from '../../chat/components/ui/AgentAvatar';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AgentListProps {
   agents: AgentWithRelations[];
@@ -35,6 +36,7 @@ const AgentList: React.FC<AgentListProps> = ({
   onStartChat,
   onShowMemory 
 }) => {
+  const { t } = useI18n();
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
@@ -46,7 +48,7 @@ const AgentList: React.FC<AgentListProps> = ({
           <div></div>
           <div></div>
         </div>
-        <p className="text-theme-foreground-muted">正在加载智能体...</p>
+        <p className="text-theme-foreground-muted">{t('agents.list.loading')}</p>
       </div>
     );
   }
@@ -57,9 +59,9 @@ const AgentList: React.FC<AgentListProps> = ({
         <div className="steam-empty-icon w-16 h-16 flex items-center justify-center mb-4">
           <Bot className="w-8 h-8 text-theme-primary" />
         </div>
-        <h3 className="text-lg font-medium text-theme-foreground mb-2">未找到任何智能体</h3>
+        <h3 className="text-lg font-medium text-theme-foreground mb-2">{t('agents.list.empty.title')}</h3>
         <p className="text-theme-foreground-muted text-center max-w-md">
-          点击上方的&ldquo;创建智能体&rdquo;按钮开始创建您的第一个智能体。
+          {t('agents.list.empty.description')}
         </p>
       </div>
     );
@@ -107,7 +109,7 @@ const AgentList: React.FC<AgentListProps> = ({
             {/* 描述 */}
             <div className="mb-4">
               <p className="text-sm text-theme-foreground-secondary line-clamp-2 min-h-[2.5rem]">
-                {agent.description || '暂无描述'}
+                {agent.description || t('agents.list.noDescription')}
               </p>
             </div>
             
@@ -147,7 +149,7 @@ const AgentList: React.FC<AgentListProps> = ({
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = '';
                   }}
-                  title="开始对话"
+                  title={t('agents.actions.startChat')}
                 >
                   <MessageCircle className="w-5 h-5" />
                 </button>
@@ -164,7 +166,7 @@ const AgentList: React.FC<AgentListProps> = ({
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = '';
                   }}
-                  title="查看记忆"
+                  title={t('agents.actions.showMemory')}
                 >
                   <Brain className="w-5 h-5" />
                 </button>
@@ -181,7 +183,7 @@ const AgentList: React.FC<AgentListProps> = ({
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = '';
                   }}
-                  title="查看详情"
+                  title={t('agents.actions.showDetails')}
                 >
                   <Eye className="w-5 h-5" />
                 </button>
@@ -197,7 +199,7 @@ const AgentList: React.FC<AgentListProps> = ({
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '';
                 }}
-                title="编辑"
+                title={t('agents.actions.edit')}
               >
                 <Pencil className="w-5 h-5" />
               </button>
@@ -212,7 +214,7 @@ const AgentList: React.FC<AgentListProps> = ({
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '';
                 }}
-                title="删除"
+                title={t('agents.actions.delete')}
               >
                 <Trash2 className="w-5 h-5" />
               </button>

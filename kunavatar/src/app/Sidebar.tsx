@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Conversation } from '@/lib/database';
 import { useCleanMode } from '@/contexts/CleanModeContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -83,6 +84,7 @@ function useSidebarState() {
 function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarProps) {
   const { isExpanded, toggleSidebar } = useSidebarState();
   const { isCleanMode } = useCleanMode();
+  const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -141,7 +143,7 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
         <button
           onClick={toggleSidebar}
           className="absolute -right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-card-hover bg-theme-card z-10 transition-opacity duration-200 opacity-0 group-hover:opacity-100"
-          title={isExpanded ? "收起侧边栏" : "展开侧边栏"}
+          title={isExpanded ? t('sidebar.collapseSidebar') : t('sidebar.expandSidebar')}
         >
           {isExpanded ? (
             <PanelLeft className="w-4 h-4" />
@@ -158,9 +160,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
           className="sidebar-button group relative w-full flex items-center gap-3 p-3 rounded-lg bg-theme-primary text-white"
         >
           <Plus className="w-5 h-5 flex-shrink-0" />
-          <span className="sidebar-text text-sm font-semibold">新建对话</span>
+          <span className="sidebar-text text-sm font-semibold">{t('sidebar.newChat')}</span>
           <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-            新建对话
+            {t('sidebar.newChat')}
           </span>
         </button>
       </div>
@@ -181,9 +183,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                 pathname === '/chat' ? 'text-theme-primary' : ''
               }`} />
             </div>
-            <span className="sidebar-text text-sm">开始对话</span>
+            <span className="sidebar-text text-sm">{t('sidebar.startChat')}</span>
             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-              {filteredConversations && filteredConversations.length > 0 ? '进入最新对话' : '开始新对话'}
+              {filteredConversations && filteredConversations.length > 0 ? t('sidebar.enterLatestChat') : t('sidebar.startNewChat')}
             </span>
           </button>
 
@@ -200,9 +202,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                 pathname === '/mcp-config' ? 'text-theme-primary' : ''
               }`} />
             </div>
-            <span className="sidebar-text text-sm">MCP配置</span>
+            <span className="sidebar-text text-sm">{t('sidebar.mcpConfig')}</span>
             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-              MCP配置
+              {t('sidebar.mcpConfig')}
             </span>
           </Link>
           
@@ -219,9 +221,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                 pathname === '/model-manager' ? 'text-theme-primary' : ''
               }`} />
             </div>
-            <span className="sidebar-text text-sm">模型管理</span>
+            <span className="sidebar-text text-sm">{t('sidebar.modelManager')}</span>
             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-              模型管理
+              {t('sidebar.modelManager')}
             </span>
           </Link>
           
@@ -238,9 +240,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                 pathname === '/agents' ? 'text-theme-primary' : ''
               }`} />
             </div>
-            <span className="sidebar-text text-sm">智能体管理</span>
+            <span className="sidebar-text text-sm">{t('sidebar.agentManager')}</span>
             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-              智能体管理
+              {t('sidebar.agentManager')}
             </span>
           </Link>
           
@@ -257,9 +259,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                  pathname.startsWith('/notes') ? 'text-theme-primary' : ''
                }`} />
              </div>
-             <span className="sidebar-text text-sm">笔记</span>
+             <span className="sidebar-text text-sm">{t('sidebar.notes')}</span>
              <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-               笔记
+               {t('sidebar.notes')}
              </span>
            </Link>
         </nav>
@@ -281,9 +283,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                 pathname === '/conversations' ? 'text-theme-primary' : ''
               }`} />
             </div>
-            <span className="sidebar-text text-sm">对话历史</span>
+            <span className="sidebar-text text-sm">{t('sidebar.chatHistory')}</span>
             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-              对话历史
+              {t('sidebar.chatHistory')}
             </span>
           </Link>
           
@@ -300,9 +302,9 @@ function SidebarComponent({ conversations, chatMode, selectedAgent }: SidebarPro
                 pathname === '/settings' ? 'text-theme-primary' : ''
               }`} />
             </div>
-            <span className="sidebar-text text-sm">设置</span>
+            <span className="sidebar-text text-sm">{t('sidebar.settings')}</span>
             <span className="sidebar-tooltip absolute left-full px-2 py-1 rounded-md text-sm bg-theme-card-hover text-theme-foreground opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none">
-              设置
+              {t('sidebar.settings')}
             </span>
           </Link>
         </div>

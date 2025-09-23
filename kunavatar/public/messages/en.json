@@ -1,0 +1,1222 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "close": "Close",
+    "open": "Open",
+    "copy": "Copy",
+    "paste": "Paste",
+    "cut": "Cut",
+    "refresh": "Refresh",
+    "reset": "Reset"
+  },
+  "app": {
+    "title": "Kun Avatar",
+    "description": "AI Assistant Application"
+  },
+  "sidebar": {
+    "newChat": "New Chat",
+    "startChat": "Chat",
+    "enterLatestChat": "Enter Latest Chat",
+    "startNewChat": "Start New Chat",
+    "mcpConfig": "MCP",
+    "modelManager": "Model",
+    "agentManager": "Agent",
+    "notes": "Notes",
+    "chatHistory": "Chat History",
+    "settings": "Settings",
+    "expandSidebar": "Expand Sidebar",
+    "collapseSidebar": "Collapse Sidebar"
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "account": "Account Management",
+      "users": "User Management",
+      "roles": "Role Management",
+      "assistant": "Assistant Model",
+      "inference": "Inference Engine",
+      "appearance": "Appearance",
+      "logs": "Log Management",
+      "appinfo": "App Info"
+    },
+    "account": {
+      "title": "Account Management",
+      "personalInfo": "Personal Information",
+      "accountStatus": "Account Status",
+      "passwordSecurity": "Password Security",
+      "username": "Username",
+      "email": "Email",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "emailVerification": "Email Verification",
+      "roles": "Roles",
+      "registrationTime": "Registration Time",
+      "lastLogin": "Last Login",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "changePassword": "Change Password",
+      "logout": "Logout",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "noRoles": "No Roles",
+      "editPasswordHint": "Click the edit button to change your password",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "inactive": "Inactive",
+        "suspended": "Suspended"
+      },
+      "messages": {
+        "authFailed": "Authentication failed, please login first",
+        "loginExpired": "Login expired, please login again",
+        "updateSuccess": "User information updated successfully",
+        "updateFailed": "Failed to update user information",
+        "logoutSuccess": "You have successfully logged out",
+        "logoutFailed": "An error occurred during logout",
+        "passwordMismatch": "New password confirmation does not match",
+        "passwordChangeSuccess": "Your password has been updated successfully",
+        "passwordChangeFailed": "Password change failed",
+        "userNotFound": "User information not found",
+        "getFailed": "Failed to get user information"
+      }
+    },
+    "assistant": {
+      "promptOptimize": "Prompt Optimization",
+      "titleSummary": "Title Summary",
+      "systemPrompt": "System Prompt",
+      "promptOptimizeModel": "Optimization Model",
+      "configureSystemPrompt": "Configure System Prompt",
+      "systemPromptSettings": "System Prompt Settings",
+      "guidanceRules": "Configure AI prompt optimization guidance rules",
+      "inputPrompt": "Enter prompt optimization system prompt...",
+      "resetToDefault": "Reset to Default",
+      "update": "Update",
+      "titleSummarySettings": "Title Summary Settings",
+      "autoGenerate": "Auto-generate conversation titles",
+      "titleGenerateRules": "Configure AI title generation guidance rules",
+      "inputTitlePrompt": "Enter title generation system prompt...",
+      "memoryFunction": "Memory Function",
+      "memoryDescription": "Automatically summarize conversation content to improve continuity",
+      "triggerRounds": "Trigger Rounds",
+      "triggerTokens": "Trigger Tokens",
+      "maxEntries": "Max Entries",
+      "summarizeStyle": "Summary Style",
+      "globalMemory": "Global Memory",
+      "memorySettings": "Memory Settings",
+      "configureMemoryParams": "Configure global memory function parameters and behavior",
+      "basicSettings": "Basic Settings",
+      "promptSettings": "Prompt Settings",
+      "promptMode": "Prompt Mode",
+      "presetStyle": "Preset Style",
+      "customPrompt": "Custom Prompt",
+      "memoryLimit": "Memory Limit",
+      "customSystemPrompt": "Custom System Prompt",
+      "triggerRoundsHint": "How many conversation rounds to trigger memory summary",
+      "memoryLimitHint": "Maximum number of memories to save",
+      "summaryStyleHint": "Select the detail level and organization method of memory summary",
+      "customPromptHint": "Configure memory summary guidance rules to help AI better understand conversation content and generate appropriate memory summaries",
+      "inputMemoryPrompt": "Enter memory summary system prompt...",
+      "saving": "Saving...",
+      "updateSettings": "Update Settings",
+      "summaryStyles": {
+        "brief": "Brief - Extract key information points",
+        "detailed": "Detailed - Retain more context",
+        "structured": "Structured - Organize by topics"
+      },
+      "loadMemorySettingsFailed": "Unable to load memory settings."
+    },
+    "appearance": {
+      "title": "Appearance Settings",
+      "theme": {
+        "title": "Interface Theme",
+        "description": "Choose light or dark theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "colorTheme": {
+        "title": "Color Theme",
+        "description": "Choose the application's color scheme",
+        "themes": {
+          "kun": "Default",
+          "green": "Emerald Green",
+          "purple": "Elegant Purple",
+          "orange": "Giant Orange",
+          "blue": "Berkeley Blue",
+          "raspberry": "Grapefruit",
+          "moonstone": "Moonstone"
+        }
+      },
+      "chatStyle": {
+        "title": "Chat Style",
+        "description": "Choose chat interface display style",
+        "conversation": "Conversation Mode",
+        "assistant": "Assistant Mode"
+      },
+      "language": {
+        "title": "Language Settings",
+        "description": "Select interface display language",
+        "current": "Current Language"
+      }
+    },
+    "appinfo": {
+      "title": "App Info",
+      "appVersion": "App Version",
+      "checkUpdate": "Check Update",
+      "updateAvailable": "New Version Available",
+      "latestVersion": "Latest Version",
+      "versionHistory": "Version History",
+      "downloadUpdate": "Download Update",
+      "installUpdate": "Install Update",
+      "checkingUpdate": "Checking for updates...",
+      "downloadingUpdate": "Downloading update...",
+      "updateCheckFailed": "Update Check Failed",
+      "networkError": "Network Connection Problem",
+      "networkErrorDesc": "Unable to connect to update server, please check network connection and try again",
+      "githubUnavailable": "GitHub Service Temporarily Unavailable",
+      "githubUnavailableDesc": "Unable to access GitHub update service, please try again later",
+      "noVersionsAvailable": "No Versions Available",
+      "noVersionsDesc": "The current project has not released an official version yet, please follow project updates",
+      "permissionDenied": "Insufficient Permissions",
+      "permissionDeniedDesc": "Insufficient permissions to perform update operation, please run as administrator",
+      "updateCheckFailedGeneric": "Encountered an issue while checking for updates, please try again later",
+      "getAppInfoFailed": "Failed to get app info",
+      "getVersionHistoryFailed": "Failed to get version history",
+      "getLocalVersionHistoryFailed": "Failed to get local version history as well",
+      "developmentUpdateError": "Development mode update check error (ignored)",
+      "newVersionAvailable": "New version {version} available",
+      "currentVersionLatest": "Current version is already the latest",
+      "updateDownloaded": "Update downloaded successfully",
+      "installAndRestart": "Install and Restart",
+      "updateLog": "Change Log",
+      "viewTechnicalDetails": "View Technical Details",
+      "developmentModeUpdateLimited": "Update check functionality is limited in development mode, this is normal. In the official release version, the update feature will work normally.",
+      "networkCheckConnection": "Network connection problem, please check your network connection and try again.",
+      "githubServiceUnavailableDesc": "GitHub service is temporarily unavailable, please try again later. This may be caused by GitHub server maintenance or network issues.",
+      "noOfficialVersionYet": "The current project has not released an official version yet, please follow project updates.",
+      "updateCheckProblem": "Encountered an issue while checking for updates, please try again later.",
+      "appDetails": "App Details",
+      "developmentTeam": "Development Team",
+      "officialWebsite": "Official Website",
+      "supportEmail": "Support Email",
+      "supportDescription": "If you have any questions or suggestions, please feel free to contact our support team",
+      "versionInfo": "Version Information",
+      "currentVersion": "Current Version",
+      "downloadCompleted": "Download Completed",
+      "updateDownloadedRestart": "Update downloaded successfully, restart the application to install the update",
+      "functionalityLimited": "Functionality Limited",
+      "updateOnlyDesktop": "Update check functionality is only available in desktop applications",
+      "checkUpdateFailed": "Check Update Failed",
+      "cannotStartUpdateCheck": "Unable to start update check, please try again later",
+      "downloadFailed": "Download Failed",
+      "updateDownloadFailed": "Update download failed, please try again later",
+      "installFailed": "Installation Failed",
+      "updateInstallFailed": "Update installation failed, please try again later",
+      "developmentMode": "Development Mode",
+      "noDetailedDescription": "No detailed description available",
+      "source": "Source",
+      "viewCompleteUpdateLog": "View Complete Update Log",
+      "thankYouForUsing": "Thank you for using Kun Avatar! We will continue to improve the product experience.",
+      "updateFeatureDesktopOnly": "Update functionality is only available in desktop applications"
+    },
+    "inference": {
+      "title": "Inference Engine",
+      "ollamaDescription": "Local large language model inference engine",
+      "connectionStatus": "Connection Status",
+      "versionInfo": "Version Information",
+      "connectionSettings": "Connection Settings",
+      "online": "online",
+      "offline": "offline",
+      "detecting": "Detecting...",
+      "cannotConnect": "Cannot connect",
+      "detectionFailed": "Detection failed",
+      "unknown": "Unknown",
+      "serviceUnavailable": "Service unavailable",
+      "networkError": "Network error",
+      "saving": "Saving...",
+      "detectOllamaStatusFailed": "Failed to detect Ollama status",
+      "getOllamaConfigFailed": "Failed to get Ollama config",
+      "saveConfigFailed": "Failed to save config",
+      "saveOllamaConfigFailed": "Failed to save Ollama config"
+    },
+    "users": {
+      "title": "User Management",
+      "addUser": "Add User",
+      "createUser": "Create User",
+      "userDetails": "User Details",
+      "manageUserRoles": "Manage User Roles",
+      "activateUser": "Activate User",
+      "pendingActivation": "pending activation",
+      "loading": "Loading...",
+      "user": "User",
+      "roles": "Roles",
+      "createdTime": "Created Time",
+      "lastLogin": "Last Login",
+      "actions": "Actions",
+      "neverLoggedIn": "Never logged in",
+      "viewDetails": "View Details",
+      "editUser": "Edit User",
+      "managePermissions": "Manage Permissions",
+      "deleteUser": "Delete User",
+      "cannotDeleteSelf": "Cannot delete your own account",
+      "noUsersFound": "No users found",
+      "basicInfo": "Basic Information",
+      "otherSettings": "Other Settings",
+      "roleAssignment": "Role Assignment",
+      "assignRoles": "Assign appropriate roles to this user",
+      "selectedRoles": "Selected Roles",
+      "pleaseSelectRole": "Please select a role",
+      "noDescription": "No description available",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "emailVerified": "Email Verified",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "notSet": "Not Set",
+      "enterUsername": "Enter username",
+      "enterEmail": "Enter email address",
+      "enterPassword": "Enter password",
+      "enterFirstName": "Enter first name",
+      "enterLastName": "Enter last name",
+      "selectRole": "Select Role",
+      "updateRole": "Update Role",
+      "updateUser": "Update",
+      "cancel": "Cancel",
+      "requiredField": "Required field",
+      "addNewUser": "Add a new user account to the system",
+      "activationNotice": "After activation, the user will be able to log in to the system normally. Please select a role for the user to ensure they have appropriate permissions.",
+      "confirmDelete": "Are you sure you want to delete this user?",
+      "viewUserDetails": "View User Details",
+      "name": "Name",
+      "userStatus": "User Status",
+      "emailVerificationStatus": "Email Verification Status",
+      "createdAt": "Created At",
+      "lastLoginAt": "Last Login At",
+      "userRoles": "User Roles",
+      "fullName": "Full Name",
+      "editUserInfo": "Edit User Information",
+      "manageRoles": "Manage Roles",
+      "activateUserWithRole": "Activate User",
+      "activateDescription": "After activation, the user will be able to log in to the system normally. Please select a role for the user to ensure they have appropriate permissions.",
+      "selectRoleRequired": "Select Role",
+      "activateUserButton": "Activate User",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "inactive": "Inactive",
+        "suspended": "Suspended"
+      },
+      "messages": {
+        "pleaseLogin": "Please login first",
+        "fetchUsersFailed": "Failed to fetch user list",
+        "fetchCurrentUserFailed": "Failed to fetch current user information",
+        "fetchRolesFailed": "Failed to fetch role list",
+        "createSuccess": "Created Successfully",
+        "userCreated": "User created successfully",
+        "createFailed": "Creation Failed",
+        "createUserFailed": "Failed to create user",
+        "updateSuccess": "Updated Successfully",
+        "userUpdated": "User information updated successfully",
+        "updateFailed": "Update Failed",
+        "updateUserFailed": "Failed to update user",
+        "roleUpdateSuccess": "Role Updated Successfully",
+        "userRoleUpdated": "User role updated successfully",
+        "roleUpdateFailed": "Role Update Failed",
+        "updateUserRoleFailed": "Failed to update user role",
+        "activationFailed": "Activation Failed",
+        "activateUserFailed": "Failed to activate user",
+        "roleAssignFailed": "Role Assignment Failed",
+        "assignUserRoleFailed": "Failed to assign user role",
+        "activationSuccess": "Activation Successful",
+        "userActivated": "User has been successfully activated and assigned roles, can now log in to the system normally",
+        "operationFailed": "Operation Failed",
+        "cannotDeleteSelf": "Cannot delete your own account",
+        "deleteSuccess": "Deleted Successfully",
+        "userDeleted": "User deleted successfully",
+        "deleteFailed": "Deletion Failed",
+        "deleteUserFailed": "Failed to delete user"
+      }
+    },
+    "roles": {
+      "title": "Role Management",
+      "createRole": "Create Role",
+      "editRole": "Edit Role",
+      "deleteRole": "Delete Role",
+      "managePermissions": "Manage Permissions",
+      "roleInfo": "Role Information",
+      "userCount": "User Count",
+      "permissionCount": "Permission Count",
+      "type": "Type",
+      "actions": "Actions",
+      "systemRole": "System Role",
+      "customRole": "Custom Role",
+      "roleId": "Role ID",
+      "roleName": "Role Name",
+      "roleDisplayName": "Display Name",
+      "description": "Description",
+      "basicInfo": "Basic Information",
+      "permissionAssignment": "Permission Assignment",
+      "createNewRole": "Create a new role for the system and assign permissions",
+      "editRoleInfo": "Modify role basic information",
+      "manageRolePermissions": "Manage Role Permissions",
+      "assignPermissions": "Assign appropriate permissions to this role",
+      "selectedPermissions": "Selected Permissions",
+      "selectPermissionsPrompt": "Please select permissions",
+      "permissionsSelected": "Selected {count} / {total} permissions",
+      "enterRoleName": "e.g.: Editor",
+      "roleNameHint": "💡 The system will automatically generate a unique role identifier, you only need to enter an easy-to-understand display name",
+      "descriptionPlaceholder": "Describe the function and purpose of this role...",
+      "requiredField": "Required field",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "updatePermissions": "Update",
+      "loading": "loading...",
+      "pleaseLogin": "Please login first",
+      "confirmDeleteRole": "Are you sure you want to delete role \"{roleName}\"? This action cannot be undone.",
+      "assignPermissionsTo": "Assign permissions to role \"{roleName}\"",
+      "resourceNames": {
+        "users": "👥 User Management",
+        "roles": "🛡️ Role Management",
+        "permissions": "🔐 Permission Management",
+        "conversations": "💬 Conversation Management",
+        "agents": "🤖 Agent Management",
+        "models": "🧠 Model Management",
+        "settings": "⚙️ System Settings",
+        "system": "🔧 System Management",
+        "notes": "📝 Note Management"
+      },
+      "messages": {
+        "fetchRolesFailed": "Failed to fetch roles list",
+        "fetchPermissionsFailed": "Failed to fetch permissions list",
+        "createSuccess": "Created Successfully",
+        "roleCreatedSuccess": "Role created successfully",
+        "createFailed": "Creation Failed",
+        "createRoleFailed": "Failed to create role",
+        "editSuccess": "Edited Successfully",
+        "roleUpdatedSuccess": "Role information updated successfully",
+        "editFailed": "Edit Failed",
+        "updateRoleFailed": "Failed to update role information",
+        "deleteSuccess": "Deleted Successfully",
+        "roleDeletedSuccess": "Role deleted successfully",
+        "deleteFailed": "Deletion Failed",
+        "deleteRoleFailed": "Failed to delete role",
+        "permissionUpdateSuccess": "Permissions Updated Successfully",
+        "rolePermissionUpdatedSuccess": "Role permissions updated successfully",
+        "permissionUpdateFailed": "Permission Update Failed",
+        "updateRolePermissionFailed": "Failed to update role permissions"
+      }
+    },
+    "models": {
+      "title": "Model Management",
+      "subtitle": "Manage and configure AI models",
+      "modelCount": "Total {count} models",
+      "loading": "loading...",
+      "sync": "Sync",
+      "syncing": "Syncing...",
+      "pull": "Pull",
+      "upload": "Upload",
+      "createModelfile": "Create Modelfile",
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "details": "Details",
+        "chat": "Chat",
+        "sync": "Sync Models",
+        "pullModel": "Pull Model",
+        "uploadModel": "Upload Model",
+        "createFromModelfile": "Create from Modelfile"
+      },
+      "processing": {
+        "deleting": "Deleting model...",
+        "creating": "Creating model...",
+        "updating": "Updating model...",
+        "creatingModelfile": "Creating Modelfile model...",
+        "processing": "Processing..."
+      },
+      "deleteModal": {
+        "title": "Confirm Delete Model",
+        "content": "Are you sure you want to delete model \"{modelName}\"? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Confirm Delete"
+      },
+      "messages": {
+        "syncFailed": "Sync Failed",
+        "syncFailedDesc": "Please check if Ollama service is running normally",
+        "syncSuccess": "Sync Successful",
+        "syncSuccessDesc": "Synced {count} models",
+        "loadFailed": "Failed to load model list",
+        "networkError": "Network Error",
+        "networkErrorDesc": "Please check network connection and try again",
+        "createSuccess": "Model Created Successfully",
+        "createSuccessDesc": "New model has been added to the list",
+        "createFailed": "Failed to create model",
+        "updateSuccess": "Model Updated Successfully",
+        "updateSuccessDesc": "Model information has been saved",
+        "updateFailed": "Failed to update model",
+        "deleteSuccess": "Model Deleted Successfully",
+        "deleteSuccessDesc": "Model has been removed from the list",
+        "deleteFailed": "Failed to delete model",
+        "modelfileCreateSuccess": "Modelfile Model Created Successfully",
+        "modelfileCreateSuccessDesc": "Model \"{modelName}\" has been created",
+        "modelfileCreateFailed": "Failed to create Modelfile model"
+      },
+      "modelfileForm": {
+        "title": "Create Modelfile",
+        "subtitle": "Customize model based on Ollama Modelfile",
+        "basicInfo": "Basic Information",
+        "systemPrompt": "System Prompt",
+        "modelParameters": "Model Parameters",
+        "advancedSettings": "Advanced Settings",
+        "fields": {
+          "displayName": "Model Alias",
+          "displayNamePlaceholder": "User-friendly display name, supports Chinese",
+          "displayNameRequired": "Model alias cannot be empty",
+          "baseModel": "Base Model",
+          "baseModelRequired": "Please select a base model",
+          "baseModelLoading": "Loading model list...",
+          "tags": "Tags",
+          "tagsPlaceholder": "Press Enter or comma to add tags, max 6",
+          "tagsPlaceholderEmpty": "Add tags...",
+          "selectNote": "Select Note",
+          "promptContent": "Prompt Content",
+          "promptContentPlaceholder": "Define the model's role and behavior...",
+          "template": "Conversation Template",
+          "templatePlaceholder": "{{ if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant\n{{ .Response }}<|im_end|>\n",
+          "license": "License",
+          "licensePlaceholder": "Enter license information..."
+        },
+        "parameters": {
+          "temperature": "Temperature",
+          "temperatureHint": "Creativity level (0.0-2.0)",
+          "topP": "Top P",
+          "topPHint": "Nucleus sampling (0.0-1.0)",
+          "topK": "Top K",
+          "topKHint": "Candidate words count (1-100)",
+          "repeatPenalty": "Repeat Penalty",
+          "repeatPenaltyHint": "Prevent repetition (0.0-2.0)",
+          "contextLength": "Context Length",
+          "contextLengthHint": "Context window size",
+          "maxGeneration": "Max Generation",
+          "maxGenerationHint": "-1 for unlimited"
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "createModel": "Create Model",
+          "previewModelfile": "Preview Modelfile",
+          "hidePreview": "Hide Preview",
+          "downloadModelfile": "Download Modelfile",
+          "optimizePrompt": "Optimize Current Prompt",
+          "optimizing": "Optimizing...",
+          "expand": "Expand",
+          "collapse": "Collapse"
+        },
+        "preview": {
+          "title": "Modelfile Preview"
+        },
+        "messages": {
+          "authFailed": "Authentication failed, please login again",
+          "loadModelsFailed": "Failed to load available models",
+          "optimizePromptConfigFirst": "Please configure prompt optimization in settings first",
+          "optimizePromptFailed": "Prompt optimization failed: {error}",
+          "optimizePromptEmpty": "Please enter prompt content first",
+          "optimizePromptDisabled": "Please configure prompt optimization in settings first"
+        }
+      },
+      "fileUploadForm": {
+        "title": "Create Model from File",
+        "subtitle": "Select local GGUF file to create custom model",
+        "basicInfo": "Basic Information",
+        "modelFile": "Model File",
+        "advancedSettings": "Advanced Settings",
+        "fields": {
+          "modelAlias": "Model Alias",
+          "modelAliasPlaceholder": "e.g.: My Custom Model",
+          "modelAliasRequired": "Model name cannot be empty",
+          "ggufFilePath": "GGUF File Path",
+          "filePathRequired": "Please enter a valid file path",
+          "fileFormatError": "File must be .gguf or .bin format",
+          "filePathInvalid": "Please enter a valid file path (absolute or relative path)",
+          "quantization": "Quantization Options",
+          "quantizationHint": "Quantization can reduce model size but may affect quality"
+        },
+        "quantizationOptions": {
+          "none": "No quantization",
+          "q4_K_M": "Q4_K_M (Recommended, medium quality)",
+          "q4_K_S": "Q4_K_S (Small size)",
+          "q8_0": "Q8_0 (Recommended, high quality)"
+        },
+        "placeholders": {
+          "windows": "e.g.: D:\\Models\\your-model.gguf",
+          "mac": "e.g.: /Users/yourname/Models/your-model.gguf",
+          "linux": "e.g.: /home/yourname/models/your-model.gguf"
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "createModel": "Create Model",
+          "creating": "Creating..."
+        },
+        "errors": {
+          "validation": {
+            "title": "Input Validation Failed",
+            "message": "Please check if the input information is correct"
+          },
+          "nameConflict": {
+            "title": "Model Name Conflict",
+            "message": "Model name already exists, please try using a different name"
+          },
+          "fileError": {
+            "title": "File Access Error",
+            "message": "Unable to access the specified file, please check file path and permissions"
+          },
+          "ollamaNotFound": {
+            "title": "Ollama Not Installed",
+            "message": "Ollama is not properly installed or configured, please install Ollama first and ensure it's in the system PATH"
+          },
+          "permissionError": {
+            "title": "Insufficient Permissions",
+            "message": "Insufficient permissions, please run as administrator or check file permissions"
+          },
+          "timeoutError": {
+            "title": "Operation Timeout",
+            "message": "Operation timed out, possibly due to large file size. Please try again later or use a smaller file"
+          },
+          "storageError": {
+            "title": "Insufficient Storage Space",
+            "message": "Insufficient disk space, please clear disk space and try again"
+          },
+          "commandError": {
+            "title": "Ollama Command Failed",
+            "message": "Model creation command failed, please check if the file format is correct"
+          },
+          "serverError": {
+            "title": "Server Error",
+            "message": "Server error occurred while processing the request, please try again later"
+          },
+          "default": {
+            "title": "Creation Failed",
+            "message": "Model creation failed, please try again"
+          },
+          "networkError": {
+            "title": "Network Error",
+            "message": "Unable to connect to server: {error}"
+          }
+        },
+        "messages": {
+          "createSuccess": "Model Created Successfully",
+          "createSuccessDesc": "Model \"{modelName}\" has been successfully created and added to the list",
+          "createSuccessShort": "Model \"{modelName}\" created successfully!"
+        }
+      },
+      "pullModelModal": {
+        "title": "Pull Model",
+        "subtitle": "Download model from Ollama repository to local",
+        "fields": {
+          "modelName": "Model Name",
+          "modelNamePlaceholder": "e.g.: llama3.2:latest or paste ollama run command directly"
+        },
+        "progress": {
+          "downloadProgress": "Download Progress",
+          "calculating": "Calculating...",
+          "processing": "Processing...",
+          "layer": "Layer"
+        },
+        "status": {
+          "pullCompleted": "Pull completed!",
+          "pullCancelled": "Pull cancelled",
+          "error": "Error: {message}"
+        },
+        "actions": {
+          "startPull": "Start Pull",
+          "cancelDownload": "Cancel Download",
+          "close": "Close",
+          "complete": "Complete"
+        },
+        "external": {
+          "ollamaLibrary": "Visit Ollama Model Library",
+          "modelscopeLibrary": "Visit ModelScope Library"
+        },
+        "messages": {
+          "enterModelName": "Please enter model name",
+          "pullFailed": "Failed to pull model",
+          "responseEmpty": "Response body is empty",
+          "pullSuccess": "Pull Successful",
+          "pullSuccessDesc": "Model \"{modelName}\" has been successfully pulled",
+          "cancelled": "Cancelled",
+          "pullCancelledDesc": "Model pull has been cancelled",
+          "pullFailedDesc": "Pull Failed"
+        }
+      },
+      "modelList": {
+        "loading": "Loading models...",
+        "empty": {
+          "title": "No models found",
+          "description": "Try syncing Ollama or adjusting search and filter conditions. You can also create custom model configurations."
+        },
+        "actions": {
+          "startChat": "Start Chat",
+          "viewDetails": "View Details",
+          "edit": "Edit",
+          "delete": "Delete"
+        },
+        "tags": {
+          "noTags": "No Tags"
+        }
+      },
+      "modelDetails": {
+        "title": "Model Details",
+        "sections": {
+          "basicInfo": "Basic Information",
+          "advancedConfig": "Advanced Configuration",
+          "license": "License"
+        },
+        "fields": {
+          "modelAlias": "Model Alias",
+          "baseModel": "Base Model",
+          "modelFamily": "Model Family",
+          "architecture": "Architecture",
+          "parameterScale": "Parameter Scale",
+          "fileSize": "File Size",
+          "contextLength": "Context Length",
+          "embeddingLength": "Embedding Length",
+          "quantizationLevel": "Quantization Level",
+          "fileFormat": "File Format",
+          "modelCapabilities": "Model Capabilities",
+          "updateTime": "Update Time",
+          "ollamaModifiedTime": "Ollama Modified Time",
+          "systemPrompt": "System Prompt",
+          "modelParameters": "Model Parameters",
+          "template": "Template",
+          "licenseInfo": "License Information"
+        },
+        "values": {
+          "unknown": "Unknown",
+          "notSet": "Not Set"
+        }
+      }
+    }
+  },
+  "agents": {
+    "title": "Agent Management",
+    "subtitle": "Create and manage AI agents",
+    "count": "Total {count} agents",
+    "actions": {
+      "create": "Create Agent",
+      "edit": "Edit",
+      "delete": "Delete",
+      "startChat": "Start Chat",
+      "showMemory": "Show Memory",
+      "showDetails": "Show Details",
+      "loading": "Loading...",
+      "processing": "Processing...",
+      "reset": "Reset",
+      "cancel": "Cancel",
+      "save": "Save",
+      "update": "Update",
+      "saving": "Saving..."
+    },
+    "list": {
+      "loading": "Loading agents...",
+      "empty": {
+        "title": "No agents found",
+        "description": "Click the \"Create Agent\" button above to create your first agent."
+      },
+      "noDescription": "No description"
+    },
+    "form": {
+      "createTitle": "Create Agent",
+      "editTitle": "Edit Agent",
+      "subtitle": "Configure agent models, tools and behavior",
+      "operationFailed": "Operation Failed",
+      "sections": {
+        "basicInfo": "Basic Information",
+        "modelConfig": "Model Configuration",
+        "toolConfig": "Tool Configuration"
+      },
+      "fields": {
+        "avatar": "Avatar",
+        "name": "Agent Name",
+        "namePlaceholder": "such as: Lucy, Tifa Lockhart, 2B...",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the main functions and use cases of this agent...",
+        "model": "Model",
+        "mcpServersAndTools": "MCP Servers and Tools"
+      },
+      "validation": {
+        "modelSupportsTools": "✅ Model supports tool calling",
+        "maxToolsReached": "Maximum number of tools reached",
+        "maxToolsError": "Maximum 10 tools can be selected",
+        "toolsSelected": "Selected {servers} servers, {tools}/10 tools"
+      },
+      "toolConfig": {
+        "noServersAvailable": "No MCP servers available",
+        "clearAll": "Clear all selections",
+        "removeToolTitle": "Remove tool: {name}",
+        "collapseToolList": "Collapse tool list",
+        "expandToolList": "Expand tool list",
+        "selectTools": "Select tools ({selected}/{total})",
+        "toolsCount": "({count} tools)"
+      },
+      "avatar": {
+        "preview": "Avatar preview",
+        "uploading": "Uploading...",
+        "upload": "Upload Avatar",
+        "change": "Change Avatar",
+        "supportedFormats": "Supports JPG, PNG formats, recommended size 200x200px, max 5MB",
+        "selectImageFile": "Please select image file",
+        "fileSizeLimit": "Image file cannot exceed 5MB",
+        "uploadFailed": "Avatar upload failed, please retry",
+        "uploadFailedConsole": "Avatar upload failed:",
+        "previewLoadFailed": "Avatar preview load failed:"
+      },
+      "memory": {
+        "enableMemory": "Enable Memory Function",
+        "loadingSettings": "Loading memory settings...",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "hint": "When enabled, the agent will automatically summarize conversation history to save context space. For detailed configuration, please go to the settings page."
+      },
+      "resetForm": "Reset Form"
+    },
+    "memory": {
+      "title": "{name}'s Memory",
+      "statsInfo": "Total {count} memories, saved {tokens} tokens",
+      "memoryList": "Memory List",
+      "memoryContent": "Memory Content",
+      "editMemory": "Edit Memory",
+      "editMemoryTitle": "Edit Memory",
+      "deleteMemoryTitle": "Delete Memory",
+      "loading": "Loading memories...",
+      "loadFailed": "Load Failed",
+      "empty": {
+        "title": "No Memories",
+        "description": "This agent has no memory records yet"
+      },
+      "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit Memory",
+        "delete": "Delete Memory"
+      },
+      "deleteModal": {
+        "title": "Confirm Delete Memory",
+        "content": "Are you sure you want to delete this memory? This action cannot be undone.",
+        "memoryPreview": "Memory content: {content}...",
+        "confirm": "Confirm Delete",
+        "cancel": "Cancel"
+      },
+      "messages": {
+        "loadFailed": "Failed to get memory data",
+        "requestFailed": "Request failed ({status})",
+        "networkError": "Network error",
+        "loadError": "Loading memory failed:",
+        "contentEmpty": "Memory content cannot be empty",
+        "jsonFormatError": "JSON format error, please check format",
+        "updateSuccess": "Memory updated successfully",
+        "updateFailed": "Update failed: {error}",
+        "updateError": "Failed to update memory, please try again later",
+        "updateErrorConsole": "Error occurred while updating memory:",
+        "deleteSuccess": "Memory deleted successfully",
+        "deleteFailed": "Delete failed: {error}",
+        "deleteError": "Failed to delete memory, please try again later",
+        "deleteErrorConsole": "Error occurred while deleting memory:",
+        "processing": "Processing...",
+        "noContent": "No content"
+      },
+      "placeholder": {
+        "editContent": "Please enter memory content in JSON format..."
+      }
+    },
+    "deleteModal": {
+      "title": "Confirm Delete Agent",
+      "content": "Are you sure you want to delete agent '{name}'? This action cannot be undone.",
+      "confirm": "Confirm Delete",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "loadFailed": "Failed to load agents",
+      "deleteFailed": "Failed to delete agent",
+      "deleteSuccess": "Delete Successful",
+      "deleteSuccessDesc": "Agent \"{name}\" has been deleted",
+      "createSuccess": "Create Successful",
+      "createSuccessDesc": "New agent has been created",
+      "updateSuccess": "Update Successful",
+      "updateSuccessDesc": "Agent has been updated",
+      "tokenNotFound": "Access token not found, please login again",
+      "loadFormDataFailed": "Failed to load form data",
+      "cannotOpenEditor": "Cannot open agent editor",
+      "unknownError": "Unknown error occurred"
+    }
+  },
+  "mcp": {
+    "title": "MCP Server Management",
+    "subtitle": "Manage Model Context Protocol servers, configure tools and connections",
+    "actions": {
+      "addServer": "Add Server",
+      "deleteServer": "Delete Server",
+      "checkStatus": "Check Connection Status",
+      "syncTools": "Sync Local Tools to Database",
+      "loading": "loading..."
+    },
+    "tabs": {
+      "all": "All",
+      "local": "Local Servers",
+      "external": "External Servers"
+    },
+    "server": {
+      "status": "Status: {status}",
+      "error": "Error: {message}",
+      "toolsCount": "{count} tools",
+      "type": {
+        "stdio": "Local",
+        "sse": "External",
+        "websocket": "WebSocket"
+      }
+    },
+    "deleteModal": {
+      "title": "Confirm Delete Server",
+      "content": "Are you sure you want to delete server \"{name}\"? This action cannot be undone.",
+      "confirm": "Confirm Delete",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "localServerCannotDelete": "Local server does not support delete operation",
+      "deleteSuccess": "Server deleted successfully",
+      "deleteSuccessDesc": "Server \"{name}\" has been deleted",
+      "deleteConfigFailed": "Failed to delete configuration file",
+      "deleteServerFailed": "Failed to delete server",
+      "unknownError": "Unknown error"
+    },
+    "execution": {
+      "resultTitle": "Tool Execution Result - {toolName}",
+      "success": "Execution Successful",
+      "failed": "Execution Failed",
+      "close": "✕"
+    },
+    "addServer": {
+      "title": "Add MCP Server",
+      "subtitle": "Configure new Model Context Protocol server",
+      "sections": {
+        "basicConfig": "Basic Configuration",
+        "connectionConfig": "Connection Configuration",
+        "toolConfig": "Tool Parameter Configuration"
+      },
+      "fields": {
+        "serverName": "Server Name",
+        "serverNamePlaceholder": "Unique name to identify the server",
+        "serverNameRequired": "Server name cannot be empty",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional: Describe the server's purpose and functionality",
+        "serverType": "Server Type (Choose server connection method)",
+        "serverUrl": "Server URL",
+        "urlPlaceholder": {
+          "sse": "e.g.: https://mcp.api-inference.modelscope.net/******/sse",
+          "streamableHttp": "e.g.: http://localhost:8080/mcp"
+        }
+      },
+      "connection": {
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "urlRequired": "Please fill in the server URL first",
+        "testFirst": "Please test the server connection first and ensure connection is successful",
+        "serverError": "Server response error: {status} {statusText}",
+        "connectionFailed": "Connection test failed"
+      },
+      "validation": {
+        "toolsFound": "Found {count} available tools",
+        "showTools": "Show tool parameters",
+        "hideTools": "Hide tool parameters"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "add": "Add Server"
+      }
+    },
+    "tools": {
+      "modalTitle": "{serverName} - Tool List",
+      "modalSubtitle": "Total {count} tools",
+      "empty": {
+        "title": "No available tools",
+        "selectPrompt": "Select a tool to view details"
+      },
+      "tool": {
+        "noDescription": "No description",
+        "enable": "Enable tool",
+        "disable": "Disable tool",
+        "paramConfig": "Parameter Configuration",
+        "noParams": "This tool requires no parameters",
+        "required": "*",
+        "selectOption": "Please select...",
+        "parseError": "Parameter schema parsing failed",
+        "executing": "Tool executing...",
+        "useTool": "Use Tool"
+      },
+      "messages": {
+        "configSaved": "Tool configuration saved",
+        "saveConfigFailed": "Failed to save configuration",
+        "updateStatusFailed": "Failed to update tool status",
+        "parseSchemeFailed": "Failed to parse tool parameter schema:"
+      }
+    }
+  },
+  "chat": {
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "newConversation": "New Conversation",
+    "regenerate": "Regenerate",
+    "copy": "Copy",
+    "copySuccess": "Copied!",
+    "copyCode": "Copy Code",
+    "copyFailed": "Copy failed"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password",
+    "rememberMe": "Remember Me"
+  },
+  "conversations": {
+    "title": "Conversation History",
+    "subtitle": "View and manage all historical conversation records · Total {count} conversations",
+    "loading": "Loading...",
+    "actions": {
+      "batchSelect": "Batch Select",
+      "newConversation": "New Conversation",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "deleteSelected": "Delete Selected",
+      "cancel": "Cancel",
+      "retry": "Retry"
+    },
+    "selection": {
+      "selected": "Selected {count} items",
+      "selectedAll": "Select All",
+      "deselectAll": "Deselect All"
+    },
+    "search": {
+      "placeholder": "Search conversation title or model..."
+    },
+    "empty": {
+      "noConversations": "No conversation history",
+      "noSearchResults": "No matching conversations found"
+    },
+    "error": {
+      "loadFailed": "Failed to load conversation list",
+      "retryPrompt": "Please check network connection and try again"
+    },
+    "deleteModal": {
+      "title": "Delete Conversation",
+      "content": "Are you sure you want to delete conversation \"{title}\"?",
+      "warning": "This action will permanently delete the conversation and all its messages, and cannot be undone.",
+      "confirm": "Confirm Delete",
+      "cancel": "Cancel",
+      "deleting": "Deleting..."
+    },
+    "batchDeleteModal": {
+      "title": "Batch Delete Conversations",
+      "content": "Are you sure you want to delete the selected {count} conversations?",
+      "warning": "This action will permanently delete these conversations and all their messages, and cannot be undone.",
+      "listTitle": "Conversations to be deleted:",
+      "confirm": "Confirm Delete",
+      "cancel": "Cancel",
+      "deleting": "Deleting..."
+    },
+    "timeGroups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "threeDaysAgo": "Three Days Ago",
+      "pastWeek": "Past Week",
+      "older": "Older"
+    },
+    "stats": {
+      "messages": "{count} messages",
+      "tokens": "{count} tokens",
+      "characters": "{count} characters",
+      "createdAt": "Created on {date}",
+      "updatedAt": "Updated on {time}"
+    },
+    "hints": {
+      "clickToEnter": "Click to enter conversation",
+      "clickToSelect": "Click to select conversation",
+      "deleteConversation": "Delete conversation"
+    },
+    "messages": {
+      "loadFailed": "Failed to load conversation list",
+      "deleteSuccess": "Delete Successful",
+      "deleteSuccessDesc": "Conversation \"{title}\" has been deleted",
+      "deleteFailed": "Delete Failed",
+      "batchDeleteSuccess": "Batch Delete Successful",
+      "batchDeleteSuccessDesc": "Deleted {count} conversations",
+      "batchDeleteFailed": "Batch Delete Failed",
+      "networkError": "Network Error",
+      "authError": "Authentication failed, please login again",
+      "unknownError": "Unknown error occurred while loading conversations"
+    }
+  },
+  "notes": {
+    "title": "Notes Management",
+    "subtitle": {
+      "private": "Record ideas, organize knowledge, share insights · Total {count} my notes",
+      "public": "Discover exciting content, learn from others' insights · Total {count} public notes"
+    },
+    "loading": "Loading notes...",
+    "loadingShort": "Loading...",
+    "create": {
+      "title": "New Note",
+      "titleField": "Note Title",
+      "titlePlaceholder": "Enter note title...",
+      "contentPlaceholder": "Start writing your note content...",
+      "tagsField": "Tags",
+      "tagsPlaceholder": "Press Enter or comma to add tags, max 6",
+      "tagsAddPlaceholder": "Add tags...",
+      "saveButton": "Create",
+      "savingButton": "Saving...",
+      "publicNote": "Public Note",
+      "privateNote": "My Note"
+    },
+    "edit": {
+      "title": "Edit Note",
+      "saveButton": "Save Note",
+      "savingButton": "Saving...",
+      "notFound": "Note not found",
+      "notFoundDesc": "Please check if the link is correct",
+      "noPermission": "No permission",
+      "noPermissionDesc": "Only note authors can edit"
+    },
+    "detail": {
+      "title": "Note Details",
+      "notFound": "Note not found",
+      "notFoundDesc": "Please check if the link is correct",
+      "shareLink": "Share Link",
+      "copyLink": "Copy",
+      "linkCopied": "Copied"
+    },
+    "tabs": {
+      "private": "My Notes",
+      "public": "Public Notes"
+    },
+    "actions": {
+      "create": "Create Note",
+      "edit": "Edit",
+      "view": "View Details",
+      "share": "Share Note",
+      "sharing": "Sharing...",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "back": "Back",
+      "save": "Save",
+      "clearSearch": "Clear Search",
+      "returnToList": "Return to Note List"
+    },
+    "search": {
+      "placeholder": "Search note title or content..."
+    },
+    "sort": {
+      "updatedAt": "Update Time",
+      "createdAt": "Create Time",
+      "title": "Title",
+      "ascending": "Ascending Order",
+      "descending": "Descending Order"
+    },
+    "status": {
+      "public": "Public",
+      "private": "Private",
+      "noTags": "No Tags"
+    },
+    "time": {
+      "createdAt": "Created on {time}",
+      "updatedAt": "Updated on {time}",
+      "unknownAuthor": "Unknown Author"
+    },
+    "empty": {
+      "noNotes": {
+        "title": "No notes yet",
+        "description": "Start creating your first note to record ideas, organize knowledge, and share insights"
+      },
+      "noSearchResults": {
+        "title": "No matching notes found",
+        "description": "Try using different keywords to search"
+      }
+    },
+    "deleteModal": {
+      "title": "Confirm Delete Note",
+      "content": "Are you sure you want to delete note \"{title}\"? This action cannot be undone.",
+      "contentDetail": "This action cannot be undone. Are you sure you want to delete this note?",
+      "noteTitle": "Note title: {title}",
+      "confirm": "Confirm Delete",
+      "cancel": "Cancel"
+    },
+    "confirmModal": {
+      "leaveTitle": "Confirm Leave",
+      "leaveContent": "Are you sure you want to leave? Unsaved changes will be lost.",
+      "unsavedContent": "You have unsaved content, are you sure you want to leave?",
+      "confirmLeave": "Confirm Leave",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "titleRequired": "Please enter title",
+      "titleEmpty": "Title cannot be empty",
+      "contentRequired": "Please enter content",
+      "contentEmpty": "Note content cannot be empty"
+    },
+    "messages": {
+      "fetchFailed": "Failed to get notes",
+      "fetchFailedDesc": "Please try again later",
+      "authFailed": "Authentication failed",
+      "authFailedDesc": "Please login again",
+      "shareSuccess": "Share link copied",
+      "shareSuccessDesc": "You can share the link with others",
+      "shareFailed": "Share failed",
+      "shareFailedDesc": "Network error, please try again later",
+      "shareFailedUnknown": "Unknown error",
+      "shareSuccessPublic": "Share successful",
+      "shareSuccessPublicDesc": "Note has been set to public",
+      "deleteSuccess": "Delete successful",
+      "deleteSuccessDesc": "Note has been deleted",
+      "deleteFailed": "Delete failed",
+      "deleteFailedDesc": "Network error, please try again later",
+      "deleteFailedUnknown": "Unknown error",
+      "createSuccess": "Note created successfully",
+      "createSuccessDesc": "Redirecting to notes management page",
+      "createFailed": "Creation failed",
+      "createFailedDesc": "Network error, please try again later",
+      "createFailedUnknown": "Unknown error",
+      "updateSuccess": "Note updated successfully",
+      "updateSuccessDesc": "Redirecting to note list page",
+      "updateFailed": "Update failed",
+      "updateFailedDesc": "Network error, please try again later",
+      "updateFailedUnknown": "Unknown error",
+      "getFailed": "Get failed",
+      "getFailedDesc": "Unable to get note details",
+      "copySuccess": "Copy successful",
+      "copySuccessDesc": "Share link copied to clipboard",
+      "copyFailed": "Copy failed",
+      "copyFailedDesc": "Please copy the link manually",
+      "networkError": "Network error, please try again later"
+    }
+  },
+  "errors": {
+    "generic": "An error occurred, please try again later",
+    "network": "Network error, please check your connection",
+    "auth": "Authentication failed, please login again",
+    "notFound": "Requested resource not found",
+    "permission": "Insufficient permissions"
+  }
+}

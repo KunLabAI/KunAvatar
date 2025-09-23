@@ -6,6 +6,7 @@ import ModelLogo from '@/app/model-manager/components/ModelLogo';
 import ModalWrapper from './ModalWrapper';
 import { Button, FormSection } from './FormComponents';
 import { formatTime } from '@/lib/utils/time';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ModelDetailsModalProps {
   model: CustomModel | null;
@@ -24,11 +25,13 @@ const formatFileSize = (bytes: number): string => {
 const InfoRow = ({ 
   label, 
   value, 
-  mono = false
+  mono = false,
+  t
 }: { 
   label: string; 
   value: React.ReactNode;
   mono?: boolean;
+  t: (key: string) => string;
 }) => (
   <div className="py-3">
     <div className="text-sm font-medium text-theme-foreground-muted mb-2">
@@ -41,12 +44,14 @@ const InfoRow = ({
         {value}
       </div>
     ) : (
-      <div className="text-theme-foreground-muted text-sm italic">未设置</div>
+      <div className="text-theme-foreground-muted text-sm italic">{t('settings.models.modelDetails.values.notSet')}</div>
     )}
   </div>
 );
 
 export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalProps) {
+  const { t } = useI18n();
+  
   if (!model) return null;
 
   const modalIcon = (
@@ -91,41 +96,47 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
           <div className="space-y-10">
             {/* 基本信息 */}
             <div>
-              <h3 className="section-title !text-theme-foreground-muted mb-6">基本信息</h3>
+              <h3 className="section-title !text-theme-foreground-muted">{t('settings.models.modelDetails.sections.basicInfo')}</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
                 <div className="space-y-1">
-                  <InfoRow label="模型别名" value={model.display_name} />
-                  <InfoRow label="基础模型" value={model.base_model} />
-                  <InfoRow label="模型家族" value={model.family} />
-                  <InfoRow label="架构" value={model.architecture || '未知'} />
+                  <InfoRow label={t('settings.models.modelDetails.fields.modelAlias')} value={model.display_name} t={t} />
+                  <InfoRow label={t('settings.models.modelDetails.fields.baseModel')} value={model.base_model} t={t} />
+                  <InfoRow label={t('settings.models.modelDetails.fields.modelFamily')} value={model.family} t={t} />
+                  <InfoRow label={t('settings.models.modelDetails.fields.architecture')} value={model.architecture || t('settings.models.modelDetails.values.unknown')} t={t} />
                   <InfoRow 
-                    label="参数规模" 
-                    value={model.parameter_count ? `${(model.parameter_count / 1e9).toFixed(1)}B` : '未知'} 
+                    label={t('settings.models.modelDetails.fields.parameterScale')} 
+                    value={model.parameter_count ? `${(model.parameter_count / 1e9).toFixed(1)}B` : t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="文件大小" 
-                    value={model.size ? formatFileSize(model.size) : '未知'} 
+                    label={t('settings.models.modelDetails.fields.fileSize')} 
+                    value={model.size ? formatFileSize(model.size) : t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                 </div>
                 <div className="space-y-1">
                   <InfoRow 
-                    label="上下文长度" 
-                    value={model.context_length ? model.context_length.toLocaleString() : '未知'} 
+                    label={t('settings.models.modelDetails.fields.contextLength')} 
+                    value={model.context_length ? model.context_length.toLocaleString() : t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="嵌入长度" 
-                    value={model.embedding_length ? model.embedding_length.toLocaleString() : '未知'} 
+                    label={t('settings.models.modelDetails.fields.embeddingLength')} 
+                    value={model.embedding_length ? model.embedding_length.toLocaleString() : t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="量化级别" 
-                    value={model.quantization_level || '未知'} 
+                    label={t('settings.models.modelDetails.fields.quantizationLevel')} 
+                    value={model.quantization_level || t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="文件格式" 
-                    value={model.format || '未知'} 
+                    label={t('settings.models.modelDetails.fields.fileFormat')} 
+                    value={model.format || t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="模型能力" 
+                    label={t('settings.models.modelDetails.fields.modelCapabilities')} 
                     value={model.capabilities && model.capabilities.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {model.capabilities.map((capability, index) => (
@@ -137,15 +148,18 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
                           </span>
                         ))}
                       </div>
-                    ) : '未知'} 
+                    ) : t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="更新时间" 
+                    label={t('settings.models.modelDetails.fields.updateTime')} 
                     value={formatTime(model.updated_at || model.created_at)} 
+                    t={t}
                   />
                   <InfoRow 
-                    label="Ollama修改时间" 
-                    value={model.ollama_modified_at ? formatTime(model.ollama_modified_at) : '未知'} 
+                    label={t('settings.models.modelDetails.fields.ollamaModifiedTime')} 
+                    value={model.ollama_modified_at ? formatTime(model.ollama_modified_at) : t('settings.models.modelDetails.values.unknown')} 
+                    t={t}
                   />
                 </div>
               </div>
@@ -153,18 +167,19 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
 
             {/* 高级配置 */}
             <div>
-              <h3 className="section-title !text-theme-foreground-muted mb-6">高级配置</h3>
+              <h3 className="section-title !text-theme-foreground-muted">{t('settings.models.modelDetails.sections.advancedConfig')}</h3>
               <div className="space-y-4">
                 <InfoRow 
-                  label="系统提示" 
+                  label={t('settings.models.modelDetails.fields.systemPrompt')} 
                   value={model.system_prompt ? (
                     <pre className="whitespace-pre-wrap text-sm bg-theme-background-secondary px-4 py-3 rounded-xl border border-theme-border overflow-x-auto scrollbar-thin">
                       {model.system_prompt}
                     </pre>
                   ) : null} 
+                  t={t}
                 />
                 <InfoRow 
-                  label="模型参数" 
+                  label={t('settings.models.modelDetails.fields.modelParameters')} 
                   value={model.parameters && Object.keys(model.parameters).length > 0 ? (
                     <div className="bg-theme-background-secondary px-4 py-3 rounded-xl border border-theme-border space-y-2">
                       {Object.entries(model.parameters).map(([key, value]) => {
@@ -178,28 +193,31 @@ export default function ModelDetailsModal({ model, onClose }: ModelDetailsModalP
                       })}
                     </div>
                   ) : null} 
+                  t={t}
                 />
                 <InfoRow 
-                  label="模板" 
+                  label={t('settings.models.modelDetails.fields.template')} 
                   value={model.template ? (
                     <pre className="whitespace-pre-wrap text-sm bg-theme-background-secondary px-4 py-3 rounded-xl border border-theme-border overflow-x-auto scrollbar-thin font-mono">
                       {model.template}
                     </pre>
                   ) : null} 
+                  t={t}
                 />
               </div>
             </div>
 
             {/* 许可证 */}
             <div>
-              <h3 className="section-title !text-theme-foreground-muted mb-6">许可证</h3>
+              <h3 className="section-title !text-theme-foreground-muted">{t('settings.models.modelDetails.sections.license')}</h3>
               <InfoRow 
-                label="许可证信息" 
+                label={t('settings.models.modelDetails.fields.licenseInfo')} 
                 value={model.license ? (
                   <pre className="whitespace-pre-wrap text-sm bg-theme-background-secondary px-4 py-3 rounded-xl border border-theme-border overflow-x-auto scrollbar-thin">
                     {model.license}
                   </pre>
                 ) : null} 
+                t={t}
               />
             </div>
           </div>

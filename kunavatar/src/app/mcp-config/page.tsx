@@ -11,8 +11,10 @@ import { Sidebar } from '../Sidebar';
 import { PageLoading } from '@/components/Loading';
 import { useConversations } from '@/hooks/useConversations';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useI18n } from '@/contexts/I18nContext';
 
 function McpConfigPageContent() {
+  const { t } = useI18n();
   const {
     servers,
     tools,
@@ -65,7 +67,7 @@ function McpConfigPageContent() {
     try {
       // 本地服务器不允许删除
       if (serverToDelete.name === 'local') {
-        notification && notification.error?.('本地服务器不支持删除操作');
+        notification && notification.error?.(t('mcp.messages.localServerCannotDelete'));
         setDeleteModalOpen(false);
         setServerToDelete(null);
         return;
@@ -87,7 +89,7 @@ function McpConfigPageContent() {
           }),
         });
         if (configResponse.ok) {
-          notification && notification.success?.('服务器删除成功', `服务器「${serverToDelete.displayName || serverToDelete.name}」已删除`);
+          notification && notification.success?.(t('mcp.messages.deleteSuccess'), t('mcp.messages.deleteSuccessDesc').replace('{name}', serverToDelete.displayName || serverToDelete.name));
           if (selectedServer === serverToDelete.name) {
             handleServerSelect(null as any);
             setTools([]);
@@ -95,14 +97,14 @@ function McpConfigPageContent() {
           await loadServers();
         } else {
           const configErrorData = await configResponse.json();
-          notification && notification.error?.('删除配置文件失败', configErrorData.error || '未知错误');
+          notification && notification.error?.(t('mcp.messages.deleteConfigFailed'), configErrorData.error || t('mcp.messages.unknownError'));
         }
       } else {
         const errorData = await response.json();
-        notification && notification.error?.('删除服务器失败', errorData.error || '未知错误');
+        notification && notification.error?.(t('mcp.messages.deleteServerFailed'), errorData.error || t('mcp.messages.unknownError'));
       }
     } catch (error) {
-      notification && notification.error?.('删除服务器失败', error instanceof Error ? error.message : '未知错误');
+      notification && notification.error?.(t('mcp.messages.deleteServerFailed'), error instanceof Error ? error.message : t('mcp.messages.unknownError'));
     } finally {
       setDeleteModalOpen(false);
       setServerToDelete(null);
@@ -137,7 +139,7 @@ function McpConfigPageContent() {
           />
           <div className="flex-1 overflow-auto">
             <PageLoading 
-              text="loading..." 
+              text={t('mcp.actions.loading')} 
               fullScreen={true}
             />
           </div>
@@ -168,10 +170,10 @@ function McpConfigPageContent() {
                   <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                     <div>
                       <h1 className="page-title">
-                       MCP 服务器管理
+                       {t('mcp.title')}
                       </h1>
                       <p className="page-subtitle mt-2">
-                        管理模型上下文协议服务器，配置工具和连接
+                        {t('mcp.subtitle')}
                       </p>
                     </div>
                     <div className="flex-shrink-0">
@@ -180,7 +182,7 @@ function McpConfigPageContent() {
                         className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium"
                       >
                         <Plus className="w-5 h-5" />
-                        添加服务器
+                        {t('mcp.actions.addServer')}
                       </button>
                     </div>
                   </div>
@@ -191,9 +193,9 @@ function McpConfigPageContent() {
                   <div className="border-b border-theme-border">
                     <nav className="-mb-px flex space-x-8">
                       {[
-                        { key: 'all', label: '全部', count: servers.length },
-                        { key: 'local', label: '本地服务器', count: servers.filter(s => s.type === 'stdio').length },
-                        { key: 'external', label: '外部服务器', count: servers.filter(s => s.type !== 'stdio').length }
+                        { key: 'all', label: t('mcp.tabs.all'), count: servers.length },
+                        { key: 'local', label: t('mcp.tabs.local'), count: servers.filter(s => s.type === 'stdio').length },
+                        { key: 'external', label: t('mcp.tabs.external'), count: servers.filter(s => s.type !== 'stdio').length }
                       ].map((tab) => (
                         <button
                           key={tab.key}
@@ -237,7 +239,7 @@ function McpConfigPageContent() {
                               <h4 className="text-base font-semibold text-theme-foreground truncate" title={server.displayName}>{server.displayName}</h4>
                             </div>
                             <div className="flex items-center space-x-2 pl-4 flex-shrink-0">
-                              <div className={`w-2.5 h-2.5 rounded-full ${statusClasses[server.status as keyof typeof statusClasses]}`} title={`状态: ${server.status}`}></div>
+                              <div className={`w-2.5 h-2.5 rounded-full ${statusClasses[server.status as keyof typeof statusClasses]}`} title={t('mcp.server.status').replace('{status}', server.status)}></div>
                               <span className="text-theme-foreground-muted capitalize text-xs">{server.type}</span>
                             </div>
                           </div>
@@ -249,7 +251,7 @@ function McpConfigPageContent() {
                             </p>
                             {server.errorMessage && (
                               <p className="text-xs text-theme-error mt-2 truncate" title={server.errorMessage}>
-                                错误: {server.errorMessage}
+                                {t('mcp.server.error').replace('{message}', server.errorMessage)}
                               </p>
                             )}
                           </div>
@@ -264,7 +266,7 @@ function McpConfigPageContent() {
                               className="bg-theme-primary/10 hover:bg-theme-primary/20 text-theme-primary px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-2"
                             >
                               <Axe className="w-4 h-4" />
-                              <span>{server.toolCount || 0} 工具</span>
+                              <span>{t('mcp.server.toolsCount').replace('{count}', (server.toolCount || 0).toString())}</span>
                             </button>
                             
                             <div className="flex items-center space-x-1">
@@ -275,7 +277,7 @@ function McpConfigPageContent() {
                                     syncLocalTools();
                                   }}
                                   className="text-theme-foreground-muted hover:text-theme-primary p-1.5 rounded-full hover:bg-theme-primary/10 transition-colors"
-                                  title="同步本地工具到数据库"
+                                  title={t('mcp.actions.syncTools')}
                                 >
                                   <RefreshCw className={`w-3.5 h-3.5 ${server.status === 'connecting' ? 'animate-spin' : ''}`} />
                                 </button>
@@ -287,7 +289,7 @@ function McpConfigPageContent() {
                                     checkServerStatus(server.name);
                                   }}
                                   className="text-theme-foreground-muted hover:text-theme-primary p-1.5 rounded-full hover:bg-theme-primary/10 transition-colors"
-                                  title="检查连接状态"
+                                  title={t('mcp.actions.checkStatus')}
                                 >
                                   <RefreshCw className={`w-3.5 h-3.5 ${server.status === 'connecting' ? 'animate-spin' : ''}`} />
                                 </button>
@@ -299,7 +301,7 @@ function McpConfigPageContent() {
                                     handleDeleteServerModal(server);
                                   }}
                                   className="text-theme-foreground-muted hover:text-theme-error p-1.5 rounded-full hover:bg-theme-error/10 transition-colors"
-                                  title="删除服务器"
+                                  title={t('mcp.actions.deleteServer')}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -347,13 +349,13 @@ function McpConfigPageContent() {
                 <div className="bg-theme-card rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-auto scrollbar-thin shadow-xl">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-theme-foreground">
-                      工具执行结果 - {executionResult.toolName}
+                      {t('mcp.execution.resultTitle').replace('{toolName}', executionResult.toolName || '')}
                     </h3>
                     <button
                       onClick={() => setExecutionResult(null)}
                       className="text-theme-foreground-muted hover:text-theme-foreground"
                     >
-                      ✕
+                      {t('mcp.execution.close')}
                     </button>
                   </div>
                   
@@ -363,7 +365,7 @@ function McpConfigPageContent() {
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        执行成功
+                        {t('mcp.execution.success')}
                       </div>
                       <div className="bg-theme-background-secondary rounded-md p-4">
                         <pre className="text-sm text-theme-foreground whitespace-pre-wrap">
@@ -377,7 +379,7 @@ function McpConfigPageContent() {
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
-                        执行失败
+                        {t('mcp.execution.failed')}
                       </div>
                       <div className="bg-theme-error/10 rounded-md p-4">
                         <p className="text-sm text-theme-error">
@@ -394,15 +396,15 @@ function McpConfigPageContent() {
             <Modal
               open={deleteModalOpen}
               onClose={() => { setDeleteModalOpen(false); setServerToDelete(null); }}
-              title="确认删除服务器"
+              title={t('mcp.deleteModal.title')}
               actions={[
                 {
-                  label: '取消',
+                  label: t('mcp.deleteModal.cancel'),
                   onClick: () => { setDeleteModalOpen(false); setServerToDelete(null); },
                   variant: 'secondary',
                 },
                 {
-                  label: '确认删除',
+                  label: t('mcp.deleteModal.confirm'),
                   onClick: confirmDeleteServer,
                   variant: 'danger',
                   autoFocus: true,
@@ -412,7 +414,7 @@ function McpConfigPageContent() {
             >
               {serverToDelete && (
                 <span>
-                  确定要删除服务器「<b>{serverToDelete.displayName || serverToDelete.name}</b>」吗？此操作不可撤销。
+                  {t('mcp.deleteModal.content').replace('{name}', serverToDelete.displayName || serverToDelete.name)}
                 </span>
               )}
             </Modal>

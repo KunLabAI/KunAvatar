@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, RefreshCw, RotateCcw, Save, X, Sliders } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '@/contexts/I18nContext';
 import defaultPrompts from '../../../config/default-prompts.json';
 import { PageLoading } from '@/components/Loading';
 import { ModelSelector } from '@/components/ModelSelector';
@@ -67,6 +68,7 @@ export function MemorySection({
   modelsLoading,
   modelsError,
 }: MemorySectionProps) {
+  const { t } = useI18n();
   const [settings, setSettings] = useState<GlobalMemorySettings | null>(null);
   const [localSettings, setLocalSettings] = useState<GlobalMemorySettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -184,7 +186,7 @@ export function MemorySection({
         body: JSON.stringify({ key, value: apiValue, category: 'memory' }),
       });
     } catch (error) {
-      console.error(`保存设置 ${key} 失败:`, error);
+      console.error(`${t('settings.assistant.saving')} ${key} ${t('errors.generic')}:`, error);
     } finally {
       // 短暂延迟后更新状态，提供视觉反馈
       setTimeout(() => setIsSaving(false), 300);
@@ -219,7 +221,7 @@ export function MemorySection({
       setSettings(localSettings);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error('保存设置失败:', error);
+      console.error(t('settings.assistant.saving') + t('errors.generic') + ':', error);
     } finally {
       setIsSaving(false);
     }
@@ -250,7 +252,7 @@ export function MemorySection({
   if (!settings) {
     return (
       <section className="bg-theme-card border border-theme-border rounded-2xl p-6">
-        <p className="text-red-500">无法加载记忆设置。</p>
+        <p className="text-red-500">{t('settings.assistant.loadMemorySettingsFailed')}</p>
       </section>
     );
   }
@@ -261,12 +263,12 @@ export function MemorySection({
       <div className="flex items-center gap-3 mb-6">
         <BookOpen className="w-5 h-5"/>
         <div>
-          <h3 className="section-title">全局记忆</h3>
+          <h3 className="section-title">{t('settings.assistant.globalMemory')}</h3>
         </div>
         {isSaving && (
           <div className="ml-auto text-xs flex items-center gap-1" style={{ color: 'var(--color-foreground-muted)' }}>
             <RefreshCw className="w-3 h-3 animate-spin" />
-            保存中...
+            {t('settings.assistant.saving')}
           </div>
         )}
       </div>
@@ -310,7 +312,7 @@ export function MemorySection({
                 borderColor: 'var(--color-border)',
                 color: 'var(--color-foreground)'
               }}
-              title="记忆设置"
+              title={t('settings.assistant.memorySettings')}
             >
               <Sliders className="w-4 h-4" />
             </button>
@@ -360,8 +362,8 @@ export function MemorySection({
                       <Sliders className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h2 className="page-title text-theme-foreground">记忆设置</h2>
-                      <p className="text-theme-foreground-muted text-sm">配置全局记忆功能的参数和行为</p>
+                      <h2 className="page-title text-theme-foreground">{t('settings.assistant.memorySettings')}</h2>
+                      <p className="text-theme-foreground-muted text-sm">{t('settings.assistant.configureMemoryParams')}</p>
                     </div>
                   </div>
                   <button
@@ -375,11 +377,11 @@ export function MemorySection({
                 {/* 表单内容 */}
                 <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-8">
                   {/* 基础设置 */}
-                  <FormSection title="基础设置">
+                  <FormSection title={t('settings.assistant.basicSettings')}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormInput 
-                        label="触发轮数" 
-                        hint="每隔多少轮对话触发一次记忆总结"
+                        label={t('settings.assistant.triggerRounds')} 
+                        hint={t('settings.assistant.triggerRoundsHint')}
                       >
                         <input
                           type="number"
@@ -399,8 +401,8 @@ export function MemorySection({
                       </FormInput>
                       
                       <FormInput 
-                        label="记忆上限" 
-                        hint="最多保存多少条记忆"
+                        label={t('settings.assistant.memoryLimit')} 
+                        hint={t('settings.assistant.memoryLimitHint')}
                       >
                         <input
                           type="number"
@@ -422,8 +424,8 @@ export function MemorySection({
                   </FormSection>
 
                   {/* 提示词设置 */}
-                  <FormSection title="提示词设置">
-                    <FormInput label="提示词模式">
+                  <FormSection title={t('settings.assistant.promptSettings')}>
+                    <FormInput label={t('settings.assistant.promptMode')}>
                       <div className="flex gap-3">
                         <button
                           onClick={() => setPromptMode('preset')}
@@ -434,7 +436,7 @@ export function MemorySection({
                           } disabled:opacity-50 disabled:cursor-not-allowed`}
                           disabled={!settings.memory_enabled || isSaving}
                         >
-                          预设风格
+                          {t('settings.assistant.presetStyle')}
                         </button>
                         <button
                           onClick={() => setPromptMode('custom')}
@@ -445,7 +447,7 @@ export function MemorySection({
                           } disabled:opacity-50 disabled:cursor-not-allowed`}
                           disabled={!settings.memory_enabled || isSaving}
                         >
-                          自定义提示词
+                          {t('settings.assistant.customPrompt')}
                         </button>
                       </div>
                     </FormInput>
@@ -453,8 +455,8 @@ export function MemorySection({
                     {/* 预设风格选择 */}
                     {promptMode === 'preset' && (
                       <FormInput 
-                        label="总结风格" 
-                        hint="选择记忆总结的详细程度和组织方式"
+                        label={t('settings.assistant.summarizeStyle')} 
+                        hint={t('settings.assistant.summaryStyleHint')}
                       >
                         <select
                           value={localSettings?.summary_style || 'detailed'}
@@ -462,9 +464,9 @@ export function MemorySection({
                           className="form-input-base disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={!settings.memory_enabled || isSaving}
                         >
-                          <option value="brief">简洁 - 提取关键信息点</option>
-                          <option value="detailed">详细 - 保留更多上下文</option>
-                          <option value="structured">结构化 - 按主题分类整理</option>
+                          <option value="brief">{t('settings.assistant.summaryStyles.brief')}</option>
+                          <option value="detailed">{t('settings.assistant.summaryStyles.detailed')}</option>
+                          <option value="structured">{t('settings.assistant.summaryStyles.structured')}</option>
                         </select>
                       </FormInput>
                     )}
@@ -472,14 +474,14 @@ export function MemorySection({
                     {/* 自定义提示词 */}
                     {promptMode === 'custom' && (
                       <FormInput 
-                        label="自定义系统提示词" 
-                        hint="配置记忆总结的指导规则，帮助AI更好地理解对话内容并生成合适的记忆摘要"
+                        label={t('settings.assistant.customSystemPrompt')} 
+                        hint={t('settings.assistant.customPromptHint')}
                       >
                         <textarea
                           value={localSettings?.memory_system_prompt || ''}
                           onChange={e => handleLocalSettingUpdate('memory_system_prompt', e.target.value)}
                           className="form-input-base h-48 resize-none font-mono text-sm"
-                          placeholder="输入记忆总结系统提示词..."
+                          placeholder={t('settings.assistant.inputMemoryPrompt')}
                           disabled={!settings.memory_enabled || isSaving}
                         />
                       </FormInput>
@@ -497,7 +499,7 @@ export function MemorySection({
                         disabled={!settings.memory_enabled || isSaving}
                       >
                         <RotateCcw className="w-4 h-4" />
-                        重置为默认
+                        {t('settings.assistant.resetToDefault')}
                       </button>
                     )}
                   </div>
@@ -509,7 +511,7 @@ export function MemorySection({
                       }}
                       className="btn-base btn-secondary px-6 py-3"
                     >
-                      取消
+                      {t('common.cancel')}
                     </button>
                     <button
                       onClick={async () => {
@@ -522,12 +524,12 @@ export function MemorySection({
                       {isSaving ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          保存中...
+                          {t('settings.assistant.saving')}
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          {hasUnsavedChanges ? '更新设置' : '保存设置'}
+                          {hasUnsavedChanges ? t('settings.assistant.updateSettings') : t('common.save')}
                         </>
                       )}
                     </button>

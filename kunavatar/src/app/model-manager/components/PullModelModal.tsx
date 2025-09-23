@@ -7,6 +7,7 @@ import MinimizedPullModal from './MinimizedPullModal';
 import { useNotification } from '@/components/notification';
 import { useDownloadManager, DownloadProgress } from '@/contexts/DownloadManagerContext';
 import { useThemeToggle } from '@/theme/contexts/ThemeContext';
+import { useI18n } from '@/contexts/I18nContext';
 import Image from 'next/image';
 
 interface PullModelModalProps {
@@ -24,6 +25,7 @@ interface PullProgress {
 }
 
 export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModelModalProps) {
+  const { t } = useI18n();
   const [modelName, setModelName] = useState('');
   const [originalInput, setOriginalInput] = useState(''); // 新增：保存用户原始输入
   const [isPulling, setIsPulling] = useState(false);
@@ -92,7 +94,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
   // 开始拉取模型
   const handlePullModel = async () => {
     if (!modelName.trim()) {
-      notification.error('错误', '请输入模型名称');
+      notification.error(t('errors.generic'), t('settings.models.pullModelModal.messages.enterModelName'));
       return;
     }
 
@@ -120,11 +122,11 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || '拉取模型失败');
+        throw new Error(errorData.error || t('settings.models.pullModelModal.messages.pullFailed'));
       }
 
       if (!response.body) {
-        throw new Error('响应体为空');
+        throw new Error(t('settings.models.pullModelModal.messages.responseEmpty'));
       }
 
       const reader = response.body.getReader();
@@ -153,8 +155,8 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                 
                 if (data.error) {
                   errorDownload();
-                  updateStatus(`错误: ${data.error}`);
-                  notification.error('拉取失败', data.error);
+                  updateStatus(t('settings.models.pullModelModal.status.error').replace('{message}', data.error));
+                  notification.error(t('settings.models.pullModelModal.messages.pullFailedDesc'), data.error);
                   break;
                 }
 
@@ -184,11 +186,11 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                 // 检查是否完成
                 if (data.status === 'success') {
                   // 一次性更新完成状态，避免多次重新渲染
-                  completeDownloadWithStatus('拉取完成！');
+                  completeDownloadWithStatus(t('settings.models.pullModelModal.status.pullCompleted'));
                   
                   // 延迟执行通知和回调，避免状态更新冲突
                   setTimeout(() => {
-                    notification.success('拉取成功', `模型 "${modelName}" 已成功拉取`);
+                    notification.success(t('settings.models.pullModelModal.messages.pullSuccess'), t('settings.models.pullModelModal.messages.pullSuccessDesc').replace('{modelName}', modelName));
                     onSuccess(modelName);
                   }, 100);
                   break;
@@ -206,11 +208,11 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
             const data: PullProgress = JSON.parse(buffer.trim());
             if (data.status === 'success') {
               // 一次性更新完成状态，避免多次重新渲染
-              completeDownloadWithStatus('拉取完成！');
+              completeDownloadWithStatus(t('settings.models.pullModelModal.status.pullCompleted'));
               
               // 延迟执行通知和回调，避免状态更新冲突
               setTimeout(() => {
-                notification.success('拉取成功', `模型 "${modelName}" 已成功拉取`);
+                notification.success(t('settings.models.pullModelModal.messages.pullSuccess'), t('settings.models.pullModelModal.messages.pullSuccessDesc').replace('{modelName}', modelName));
                 onSuccess(modelName);
               }, 100);
             }
@@ -223,13 +225,13 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        updateStatus('拉取已取消');
-        notification.info('已取消', '模型拉取已取消');
+        updateStatus(t('settings.models.pullModelModal.status.pullCancelled'));
+        notification.info(t('settings.models.pullModelModal.messages.cancelled'), t('settings.models.pullModelModal.messages.pullCancelledDesc'));
       } else {
         console.error('拉取模型失败:', error);
         errorDownload();
-        updateStatus(`错误: ${error.message}`);
-        notification.error('拉取失败', error.message);
+        updateStatus(t('settings.models.pullModelModal.status.error').replace('{message}', error.message));
+        notification.error(t('settings.models.pullModelModal.messages.pullFailedDesc'), error.message);
       }
     } finally {
       setIsPulling(false);
@@ -331,8 +333,8 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
       <ModalWrapper
         isOpen={isOpen && !downloadState.isMinimized}
         onClose={handleClose}
-        title="拉取模型"
-        subtitle="从 Ollama 仓库下载模型到本地"
+        title={t('settings.models.pullModelModal.title')}
+        subtitle={t('settings.models.pullModelModal.subtitle')}
         maxWidth="2xl"
         showMinimizeButton={downloadState.isActive && !downloadState.isCompleted && !downloadState.hasError}
         onMinimize={handleMinimize}
@@ -346,13 +348,13 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                 className="block text-sm font-medium mb-2"
                 style={{ color: 'var(--color-foreground)' }}
               >
-                模型名称
+                {t('settings.models.pullModelModal.fields.modelName')}
               </label>
               <input
                 type="text"
                 value={originalInput || modelName}
                 onChange={(e) => handleModelNameChange(e.target.value)}
-                placeholder="例如: llama3.2:latest 或直接粘贴 ollama run 命令"
+                placeholder={t('settings.models.pullModelModal.fields.modelNamePlaceholder')}
                 className="w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2"
                 style={{
                   backgroundColor: 'var(--color-input)',
@@ -407,14 +409,14 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                       className="text-sm font-medium"
                       style={{ color: 'var(--color-foreground)' }}
                     >
-                      下载进度
+                      {t('settings.models.pullModelModal.progress.downloadProgress')}
                     </span>
                     {downloadState.isActive && (
                       <span 
                         className="text-xs"
                         style={{ color: 'var(--color-foreground-muted)' }}
                       >
-                        {downloadState.downloadSpeed || '计算中...'}
+                        {downloadState.downloadSpeed || t('settings.models.pullModelModal.progress.calculating')}
                       </span>
                     )}
                   </div>
@@ -454,14 +456,14 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                           className="truncate"
                           style={{ color: 'var(--color-foreground-muted)' }}
                         >
-                          {item.digest ? `${item.digest.substring(0, 12)}...` : `Layer ${index + 1}`}
+                          {item.digest ? `${item.digest.substring(0, 12)}...` : `${t('settings.models.pullModelModal.progress.layer')} ${index + 1}`}
                         </span>
                         <span 
                           style={{ color: 'var(--color-foreground-muted)' }}
                         >
                           {item.total && item.completed 
                             ? `${formatBytes(item.completed)} / ${formatBytes(item.total)}`
-                            : '处理中...'
+                            : t('settings.models.pullModelModal.progress.processing')
                           }
                         </span>
                       </div>
@@ -492,7 +494,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
 
           {/* 操作按钮 */}
           <div 
-            className="px-8 py-6 border-t"
+            className="p-8 border-t"
             style={{
               borderColor: 'var(--color-border)',
               backgroundColor: 'var(--color-card-secondary)'
@@ -518,7 +520,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                     e.currentTarget.style.backgroundColor = 'var(--color-background)';
                     e.currentTarget.style.borderColor = 'var(--color-border)';
                   }}
-                  title="访问 Ollama 模型库"
+                  title={t('settings.models.pullModelModal.external.ollamaLibrary')}
                 >
                   <Image
                     src="/assets/modelslogo/Ollama_icon.svg"
@@ -551,7 +553,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                     e.currentTarget.style.backgroundColor = 'var(--color-background)';
                     e.currentTarget.style.borderColor = 'var(--color-border)';
                   }}
-                  title="访问魔搭社区模型库"
+                  title={t('settings.models.pullModelModal.external.modelscopeLibrary')}
                 >
                   <Image
                     src="/assets/modelslogo/Modelscope_icon.svg"
@@ -583,7 +585,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                       e.currentTarget.style.backgroundColor = 'var(--color-error)';
                     }}
                   >
-                    取消下载
+                    {t('settings.models.pullModelModal.actions.cancelDownload')}
                   </button>
                 ) : downloadState.hasError ? (
                   <button
@@ -601,7 +603,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                       e.currentTarget.style.backgroundColor = 'var(--color-background)';
                     }}
                   >
-                    关闭
+                    {t('settings.models.pullModelModal.actions.close')}
                   </button>
                 ) : downloadState.isCompleted ? (
                   <button
@@ -619,7 +621,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                       e.currentTarget.style.backgroundColor = 'var(--color-success)';
                     }}
                   >
-                    完成
+                    {t('settings.models.pullModelModal.actions.complete')}
                   </button>
                 ) : (
                   <button
@@ -643,7 +645,7 @@ export default function PullModelModal({ isOpen, onClose, onSuccess }: PullModel
                     }}
                   >
                     <Download className="w-4 h-4" />
-                    开始拉取
+                    {t('settings.models.pullModelModal.actions.startPull')}
                   </button>
                 )}
               </div>

@@ -10,6 +10,7 @@ import { Sidebar } from '@/app/Sidebar';
 import { formatTime } from '@/lib/utils/time';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Modal from '@/components/Modal';
+import { useI18n } from '@/contexts/I18nContext';
 
 const NoteDetailPage = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const NoteDetailPage = () => {
   const searchParams = useSearchParams();
   const notification = useNotification();
   const noteId = params.id as string;
+  const { t } = useI18n(); // 多语言支持
   
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,12 +61,12 @@ const NoteDetailPage = () => {
           setShareUrl(`${window.location.origin}/notes/${noteId}`);
         }
       } else {
-        notification.error('获取失败', data.message || '无法获取笔记详情');
+        notification.error(t('notes.messages.fetchFailed'), data.message || t('notes.messages.fetchFailedUnknown'));
         router.push('/notes');
       }
     } catch (error) {
       console.error('获取笔记详情失败:', error);
-      notification.error('获取失败', '网络错误，请稍后重试');
+      notification.error(t('notes.messages.fetchFailed'), t('notes.messages.fetchFailedDesc'));
       router.push('/notes');
     } finally {
       setLoading(false);
@@ -117,14 +119,14 @@ const NoteDetailPage = () => {
       const data = await response.json();
       
       if (data.success) {
-        notification.success('删除成功', '笔记已删除');
+        notification.success(t('notes.messages.deleteSuccess'), t('notes.messages.deleteSuccessDesc'));
         router.push('/notes');
       } else {
-        notification.error('删除失败', data.message || '删除笔记时出错');
+        notification.error(t('notes.messages.deleteFailed'), data.message || t('notes.messages.deleteFailedDesc'));
       }
     } catch (err) {
       console.error('删除笔记失败:', err);
-      notification.error('删除失败', '网络错误，请稍后重试');
+      notification.error(t('notes.messages.deleteFailed'), t('notes.messages.deleteFailedDesc'));
     } finally {
       setDeleting(false);
     }
@@ -154,13 +156,13 @@ const NoteDetailPage = () => {
       
       if (data.success) {
         setShareUrl(data.shareUrl);
-        notification.success('分享成功', '笔记已设为公开');
+        notification.success(t('notes.messages.shareSuccess'), t('notes.messages.shareSuccessDesc'));
       } else {
-        notification.error('分享失败', data.message || '分享笔记时出错');
+        notification.error(t('notes.messages.shareFailed'), data.message || t('notes.messages.shareFailedDesc'));
       }
     } catch (err) {
       console.error('分享笔记失败:', err);
-      notification.error('分享失败', '网络错误，请稍后重试');
+      notification.error(t('notes.messages.shareFailed'), t('notes.messages.shareFailedDesc'));
     } finally {
       setSharing(false);
     }
@@ -172,10 +174,10 @@ const NoteDetailPage = () => {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      notification.success('复制成功', '分享链接已复制到剪贴板');
+      notification.success(t('notes.messages.copySuccess'), t('notes.messages.copySuccessDesc'));
     } catch (err) {
       console.error('复制失败:', err);
-      notification.error('复制失败', '请手动复制链接');
+      notification.error(t('notes.messages.copyFailed'), t('notes.messages.copyFailedDesc'));
     }
   };
 
@@ -206,15 +208,15 @@ const NoteDetailPage = () => {
     return (
       <div className="container mx-auto p-6 max-w-6xl">
         <div className="text-center py-12">
-          <h3 className="text-lg font-semibold mb-2">笔记不存在</h3>
+          <h3 className="text-lg font-semibold mb-2">{t('notes.detail.notFound')}</h3>
           <p className="text-muted-foreground mb-4">
-            请检查链接是否正确
+            {t('notes.detail.notFoundDesc')}
           </p>
           <button 
             onClick={() => router.push('/notes')}
             className="px-4 py-2 bg-theme-accent text-white rounded-md hover:bg-theme-accent-hover transition-colors"
           >
-            返回笔记列表
+            {t('notes.actions.returnToList')}
           </button>
         </div>
       </div>
@@ -238,7 +240,7 @@ const NoteDetailPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                      笔记详情
+                      {t('notes.detail.title')}
                     </h1>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
@@ -249,7 +251,7 @@ const NoteDetailPage = () => {
                         className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                       >
                         <Share2 className="w-4 h-4" />
-                        {sharing ? '分享中...' : '分享'}
+                        {sharing ? t('notes.actions.sharing') : t('notes.actions.share')}
                       </button>
                     )}
                     <button
@@ -258,14 +260,14 @@ const NoteDetailPage = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                     >
                       <Trash2 className="w-4 h-4" />
-                      {deleting ? '删除中...' : '删除'}
+                      {deleting ? t('notes.actions.deleting') : t('notes.actions.delete')}
                     </button>
                     <button
                       onClick={handleBack}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      返回
+                      {t('notes.actions.back')}
                     </button>
                     
                     {isOwner && (
@@ -275,7 +277,7 @@ const NoteDetailPage = () => {
                           className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium"
                         >
                           <Edit className="w-4 h-4" />
-                          编辑
+                          {t('notes.actions.edit')}
                         </button>                        
                       </>
                     )}
@@ -316,14 +318,14 @@ const NoteDetailPage = () => {
                               <Calendar className="w-4 h-4" />
                               <span>
                                 {note.created_at === note.updated_at 
-                                  ? `创建于 ${formatDate(note.created_at)}`
-                                  : `更新于 ${formatDate(note.updated_at)}`
+                                  ? t('notes.time.createdAt').replace('{time}', formatDate(note.created_at))
+                                  : t('notes.time.updatedAt').replace('{time}', formatDate(note.updated_at))
                                 }
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
                               <User className="w-4 h-4" />
-                              <span>{note.author_name || '未知作者'}</span>
+                              <span>{note.author_name || t('notes.time.unknownAuthor')}</span>
                             </div>
                           </div>
                         </div>
@@ -349,7 +351,7 @@ const NoteDetailPage = () => {
                       {/* 分享链接显示 */}
                       {shareUrl && (
                         <div className="bg-theme-card border border-theme-border rounded-xl p-6 shadow-sm">
-                          <h3 className="text-lg font-semibold text-theme-foreground mb-4">分享链接</h3>
+                          <h3 className="text-lg font-semibold text-theme-foreground mb-4">{t('notes.detail.shareLink')}</h3>
                           <div className="flex gap-2">
                             <input
                               type="text"
@@ -364,12 +366,12 @@ const NoteDetailPage = () => {
                               {copied ? (
                                 <>
                                   <Check className="w-4 h-4" />
-                                  已复制
+                                  {t('notes.detail.linkCopied')}
                                 </>
                               ) : (
                                 <>
                                   <Copy className="w-4 h-4" />
-                                  复制
+                                  {t('notes.detail.copyLink')}
                                 </>
                               )}
                             </button>
@@ -389,15 +391,15 @@ const NoteDetailPage = () => {
       <Modal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="删除笔记"
+        title={t('notes.deleteModal.title')}
         actions={[
           {
-            label: '取消',
+            label: t('notes.deleteModal.cancel'),
             onClick: () => setDeleteModalOpen(false),
             variant: 'secondary'
           },
           {
-            label: '确定删除',
+            label: t('notes.deleteModal.confirm'),
             onClick: () => {
               setDeleteModalOpen(false);
               handleDelete();
@@ -412,10 +414,10 @@ const NoteDetailPage = () => {
           </div>
           <div>
             <p className="text-theme-foreground mb-2">
-              此操作不可撤销。确定要删除这篇笔记吗？
+              {t('notes.deleteModal.contentDetail')}
             </p>
             <p className="text-sm text-theme-foreground-muted">
-              笔记标题：{note?.title}
+              {t('notes.deleteModal.noteTitle').replace('{title}', note?.title || '')}
             </p>
           </div>
         </div>

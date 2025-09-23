@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Cpu, CheckCircle, XCircle } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { authenticatedFetch } from '@/lib/utils/auth-utils';
 
@@ -12,10 +13,11 @@ interface OllamaStatus {
 }
 
 export function InferenceEngineTab() {
+  const { t } = useI18n();
   const { isAdmin } = usePermissions();
   const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus>({
     connected: false,
-    version: '检测中...'
+    version: ''
   });
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
   const [tempUrl, setTempUrl] = useState('');
@@ -32,21 +34,21 @@ export function InferenceEngineTab() {
         const versionData = await versionResponse.json();
         setOllamaStatus({
           connected: true,
-          version: versionData.version || '未知'
+          version: versionData.version || t('settings.inference.unknown')
         });
       } else {
         setOllamaStatus({
           connected: false,
-          version: '无法连接',
-          error: '服务不可用'
+          version: t('settings.inference.cannotConnect'),
+          error: t('settings.inference.serviceUnavailable')
         });
       }
     } catch (error) {
-      console.error('检测Ollama状态失败:', error);
+      console.error(t('settings.inference.detectOllamaStatusFailed') + ':', error);
       setOllamaStatus({
         connected: false,
-        version: '检测失败',
-        error: '网络错误'
+        version: t('settings.inference.detectionFailed'),
+        error: t('settings.inference.networkError')
       });
     }
   };
@@ -60,7 +62,7 @@ export function InferenceEngineTab() {
         setOllamaUrl(config.baseUrl || 'http://localhost:11434');
       }
     } catch (error) {
-      console.error('获取Ollama配置失败:', error);
+      console.error(t('settings.inference.getOllamaConfigFailed') + ':', error);
     }
   };
 
@@ -81,12 +83,12 @@ export function InferenceEngineTab() {
         await checkOllamaStatus();
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('保存配置失败:', errorData);
+        console.error(t('settings.inference.saveConfigFailed') + ':', errorData);
         // 恢复原值
         setTempUrl(ollamaUrl);
       }
     } catch (error) {
-      console.error('保存Ollama配置失败:', error);
+      console.error(t('settings.inference.saveOllamaConfigFailed') + ':', error);
       // 恢复原值
       setTempUrl(ollamaUrl);
     } finally {
@@ -113,6 +115,16 @@ export function InferenceEngineTab() {
     checkOllamaStatus();
   }, []);
 
+  // 初始化翻译状态
+  useEffect(() => {
+    if (ollamaStatus.version === '') {
+      setOllamaStatus(prev => ({
+        ...prev,
+        version: t('settings.inference.detecting')
+      }));
+    }
+  }, [t]);
+
   // 同步tempUrl和ollamaUrl
   useEffect(() => {
     setTempUrl(ollamaUrl);
@@ -125,7 +137,7 @@ export function InferenceEngineTab() {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-theme-foreground flex items-center gap-2">
             <Cpu className="w-5 h-5" />
-            推理引擎
+            {t('settings.inference.title')}
           </h2>
         </div>
         
@@ -146,7 +158,7 @@ export function InferenceEngineTab() {
               </div>
               <div>
                 <h3 className="text-lg font-medium text-theme-foreground mb-1">Ollama</h3>
-                <p className="text-sm text-theme-foreground-muted">本地大语言模型推理引擎</p>
+                <p className="text-sm text-theme-foreground-muted">{t('settings.inference.ollamaDescription')}</p>
               </div>
             </div>
           </div>
@@ -155,21 +167,21 @@ export function InferenceEngineTab() {
             {/* 连接状态 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <h4 className="text-lg font-medium text-theme-foreground mb-1">连接状态</h4>
+                <h4 className="text-lg font-medium text-theme-foreground mb-1">{t('settings.inference.connectionStatus')}</h4>
               </div>
               <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
                 ollamaStatus.connected 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                   : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
               }`}>
-                {ollamaStatus.connected ? 'online' : 'offline'}
+                {ollamaStatus.connected ? t('settings.inference.online') : t('settings.inference.offline')}
               </span>
             </div>
 
             {/* 版本信息 */}
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-lg font-medium text-theme-foreground mb-1">版本信息</h4>
+                <h4 className="text-lg font-medium text-theme-foreground mb-1">{t('settings.inference.versionInfo')}</h4>
               </div>
               <span className="px-3 py-1 rounded-lg text-sm font-medium bg-theme-background border border-theme-border text-theme-foreground">
                 {ollamaStatus.version}
@@ -180,11 +192,11 @@ export function InferenceEngineTab() {
              {isAdmin && (
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-lg font-medium text-theme-foreground mb-1">连接设置</h4>
+                  <h4 className="text-lg font-medium text-theme-foreground mb-1">{t('settings.inference.connectionSettings')}</h4>
                 </div>
                 <div className="flex items-center gap-2">
                   {isSaving && (
-                    <span className="text-sm text-theme-foreground-muted">保存中...</span>
+                    <span className="text-sm text-theme-foreground-muted">{t('settings.inference.saving')}</span>
                   )}
                   <div className="relative">
                     <input

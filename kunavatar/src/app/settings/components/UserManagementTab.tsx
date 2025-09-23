@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Plus, Edit, Trash2, Shield, Eye, X, Save, Mail, User, Lock, Check, UserCheck } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useNotification } from '@/components/notification';
 import { PageLoading } from '@/components/Loading';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -77,6 +78,7 @@ const Modal = ({ isOpen, onClose, title, children }: {
 };
 
 export function UserManagementTab({}: UserManagementTabProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const { success, error: notifyError, warning } = useNotification();
   const [users, setUsers] = useState<User[]>([]);
@@ -125,7 +127,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        setError('请先登录');
+        setError(t('settings.users.messages.pleaseLogin'));
         return;
       }
 
@@ -140,18 +142,18 @@ export function UserManagementTab({}: UserManagementTabProps) {
           handleAuthError();
           return;
         }
-        throw new Error('获取用户列表失败');
+        throw new Error(t('settings.users.messages.fetchUsersFailed'));
       }
 
       const data = await response.json();
       if (data.success) {
         setUsers(data.users);
       } else {
-        setError(data.error || '获取用户列表失败');
+        setError(data.error || t('settings.users.messages.fetchUsersFailed'));
       }
     } catch (error) {
-      console.error('获取用户列表失败:', error);
-      setError(error instanceof Error ? error.message : '获取用户列表失败');
+      console.error(t('settings.users.messages.fetchUsersFailed') + ':', error);
+      setError(error instanceof Error ? error.message : t('settings.users.messages.fetchUsersFailed'));
     } finally {
       setLoading(false);
     }
@@ -179,7 +181,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
         }
       }
     } catch (error) {
-      console.error('获取当前用户信息失败:', error);
+      console.error(t('settings.users.messages.fetchCurrentUserFailed') + ':', error);
     }
   }, [handleAuthError]);
 
@@ -205,7 +207,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
         }
       }
     } catch (error) {
-      console.error('获取角色列表失败:', error);
+      console.error(t('settings.users.messages.fetchRolesFailed') + ':', error);
     }
   }, [handleAuthError]);
 
@@ -244,13 +246,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
           roles: defaultUserRole ? [defaultUserRole.id] : [],
         });
         fetchUsers();
-        success('创建成功', '用户创建成功');
+        success(t('settings.users.messages.createSuccess'), t('settings.users.messages.userCreated'));
       } else {
-        notifyError('创建失败', data.error || '创建用户失败');
+        notifyError(t('settings.users.messages.createFailed'), data.error || t('settings.users.messages.createUserFailed'));
       }
     } catch (error) {
-      console.error('创建用户失败:', error);
-      notifyError('创建失败', '创建用户失败');
+      console.error(t('settings.users.messages.createUserFailed') + ':', error);
+      notifyError(t('settings.users.messages.createFailed'), t('settings.users.messages.createUserFailed'));
     }
   };
 
@@ -276,13 +278,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
         setShowEditModal(false);
         setSelectedUser(null);
         fetchUsers();
-        success('更新成功', '用户信息更新成功');
+        success(t('settings.users.messages.updateSuccess'), t('settings.users.messages.userUpdated'));
       } else {
-        notifyError('更新失败', data.error || '更新用户失败');
+        notifyError(t('settings.users.messages.updateFailed'), data.error || t('settings.users.messages.updateUserFailed'));
       }
     } catch (error) {
-      console.error('更新用户失败:', error);
-      notifyError('更新失败', '更新用户失败');
+      console.error(t('settings.users.messages.updateUserFailed') + ':', error);
+      notifyError(t('settings.users.messages.updateFailed'), t('settings.users.messages.updateUserFailed'));
     }
   };
 
@@ -306,13 +308,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
         setShowRoleModal(false);
         setSelectedUser(null);
         fetchUsers();
-        success('角色更新成功', '用户角色更新成功');
+        success(t('settings.users.messages.roleUpdateSuccess'), t('settings.users.messages.userRoleUpdated'));
       } else {
-        notifyError('角色更新失败', data.error || '更新用户角色失败');
+        notifyError(t('settings.users.messages.roleUpdateFailed'), data.error || t('settings.users.messages.updateUserRoleFailed'));
       }
     } catch (error) {
-      console.error('更新用户角色失败:', error);
-      notifyError('角色更新失败', '更新用户角色失败');
+      console.error(t('settings.users.messages.updateUserRoleFailed') + ':', error);
+      notifyError(t('settings.users.messages.roleUpdateFailed'), t('settings.users.messages.updateUserRoleFailed'));
     }
   };
 
@@ -347,7 +349,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
 
       if (!activateResponse.ok) {
         const data = await activateResponse.json();
-        notifyError('激活失败', data.error || '激活用户失败');
+        notifyError(t('settings.users.messages.activationFailed'), data.error || t('settings.users.messages.activateUserFailed'));
         return;
       }
 
@@ -363,17 +365,17 @@ export function UserManagementTab({}: UserManagementTabProps) {
 
       if (!roleResponse.ok) {
         const data = await roleResponse.json();
-        notifyError('角色分配失败', data.error || '分配用户角色失败');
+        notifyError(t('settings.users.messages.roleAssignFailed'), data.error || t('settings.users.messages.assignUserRoleFailed'));
         return;
       }
 
       setShowActivateModal(false);
       setSelectedUser(null);
       fetchUsers(); // 重新获取用户列表
-      success('激活成功', '用户已成功激活并分配角色，现在可以正常登录系统');
+      success(t('settings.users.messages.activationSuccess'), t('settings.users.messages.userActivated'));
     } catch (error) {
-      console.error('激活用户失败:', error);
-      notifyError('激活失败', '激活用户失败');
+      console.error(t('settings.users.messages.activateUserFailed') + ':', error);
+      notifyError(t('settings.users.messages.activationFailed'), t('settings.users.messages.activateUserFailed'));
     }
   };
 
@@ -381,11 +383,11 @@ export function UserManagementTab({}: UserManagementTabProps) {
   const handleDeleteUser = async (userId: number) => {
     // 检查是否尝试删除自己的账户
     if (currentUserId && userId === currentUserId) {
-      warning('操作失败', '不能删除自己的账户');
+      warning(t('settings.users.messages.operationFailed'), t('settings.users.messages.cannotDeleteSelf'));
       return;
     }
 
-    if (!confirm('确定要删除这个用户吗？')) return;
+    if (!confirm(t('settings.users.confirmDelete'))) return;
 
     try {
       const token = localStorage.getItem('accessToken');
@@ -402,14 +404,14 @@ export function UserManagementTab({}: UserManagementTabProps) {
           return;
         }
         const data = await response.json();
-        notifyError('删除失败', data.error || '删除用户失败');
+        notifyError(t('settings.users.messages.deleteFailed'), data.error || t('settings.users.messages.deleteUserFailed'));
       } else {
         fetchUsers(); // 重新获取用户列表
-        success('删除成功', '用户删除成功');
+        success(t('settings.users.messages.deleteSuccess'), t('settings.users.messages.userDeleted'));
       }
     } catch (error) {
-      console.error('删除用户失败:', error);
-      notifyError('删除失败', '删除用户失败');
+      console.error(t('settings.users.messages.deleteUserFailed') + ':', error);
+      notifyError(t('settings.users.messages.deleteFailed'), t('settings.users.messages.deleteUserFailed'));
     }
   };
 
@@ -470,10 +472,10 @@ export function UserManagementTab({}: UserManagementTabProps) {
       suspended: 'bg-red-100 text-red-800',
     };
     const labels = {
-      pending: '待激活',
-      active: '活跃',
-      inactive: '未激活',
-      suspended: '已暂停',
+      pending: t('settings.users.status.pending'),
+      active: t('settings.users.status.active'),
+      inactive: t('settings.users.status.inactive'),
+      suspended: t('settings.users.status.suspended'),
     };
     return (
       <span className={`px-2 py-1 text-xs rounded-full ${styles[status as keyof typeof styles]}`}>
@@ -485,7 +487,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
   if (loading) {
     return (
       <PageLoading 
-        text="loading..." 
+        text={t('settings.users.loading')} 
         fullScreen={false}
       />
     );
@@ -499,12 +501,12 @@ export function UserManagementTab({}: UserManagementTabProps) {
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold text-theme-foreground flex items-center gap-2">
               <Users className="w-5 h-5" />
-              用户管理
+              {t('settings.users.title')}
             </h2>
             {users.filter(user => user.status === 'pending').length > 0 && (
               <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
                 <span className="text-sm text-yellow-700 font-medium">
-                  {users.filter(user => user.status === 'pending').length} 个待激活
+                  {users.filter(user => user.status === 'pending').length} {t('settings.users.pendingActivation')}
                 </span>
               </div>
             )}
@@ -514,7 +516,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
             className="bg-theme-primary text-white px-4 py-2 rounded-lg hover:bg-theme-primary-hover flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            添加用户
+            {t('settings.users.addUser')}
           </button>
         </div>
 
@@ -532,22 +534,22 @@ export function UserManagementTab({}: UserManagementTabProps) {
               <thead className="bg-theme-background-tertiary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                    用户
+                    {t('settings.users.user')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                    状态
+                    {t('settings.users.status')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                    角色
+                    {t('settings.users.roles')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                    创建时间
+                    {t('settings.users.createdTime')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                    最后登录
+                    {t('settings.users.lastLogin')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                    操作
+                    {t('settings.users.actions')}
                   </th>
                 </tr>
               </thead>
@@ -578,7 +580,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                       <div className="flex flex-col gap-1">
                         {getStatusBadge(user.status)}
                         {user.email_verified && (
-                          <span className="text-xs text-green-600">✓ 已验证</span>
+                          <span className="text-xs text-green-600">✓ {t('settings.users.verified')}</span>
                         )}
                       </div>
                     </td>
@@ -600,7 +602,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-theme-foreground-muted">
                       {user.last_login_at 
                         ? formatTime(user.last_login_at)
-                        : '从未登录'
+                        : t('settings.users.neverLoggedIn')
                       }
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -608,7 +610,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                         <button 
                           onClick={() => openViewModal(user)}
                           className="text-theme-primary hover:text-theme-primary-hover transition-colors"
-                          title="查看详情"
+                          title={t('settings.users.viewDetails')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -616,7 +618,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                           <button 
                             onClick={() => handleActivateUser(user)}
                             className="text-green-600 hover:text-green-700 transition-colors"
-                            title="激活用户"
+                            title={t('settings.users.activateUser')}
                           >
                             <UserCheck className="w-4 h-4" />
                           </button>
@@ -624,14 +626,14 @@ export function UserManagementTab({}: UserManagementTabProps) {
                         <button 
                           onClick={() => openEditModal(user)}
                           className="text-theme-primary hover:text-theme-primary-hover transition-colors"
-                          title="编辑用户"
+                          title={t('settings.users.editUser')}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => openRoleModal(user)}
                           className="text-theme-primary hover:text-theme-primary-hover transition-colors"
-                          title="管理权限"
+                          title={t('settings.users.managePermissions')}
                         >
                           <Shield className="w-4 h-4" />
                         </button>
@@ -643,7 +645,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                               ? 'text-gray-400 cursor-not-allowed' 
                               : 'text-red-600 hover:text-red-700'
                           }`}
-                          title={currentUserId === user.id ? "不能删除自己的账户" : "删除用户"}
+                          title={currentUserId === user.id ? t('settings.users.cannotDeleteSelf') : t('settings.users.deleteUser')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -659,7 +661,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
         {/* 空状态 */}
         {users.length === 0 && !loading && (
           <div className="text-center py-8 text-theme-foreground-muted">
-            没有找到用户
+            {t('settings.users.noUsersFound')}
           </div>
         )}
       </div>
@@ -686,8 +688,8 @@ export function UserManagementTab({}: UserManagementTabProps) {
                     <Plus className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h2 className="page-title text-theme-foreground">创建用户</h2>
-                    <p className="text-theme-foreground-muted text-sm">为系统添加新的用户账户</p>
+                    <h2 className="page-title text-theme-foreground">{t('settings.users.createUser')}</h2>
+                    <p className="text-theme-foreground-muted text-sm">{t('settings.users.addNewUser')}</p>
                   </div>
                 </div>
                 <button
@@ -703,18 +705,18 @@ export function UserManagementTab({}: UserManagementTabProps) {
                 {/* 基本信息 */}
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-theme-foreground mb-4">基本信息</h3>
+                    <h3 className="text-lg font-medium text-theme-foreground mb-4">{t('settings.users.basicInfo')}</h3>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          用户名 <span className="text-red-500">*</span>
+                          {t('settings.users.username')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={userForm.username}
                           onChange={(e) => updateUserForm({ username: e.target.value })}
                           className="form-input-base w-full"
-                          placeholder="输入用户名"
+                          placeholder={t('settings.users.enterUsername')}
                         />
                         {errors.username && (
                           <p className="text-red-500 text-sm mt-1">{errors.username}</p>
@@ -723,14 +725,14 @@ export function UserManagementTab({}: UserManagementTabProps) {
                       
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          邮箱 <span className="text-red-500">*</span>
+                          {t('settings.users.email')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="email"
                           value={userForm.email}
                           onChange={(e) => updateUserForm({ email: e.target.value })}
                           className="form-input-base w-full"
-                          placeholder="输入邮箱地址"
+                          placeholder={t('settings.users.enterEmail')}
                         />
                         {errors.email && (
                           <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -739,14 +741,14 @@ export function UserManagementTab({}: UserManagementTabProps) {
                       
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          密码 <span className="text-red-500">*</span>
+                          {t('settings.users.password')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="password"
                           value={userForm.password}
                           onChange={(e) => updateUserForm({ password: e.target.value })}
                           className="form-input-base w-full"
-                          placeholder="输入密码"
+                          placeholder={t('settings.users.enterPassword')}
                         />
                         {errors.password && (
                           <p className="text-red-500 text-sm mt-1">{errors.password}</p>
@@ -755,43 +757,43 @@ export function UserManagementTab({}: UserManagementTabProps) {
                       
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          状态
+                          {t('settings.users.status')}
                         </label>
                         <select
                           value={userForm.status}
                           onChange={(e) => updateUserForm({ status: e.target.value as any })}
                           className="form-input-base w-full"
                         >
-                          <option value="pending">待激活</option>
-                          <option value="active">活跃</option>
-                          <option value="inactive">未激活</option>
-                          <option value="suspended">已暂停</option>
+                          <option value="pending">{t('settings.users.status.pending')}</option>
+                          <option value="active">{t('settings.users.status.active')}</option>
+                          <option value="inactive">{t('settings.users.status.inactive')}</option>
+                          <option value="suspended">{t('settings.users.status.suspended')}</option>
                         </select>
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          名字
+                          {t('settings.users.firstName')}
                         </label>
                         <input
                           type="text"
                           value={userForm.first_name}
                           onChange={(e) => updateUserForm({ first_name: e.target.value })}
                           className="form-input-base w-full"
-                          placeholder="输入名字"
+                          placeholder={t('settings.users.enterFirstName')}
                         />
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          姓氏
+                          {t('settings.users.lastName')}
                         </label>
                         <input
                           type="text"
                           value={userForm.last_name}
                           onChange={(e) => updateUserForm({ last_name: e.target.value })}
                           className="form-input-base w-full"
-                          placeholder="输入姓氏"
+                          placeholder={t('settings.users.enterLastName')}
                         />
                       </div>
                     </div>
@@ -801,7 +803,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                 {/* 其他设置 */}
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-theme-foreground mb-4">其他设置</h3>
+                    <h3 className="text-lg font-medium text-theme-foreground mb-4">{t('settings.users.otherSettings')}</h3>
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -811,7 +813,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                         className="rounded border-theme-border"
                       />
                       <label htmlFor="email_verified" className="text-sm text-theme-foreground">
-                        邮箱已验证
+                        {t('settings.users.emailVerified')}
                       </label>
                     </div>
                   </div>
@@ -822,11 +824,11 @@ export function UserManagementTab({}: UserManagementTabProps) {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-medium text-theme-foreground">角色分配</h3>
-                        <p className="text-sm text-theme-foreground-muted">为此用户分配相应的角色</p>
+                        <h3 className="text-lg font-medium text-theme-foreground">{t('settings.users.roleAssignment')}</h3>
+                        <p className="text-sm text-theme-foreground-muted">{t('settings.users.assignRoles')}</p>
                       </div>
                       <div className="text-sm text-theme-foreground-muted">
-                        {userForm.roles.length > 0 ? '已选择角色' : '请选择一个角色'}
+                        {userForm.roles.length > 0 ? t('settings.users.selectedRoles') : t('settings.users.pleaseSelectRole')}
                       </div>
                     </div>
 
@@ -849,7 +851,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
                               <div className="flex-1">
                                 <div className="font-medium text-theme-foreground">{role.display_name}</div>
                                 <div className="text-sm text-theme-foreground-muted mt-1 line-clamp-2">
-                                  {role.description || '暂无描述'}
+                                  {role.description || t('settings.users.noDescription')}
                                 </div>
                               </div>
                               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ml-3 ${
@@ -876,14 +878,14 @@ export function UserManagementTab({}: UserManagementTabProps) {
                   onClick={() => setShowCreateModal(false)}
                   className="btn-base btn-secondary px-6 py-3"
                 >
-                  取消
+                  {t('settings.users.cancel')}
                 </button>
                 <button
                   onClick={handleCreateUser}
                   className="btn-base btn-primary px-6 py-3"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  创建用户
+                  <Plus className="w-4 h-4" />
+                  {t('settings.users.createUser')}
                 </button>
               </div>
             </motion.div>
@@ -895,12 +897,12 @@ export function UserManagementTab({}: UserManagementTabProps) {
       <Modal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        title="编辑用户"
+        title={t('settings.users.editUser')}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-              用户名
+              {t('settings.users.username')}
             </label>
             <input
               type="text"
@@ -911,7 +913,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-              邮箱
+              {t('settings.users.email')}
             </label>
             <input
               type="email"
@@ -923,7 +925,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-                名字
+                {t('settings.users.firstName')}
               </label>
               <input
                    type="text"
@@ -934,7 +936,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
             </div>
             <div>
               <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-                姓氏
+                {t('settings.users.lastName')}
               </label>
               <input
                    type="text"
@@ -946,17 +948,17 @@ export function UserManagementTab({}: UserManagementTabProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-              状态
+              {t('settings.users.status')}
             </label>
             <select
               value={userForm.status}
               onChange={(e) => updateUserForm({ status: e.target.value as any })}
               className="form-input-base w-full"
             >
-              <option value="pending">待激活</option>
-              <option value="active">活跃</option>
-              <option value="inactive">未激活</option>
-              <option value="suspended">已暂停</option>
+              <option value="pending">{t('settings.users.status.pending')}</option>
+              <option value="active">{t('settings.users.status.active')}</option>
+              <option value="inactive">{t('settings.users.status.inactive')}</option>
+              <option value="suspended">{t('settings.users.status.suspended')}</option>
             </select>
           </div>
           <div className="flex items-center gap-2">
@@ -968,7 +970,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
               className="rounded border-theme-border"
             />
             <label htmlFor="email_verified_edit" className="text-sm text-theme-foreground-muted">
-              邮箱已验证
+              {t('settings.users.emailVerified')}
             </label>
           </div>
           <div className="flex gap-2 pt-4">
@@ -976,13 +978,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
               onClick={handleUpdateUser}
               className="btn-base btn-primary flex-1"
             >
-              更新用户
+              {t('settings.users.updateUser')}
             </button>
             <button
               onClick={() => setShowEditModal(false)}
               className="btn-base btn-secondary flex-1"
             >
-              取消
+              {t('settings.users.cancel')}
             </button>
           </div>
         </div>
@@ -992,7 +994,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
       <Modal
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
-        title="用户详情"
+        title={t('settings.users.userDetails')}
       >
         {selectedUser && (
           <div className="space-y-4">
@@ -1008,41 +1010,41 @@ export function UserManagementTab({}: UserManagementTabProps) {
             
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-theme-foreground-muted">状态:</span>
+                <span className="text-theme-foreground-muted">{t('settings.users.userStatus')}:</span>
                 {getStatusBadge(selectedUser.status)}
               </div>
               <div className="flex justify-between">
-                <span className="text-theme-foreground-muted">邮箱验证:</span>
+                <span className="text-theme-foreground-muted">{t('settings.users.emailVerificationStatus')}:</span>
                 <span className={selectedUser.email_verified ? 'text-green-600' : 'text-red-600'}>
-                  {selectedUser.email_verified ? '已验证' : '未验证'}
+                  {selectedUser.email_verified ? t('settings.users.verified') : t('settings.users.unverified')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-theme-foreground-muted">姓名:</span>
+                <span className="text-theme-foreground-muted">{t('settings.users.fullName')}:</span>
                 <span className="text-theme-foreground">
                   {selectedUser.first_name || selectedUser.last_name 
                     ? `${selectedUser.first_name} ${selectedUser.last_name}` 
-                    : '未设置'
+                    : t('settings.users.notSet')
                   }
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-theme-foreground-muted">创建时间:</span>
+                <span className="text-theme-foreground-muted">{t('settings.users.createdAt')}:</span>
                 <span className="text-theme-foreground">
                   {formatTime(selectedUser.created_at)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-theme-foreground-muted">最后登录:</span>
+                <span className="text-theme-foreground-muted">{t('settings.users.lastLoginAt')}:</span>
                 <span className="text-theme-foreground">
                   {selectedUser.last_login_at 
                     ? formatTime(selectedUser.last_login_at)
-                    : '从未登录'
+                    : t('settings.users.neverLoggedIn')
                   }
                 </span>
               </div>
               <div>
-                <span className="text-theme-foreground-muted">角色:</span>
+                <span className="text-theme-foreground-muted">{t('settings.users.userRoles')}:</span>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {selectedUser.roles.map((role) => (
                     <span
@@ -1063,12 +1065,12 @@ export function UserManagementTab({}: UserManagementTabProps) {
       <Modal
         isOpen={showRoleModal}
         onClose={() => setShowRoleModal(false)}
-        title="管理用户角色"
+        title={t('settings.users.manageUserRoles')}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-theme-foreground-muted mb-2">
-              选择角色
+              {t('settings.users.selectRoleRequired')}
             </label>
             <div className="space-y-2">
               {roles.map((role) => (
@@ -1097,13 +1099,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
               onClick={handleUpdateUserRoles}
               className="btn-base btn-primary flex-1"
             >
-              更新角色
+              {t('settings.users.updateRole')}
             </button>
             <button
               onClick={() => setShowRoleModal(false)}
               className="btn-base btn-secondary flex-1"
             >
-              取消
+              {t('settings.users.cancel')}
             </button>
           </div>
         </div>
@@ -1113,7 +1115,7 @@ export function UserManagementTab({}: UserManagementTabProps) {
       <Modal
         isOpen={showActivateModal}
         onClose={() => setShowActivateModal(false)}
-        title="激活用户"
+        title={t('settings.users.activateUserWithRole')}
       >
         <div className="space-y-4">
           {selectedUser && (
@@ -1130,13 +1132,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-sm text-yellow-700">
-                  激活用户后，用户将可以正常登录系统。请为用户选择一个角色以确保其拥有适当的权限。
+                  {t('settings.users.activateDescription')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-theme-foreground-muted mb-2">
-                  选择角色 <span className="text-red-500">*</span>
+                  {t('settings.users.selectRoleRequired')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   {roles.map((role) => (
@@ -1170,13 +1172,13 @@ export function UserManagementTab({}: UserManagementTabProps) {
                   disabled={userForm.roles.length === 0}
                   className="btn-base btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  激活用户
+                  {t('settings.users.activateUserButton')}
                 </button>
                 <button
                   onClick={() => setShowActivateModal(false)}
                   className="btn-base btn-secondary flex-1"
                 >
-                  取消
+                  {t('settings.users.cancel')}
                 </button>
               </div>
             </>

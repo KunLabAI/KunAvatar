@@ -1,6 +1,6 @@
 {
   "name": "kun-avatar",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": true,
   "type": "module",
   "scripts": {
@@ -37,6 +37,7 @@
     "katex": "^0.16.22",
     "lucide-react": "^0.460.0",
     "next": "15.3.3",
+    "next-intl": "^4.3.9",
     "node-fetch": "^3.3.2",
     "postcss": "^8.4.0",
     "react": "^19.1.0",

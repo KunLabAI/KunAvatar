@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, RefreshCw, RotateCcw, Save, Settings, X } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 import defaultPrompts from '../../../config/default-prompts.json';
 import { ModelSelector } from '@/components/ModelSelector';
 
@@ -29,6 +30,7 @@ export function TitleSummarySection({
   modelsError,
   onUpdateSetting
 }: TitleSummarySectionProps) {
+  const { t } = useI18n();
   const [localSystemPrompt, setLocalSystemPrompt] = useState(settings.titleSummarySystemPrompt);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,7 +62,7 @@ export function TitleSummarySection({
       <div className="flex items-center gap-3 mb-6">
         <MessageSquare className="w-5 h-5"/>
         <div>
-          <h3 className="section-title">标题总结</h3>
+          <h3 className="section-title">{t('settings.assistant.titleSummary')}</h3>
         </div>
       </div>
       
@@ -109,7 +111,7 @@ export function TitleSummarySection({
             borderColor: 'var(--color-border)',
             color: 'var(--color-foreground)'
           }}
-          title="配置系统提示词"
+          title={t('settings.assistant.configureSystemPrompt')}
         >
           <Settings className="w-4 h-4" />
         </button>
@@ -149,8 +151,8 @@ export function TitleSummarySection({
                     <Settings className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-theme-foreground">系统提示词设置</h2>
-                    <p className="text-sm text-theme-foreground-muted mt-1">配置AI生成标题的指导规则</p>
+                    <h2 className="text-xl font-semibold text-theme-foreground">{t('settings.assistant.titleSummarySettings')}</h2>
+                    <p className="text-sm text-theme-foreground-muted mt-1">{t('settings.assistant.titleGenerateRules')}</p>
                   </div>
                 </div>
                 <button
@@ -165,13 +167,13 @@ export function TitleSummarySection({
               <div className="flex-1 overflow-y-auto p-8">
                 <div className="space-y-4">
                   <label className="text-sm font-medium text-theme-foreground block">
-                    系统提示词
+                    {t('settings.assistant.systemPrompt')}
                   </label>
                   <textarea
                     value={localSystemPrompt}
                     onChange={e => handleSystemPromptChange(e.target.value)}
                     className="w-full h-64 p-4 rounded-xl border border-theme-border bg-theme-background-secondary text-theme-foreground resize-none font-mono text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent"
-                    placeholder="输入标题生成系统提示词..."
+                    placeholder={t('settings.assistant.inputTitlePrompt')}
                   />
                 </div>
               </div>
@@ -184,7 +186,7 @@ export function TitleSummarySection({
                     className="btn-base btn-secondary px-6 py-3"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    重置为默认
+                    {t('settings.assistant.resetToDefault')}
                   </button>
                 </div>
                 <div className="flex gap-3">
@@ -192,7 +194,7 @@ export function TitleSummarySection({
                     onClick={() => setIsModalOpen(false)}
                     className="btn-base btn-secondary px-6 py-3"
                   >
-                    取消
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={() => {
@@ -203,7 +205,7 @@ export function TitleSummarySection({
                     className="btn-base btn-primary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
-                    {hasUnsavedChanges ? '更新' : '保存'}
+                    {hasUnsavedChanges ? t('settings.assistant.update') : t('common.save')}
                   </button>
                 </div>
               </div>

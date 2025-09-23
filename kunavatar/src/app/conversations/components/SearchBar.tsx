@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -10,8 +11,10 @@ interface SearchBarProps {
 export function SearchBar({
   searchQuery,
   onSearchChange,
-  placeholder = "搜索..."
+  placeholder
 }: SearchBarProps) {
+  const { t } = useI18n();
+  const defaultPlaceholder = placeholder || t('conversations.search.placeholder');
   const handleClear = () => {
     onSearchChange('');
   };
@@ -26,7 +29,7 @@ export function SearchBar({
         type="text"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={defaultPlaceholder}
         className="w-full focus:outline-none transition-all duration-200"
         style={{
           paddingLeft: 'calc(var(--spacing-lg) + var(--spacing-md))',

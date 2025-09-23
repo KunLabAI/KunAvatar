@@ -8,6 +8,7 @@ import { ModelSelector } from '@/components/ModelSelector';
 import { NoteSelector } from '@/components/NoteSelector';
 import { usePromptOptimizeSettings } from '../../settings/hooks/usePromptOptimizeSettings';
 import { useNotesForSelection } from '@/hooks/useNotes';
+import { useI18n } from '@/contexts/I18nContext';
 
 
 interface ModelfileFormProps {
@@ -127,6 +128,7 @@ const FormInput = ({
 );
 
 export default function ModelfileForm({ onSave, onCancel, customModels = [] }: ModelfileFormProps) {
+  const { t } = useI18n();
   const [availableModels, setAvailableModels] = useState<OllamaModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(true);
   const [selectedNoteId, setSelectedNoteId] = useState<string>('');
@@ -193,7 +195,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
         
         // 处理认证错误
         if (response.status === 401) {
-          console.error('认证失败，请重新登录');
+          console.error(t('settings.models.modelfileForm.messages.authFailed'));
           // 可以在这里添加重定向到登录页面的逻辑
           return;
         }
@@ -230,7 +232,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
           // 不自动选择第一个模型，保持空值让用户手动选择
         }
       } catch (error) {
-        console.error('加载可用模型失败:', error);
+        console.error(t('settings.models.modelfileForm.messages.loadModelsFailed'), error);
       } finally {
         setIsLoadingModels(false);
       }
@@ -246,7 +248,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
     
     // 检查设置是否启用
     if (!settings.promptEnabled || !settings.promptModel) {
-      alert('请先在设置中配置提示词优化功能');
+      alert(t('settings.models.modelfileForm.messages.optimizePromptConfigFirst'));
       return;
     }
     
@@ -282,8 +284,8 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
       console.error('优化提示词失败:', error);
       
       // 显示具体的错误信息
-      const errorMessage = error instanceof Error ? error.message : '优化失败';
-      alert(`提示词优化失败：${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : t('settings.models.modelfileForm.messages.optimizePromptFailed', 'Optimization failed');
+      alert(t('settings.models.modelfileForm.messages.optimizePromptFailed').replace('{error}', errorMessage));
     } finally {
       setIsOptimizing(false);
     }
@@ -334,11 +336,11 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
     const newErrors: {[key: string]: string} = {};
     
     if (!formData.display_name.trim()) {
-      newErrors.display_name = '模型别名不能为空';
+      newErrors.display_name = t('settings.models.modelfileForm.fields.displayNameRequired');
     }
     
     if (!formData.base_model) {
-      newErrors.base_model = '请选择基础模型';
+      newErrors.base_model = t('settings.models.modelfileForm.fields.baseModelRequired');
     }
     
     setErrors(newErrors);
@@ -426,8 +428,8 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   <Code className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="page-title text-theme-foreground">创建 Modelfile</h2>
-                  <p className="text-theme-foreground-muted text-sm">基于 Ollama Modelfile 自定义模型</p>
+                  <h2 className="page-title text-theme-foreground">{t('settings.models.modelfileForm.title')}</h2>
+                  <p className="text-theme-foreground-muted text-sm">{t('settings.models.modelfileForm.subtitle')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -443,10 +445,10 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
             {/* 表单内容 */}
             <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-8">
               {/* 基本信息 */}
-              <FormSection title="基本信息">
+              <FormSection title={t('settings.models.modelfileForm.basicInfo')}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormInput 
-                    label="模型别名" 
+                    label={t('settings.models.modelfileForm.fields.displayName')} 
                     required 
                     error={errors.display_name}
                   >
@@ -455,15 +457,15 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       value={formData.display_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
                       className="form-input-base"
-                      placeholder="用户友好的显示名称，支持中文"
+                      placeholder={t('settings.models.modelfileForm.fields.displayNamePlaceholder')}
                     />
                   </FormInput>
 
-                  <FormInput label="基础模型" required error={errors.base_model}>
+                  <FormInput label={t('settings.models.modelfileForm.fields.baseModel')} required error={errors.base_model}>
                     {isLoadingModels ? (
                       <div className="form-input-base flex items-center justify-center py-4">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-theme-primary mr-2"></div>
-                        <span className="text-theme-foreground-muted">加载模型列表...</span>
+                        <span className="text-theme-foreground-muted">{t('settings.models.modelfileForm.fields.baseModelLoading')}</span>
                       </div>
                     ) : (
                       <ModelSelector
@@ -478,7 +480,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   </FormInput>
                 </div>
 
-                <FormInput label="标签">
+                <FormInput label={t('settings.models.modelfileForm.fields.tags')}>
                   <div className="relative">
                     <div className="form-input-base min-h-[42px] flex flex-wrap items-center gap-1 p-2">
                       {formData.tags && formData.tags.map((tag, index) => (
@@ -494,7 +496,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       ))}
                       <input
                         type="text"
-                        placeholder={(!formData.tags || formData.tags.length === 0) ? "按回车或逗号添加标签，最多6个" : "添加标签..."}
+                        placeholder={(!formData.tags || formData.tags.length === 0) ? t('settings.models.modelfileForm.fields.tagsPlaceholder') : t('settings.models.modelfileForm.fields.tagsPlaceholderEmpty')}
                         value={currentTag}
                         onChange={(e) => setCurrentTag(e.target.value)}
                         onKeyDown={handleTagKeyDown}
@@ -517,9 +519,9 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
               </FormSection>
 
               {/* 系统提示词 */}
-              <FormSection title="系统提示词">
+              <FormSection title={t('settings.models.modelfileForm.systemPrompt')}>
                 <div className="space-y-4">
-                  <FormInput label="选择笔记">
+                  <FormInput label={t('settings.models.modelfileForm.fields.selectNote')}>
                     <NoteSelector
                       notes={notes}
                       selectedNoteId={selectedNoteId}
@@ -529,7 +531,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                     />
                   </FormInput>
 
-                  <FormInput label="提示词内容" >
+                  <FormInput label={t('settings.models.modelfileForm.fields.promptContent')} >
                     <div className="relative">
                       <textarea
                         value={formData.system_prompt || ''}
@@ -540,7 +542,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                           minHeight: '8rem' 
                         }}
                         rows={isSystemPromptExpanded ? 60 : 8}
-                        placeholder="定义模型的角色和行为..."
+                        placeholder={t('settings.models.modelfileForm.fields.promptContentPlaceholder')}
                       />
                       {/* 提示词优化按钮 */}
                       <button
@@ -550,12 +552,12 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                         className="absolute top-4 right-14 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={
                           isOptimizing 
-                            ? "正在优化..." 
+                            ? t('settings.models.modelfileForm.actions.optimizing') 
                             : !formData.system_prompt?.trim() 
-                            ? "请先输入提示词内容" 
+                            ? t('settings.models.modelfileForm.messages.optimizePromptEmpty') 
                             : !settings.promptEnabled || !settings.promptModel
-                            ? "请先在设置中配置提示词优化"
-                            : "优化当前提示词"
+                            ? t('settings.models.modelfileForm.messages.optimizePromptDisabled')
+                            : t('settings.models.modelfileForm.actions.optimizePrompt')
                         }
                       >
                         {isOptimizing ? (
@@ -569,7 +571,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                         type="button"
                         onClick={() => setIsSystemPromptExpanded(!isSystemPromptExpanded)}
                         className="absolute top-4 right-4 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10"
-                        title={isSystemPromptExpanded ? '收起' : '展开'}
+                        title={isSystemPromptExpanded ? t('settings.models.modelfileForm.actions.collapse') : t('settings.models.modelfileForm.actions.expand')}
                       >
                         {isSystemPromptExpanded ? (
                           <Minimize2 className="w-4 h-4" />
@@ -584,12 +586,12 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
 
               {/* 模型参数 */}
               <CollapsibleFormSection 
-                title="模型参数" 
+                title={t('settings.models.modelfileForm.modelParameters')} 
                 isCollapsed={isParametersCollapsed}
                 onToggle={() => setIsParametersCollapsed(!isParametersCollapsed)}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                          <FormInput label="Temperature" hint="创造性程度 (0.0-2.0)">
+                                          <FormInput label={t('settings.models.modelfileForm.parameters.temperature')} hint={t('settings.models.modelfileForm.parameters.temperatureHint')}>
                         <input
                           type="number"
                           min="0"
@@ -604,7 +606,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                         />
                     </FormInput>
 
-                    <FormInput label="Top P" hint="核心采样 (0.0-1.0)">
+                    <FormInput label={t('settings.models.modelfileForm.parameters.topP')} hint={t('settings.models.modelfileForm.parameters.topPHint')}>
                       <input
                         type="number"
                         min="0"
@@ -619,7 +621,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       />
                     </FormInput>
 
-                    <FormInput label="Top K" hint="候选词数量 (1-100)">
+                    <FormInput label={t('settings.models.modelfileForm.parameters.topK')} hint={t('settings.models.modelfileForm.parameters.topKHint')}>
                       <input
                         type="number"
                         min="1"
@@ -633,7 +635,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       />
                     </FormInput>
 
-                    <FormInput label="重复惩罚" hint="防止重复 (0.0-2.0)">
+                    <FormInput label={t('settings.models.modelfileForm.parameters.repeatPenalty')} hint={t('settings.models.modelfileForm.parameters.repeatPenaltyHint')}>
                       <input
                         type="number"
                         min="0"
@@ -648,7 +650,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       />
                     </FormInput>
 
-                    <FormInput label="上下文长度" hint="上下文窗口大小">
+                    <FormInput label={t('settings.models.modelfileForm.parameters.contextLength')} hint={t('settings.models.modelfileForm.parameters.contextLengthHint')}>
                       <input
                         type="number"
                         min="512"
@@ -663,7 +665,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                       />
                     </FormInput>
 
-                    <FormInput label="最大生成数" hint="-1 为无限制">
+                    <FormInput label={t('settings.models.modelfileForm.parameters.maxGeneration')} hint={t('settings.models.modelfileForm.parameters.maxGenerationHint')}>
                       <input
                         type="number"
                         min="-1"
@@ -680,11 +682,11 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
 
               {/* 高级设置 */}
               <CollapsibleFormSection 
-                title="高级设置" 
+                title={t('settings.models.modelfileForm.advancedSettings')} 
                 isCollapsed={isAdvancedCollapsed}
                 onToggle={() => setIsAdvancedCollapsed(!isAdvancedCollapsed)}
               >
-                <FormInput label="对话模板" >
+                <FormInput label={t('settings.models.modelfileForm.fields.template')} >
                   <div className="relative">
                     <textarea
                       value={formData.template}
@@ -695,20 +697,14 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                         minHeight: '10rem'
                       }}
                       rows={isTemplateExpanded ? 60 : 6}
-                      placeholder={`{{ if .System }}<|im_start|>system
-{{ .System }}<|im_end|>
-{{ end }}{{ if .Prompt }}<|im_start|>user
-{{ .Prompt }}<|im_end|>
-{{ end }}<|im_start|>assistant
-{{ .Response }}<|im_end|>
-`}
+                      placeholder={t('settings.models.modelfileForm.fields.templatePlaceholder')}
                     />
                     
                     <button
                       type="button"
                       onClick={() => setIsTemplateExpanded(!isTemplateExpanded)}
                       className="absolute top-4 right-4 p-1 rounded bg-theme-card hover:bg-theme-card-hover text-theme-foreground-muted hover:text-theme-foreground transition-colors z-10"
-                      title={isTemplateExpanded ? '收起' : '展开'}
+                      title={isTemplateExpanded ? t('settings.models.modelfileForm.actions.collapse') : t('settings.models.modelfileForm.actions.expand')}
                     >
                       {isTemplateExpanded ? (
                         <Minimize2 className="w-4 h-4" />
@@ -719,13 +715,13 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   </div>
                 </FormInput>
 
-                <FormInput label="许可证">
+                <FormInput label={t('settings.models.modelfileForm.fields.license')}>
                   <textarea
                     value={formData.license || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, license: e.target.value }))}
                     className="form-input-base resize-none"
                     rows={4}
-                    placeholder="请输入许可证信息..."
+                    placeholder={t('settings.models.modelfileForm.fields.licensePlaceholder')}
                   />
                 </FormInput>
               </CollapsibleFormSection>
@@ -735,7 +731,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
             {showPreview && (
               <div className="border-t border-theme-border bg-theme-background-subtle">
                 <div className="p-8 space-y-4">
-                  <h3 className="section-title !text-theme-foreground-muted">Modelfile 预览</h3>
+                  <h3 className="section-title !text-theme-foreground-muted">{t('settings.models.modelfileForm.preview.title')}</h3>
                   <div className="bg-theme-background border border-theme-border rounded-lg p-4 font-mono text-sm text-theme-foreground whitespace-pre-wrap max-h-96 overflow-y-auto">
                     {generateModelfile()}
                   </div>
@@ -750,7 +746,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   onClick={() => setShowPreview(!showPreview)}
                   className="btn-base btn-secondary px-4 py-2"
                 >
-                  {showPreview ? '隐藏预览' : '预览 Modelfile'}
+                  {showPreview ? t('settings.models.modelfileForm.actions.hidePreview') : t('settings.models.modelfileForm.actions.previewModelfile')}
                 </button>
                 <button
                   onClick={downloadModelfile}
@@ -758,7 +754,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   className="btn-base btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4" />
-                  下载 Modelfile
+                  {t('settings.models.modelfileForm.actions.downloadModelfile')}
                 </button>
               </div>
               <div className="flex gap-3">
@@ -766,7 +762,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   onClick={onCancel}
                   className="btn-base btn-secondary px-6 py-3"
                 >
-                  取消
+                  {t('settings.models.modelfileForm.actions.cancel')}
                 </button>
                 <button 
                   onClick={handleSave}
@@ -774,7 +770,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
                   className="btn-base btn-primary px-6 py-3"
                 >
                   <DiamondPlus className="w-4 h-4" />
-                  创建模型
+                  {t('settings.models.modelfileForm.actions.createModel')}
                 </button>
               </div>
             </div>

@@ -8,6 +8,7 @@ import VditorEditor from '@/components/notes/VditorEditor';
 import { Sidebar } from '@/app/Sidebar';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Modal from '@/components/Modal';
+import { useI18n } from '@/contexts/I18nContext';
 
 // FormInput组件，与ModelfileForm保持一致的样式
 const FormInput = ({ 
@@ -41,6 +42,7 @@ const FormInput = ({
 const NewNotePage = () => {
   const router = useRouter();
   const notification = useNotification();
+  const { t } = useI18n(); // 多语言支持
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPublished, setIsPublished] = useState(false);
@@ -77,12 +79,12 @@ const NewNotePage = () => {
   // 保存笔记
   const handleSave = async () => {
     if (!title.trim()) {
-      notification.error('请输入标题', '标题不能为空');
+      notification.error(t('notes.validation.titleRequired'), t('notes.validation.titleEmpty'));
       return;
     }
 
     if (!content.trim()) {
-      notification.error('请输入内容', '笔记内容不能为空');
+      notification.error(t('notes.validation.contentRequired'), t('notes.validation.contentEmpty'));
       return;
     }
 
@@ -91,7 +93,7 @@ const NewNotePage = () => {
       const token = localStorage.getItem('accessToken');
       
       if (!token) {
-        notification.error('认证失败', '请重新登录');
+        notification.error(t('notes.messages.authFailed'), t('notes.messages.authFailedDesc'));
         router.push('/login');
         return;
       }
@@ -114,7 +116,7 @@ const NewNotePage = () => {
         // 认证失败，清除token并跳转到登录页面
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        notification.error('认证失败', '请重新登录');
+        notification.error(t('notes.messages.authFailed'), t('notes.messages.authFailedDesc'));
         router.push('/login');
         return;
       }
@@ -122,13 +124,13 @@ const NewNotePage = () => {
       const data = await response.json();
 
       if (data.success) {
-        notification.success('笔记创建成功', '正在跳转到笔记管理页面');
+        notification.success(t('notes.messages.createSuccess'), t('notes.messages.createSuccessDesc'));
         router.push('/notes');
       } else {
-        notification.error('创建失败', data.error || '未知错误');
+        notification.error(t('notes.messages.createFailed'), data.error || t('notes.messages.createFailedUnknown'));
       }
     } catch (error) {
-      notification.error('创建失败', '网络错误，请稍后重试');
+      notification.error(t('notes.messages.createFailed'), t('notes.messages.createFailedDesc'));
     } finally {
       setSaving(false);
     }
@@ -164,7 +166,7 @@ const NewNotePage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                      新建笔记
+                      {t('notes.create.title')}
                     </h1>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
@@ -179,12 +181,12 @@ const NewNotePage = () => {
                       {isPublished ? (
                         <>
                           <Unlock className="w-4 h-4" />
-                          公开笔记
+                          {t('notes.create.publicNote')}
                         </>
                       ) : (
                         <>
                           <Lock className="w-4 h-4" />
-                          我的笔记
+                          {t('notes.create.privateNote')}
                         </>
                       )}
                     </button>
@@ -193,7 +195,7 @@ const NewNotePage = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      返回
+                      {t('notes.actions.back')}
                     </button>
 
                     <button 
@@ -202,7 +204,7 @@ const NewNotePage = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-lg hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                     >
                       <Save className="w-4 h-4" />
-                      {saving ? '保存中...' : '创建'}
+                      {saving ? t('notes.create.savingButton') : t('notes.create.saveButton')}
                     </button>
                   </div>
                 </div>
@@ -214,10 +216,10 @@ const NewNotePage = () => {
                   <div className="flex gap-6">
                     {/* 笔记标题 */}
                     <div className="flex-1">
-                      <FormInput label="笔记标题" required>
+                      <FormInput label={t('notes.create.titleField')} required>
                         <input
                           type="text"
-                          placeholder="输入笔记标题..."
+                          placeholder={t('notes.create.titlePlaceholder')}
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           className="form-input-base"
@@ -228,7 +230,7 @@ const NewNotePage = () => {
 
                     {/* 标签管理 */}
                     <div className="flex-1">
-                      <FormInput label="标签">
+                      <FormInput label={t('notes.create.tagsField')}>
                         <div className="relative">
                           <div className="form-input-base min-h-[42px] flex flex-wrap items-center gap-1 p-2">
                             {tags.map((tag, index) => (
@@ -244,7 +246,7 @@ const NewNotePage = () => {
                             ))}
                             <input
                               type="text"
-                              placeholder={tags.length === 0 ? "按回车或逗号添加标签，最多6个" : "添加标签..."}
+                              placeholder={tags.length === 0 ? t('notes.create.tagsPlaceholder') : t('notes.create.tagsAddPlaceholder')}
                               value={tagInput}
                               onChange={(e) => setTagInput(e.target.value)}
                               onKeyDown={handleTagInputKeyDown}
@@ -266,8 +268,8 @@ const NewNotePage = () => {
                     <VditorEditor
                       value={content}
                       onChange={setContent}
-                      placeholder="开始编写你的笔记内容..."
-                      height="calc(90vh - 400px)"
+                      placeholder={t('notes.create.contentPlaceholder')}
+                      height="calc(100vh - 288px)"
                     />
                   </div>
                 </div>
@@ -281,16 +283,16 @@ const NewNotePage = () => {
        <Modal
          open={confirmModalOpen}
          onClose={() => setConfirmModalOpen(false)}
-         title="确认离开"
+         title={t('notes.confirmModal.leaveTitle')}
          icon={<AlertTriangle className="w-6 h-6 text-theme-warning" />}
          actions={[
            {
-             label: '取消',
+             label: t('notes.confirmModal.cancel'),
              onClick: () => setConfirmModalOpen(false),
              variant: 'secondary',
            },
            {
-             label: '确定离开',
+             label: t('notes.confirmModal.confirmLeave'),
              onClick: confirmLeave,
              variant: 'danger',
              autoFocus: true,
@@ -299,7 +301,7 @@ const NewNotePage = () => {
          width={380}
        >
          <span>
-           您有未保存的内容，确定要离开吗？
+           {t('notes.confirmModal.unsavedContent')}
          </span>
        </Modal>
     </div>

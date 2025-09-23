@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Conversation } from '@/lib/database';
 import { Agent } from '@/lib/database/agents';
 import { formatTime, formatDate as formatDateOnly } from '@/lib/utils/time';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DateGroupedConversationListProps {
   conversations: Conversation[];
@@ -29,6 +30,7 @@ export function DateGroupedConversationList({
   selectedConversations = new Set(),
   onToggleSelection,
 }: DateGroupedConversationListProps) {
+  const { t } = useI18n();
   // 根据agent_id查找agent信息
   const getAgentById = (agentId: number | null | undefined): Agent | null => {
     if (!agentId) return null;
@@ -52,15 +54,15 @@ export function DateGroupedConversationList({
     });
 
     if (conversationDate.getTime() === today.getTime()) {
-      return { label: '今天', actualDate: actualDateStr };
+      return { label: t('conversations.timeGroups.today'), actualDate: actualDateStr };
     } else if (conversationDate.getTime() === yesterday.getTime()) {
-      return { label: '昨天', actualDate: actualDateStr };
+      return { label: t('conversations.timeGroups.yesterday'), actualDate: actualDateStr };
     } else if (conversationDate >= threeDaysAgo) {
-      return { label: '三天前', actualDate: actualDateStr };
+      return { label: t('conversations.timeGroups.threeDaysAgo'), actualDate: actualDateStr };
     } else if (conversationDate >= oneWeekAgo) {
-      return { label: '过去一周', actualDate: actualDateStr };
+      return { label: t('conversations.timeGroups.pastWeek'), actualDate: actualDateStr };
     } else {
-      return { label: '更久以前', actualDate: actualDateStr };
+      return { label: t('conversations.timeGroups.older'), actualDate: actualDateStr };
     }
   };
 
@@ -99,7 +101,13 @@ export function DateGroupedConversationList({
 
     // 按时间顺序排序分组
     const sortedGroups = Object.values(groups).sort((a, b) => {
-      const order = ['今天', '昨天', '三天前', '过去一周', '更久以前'];
+      const order = [
+        t('conversations.timeGroups.today'), 
+        t('conversations.timeGroups.yesterday'), 
+        t('conversations.timeGroups.threeDaysAgo'), 
+        t('conversations.timeGroups.pastWeek'), 
+        t('conversations.timeGroups.older')
+      ];
       const aIndex = order.indexOf(a.label);
       const bIndex = order.indexOf(b.label);
       return aIndex - bIndex;
@@ -271,15 +279,15 @@ export function DateGroupedConversationList({
                         }}>
                           <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                             <MessageSquare className="w-4 h-4" />
-                            <span>{conversation.stats.message_count} 条消息</span>
+                            <span>{t('conversations.stats.messages').replace('{count}', conversation.stats.message_count.toString())}</span>
                           </div>
                           <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                             <Hash className="w-4 h-4" />
-                            <span>{conversation.stats.total_tokens.toLocaleString()} tokens</span>
+                            <span>{t('conversations.stats.tokens').replace('{count}', conversation.stats.total_tokens.toLocaleString())}</span>
                           </div>
                           <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                             <Type className="w-4 h-4" />
-                            <span>{conversation.stats.total_characters.toLocaleString()} 字符</span>
+                            <span>{t('conversations.stats.characters').replace('{count}', conversation.stats.total_characters.toLocaleString())}</span>
                           </div>
                         </div>
                       )}
@@ -292,11 +300,11 @@ export function DateGroupedConversationList({
                       }}>
                         <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                           <Calendar className="w-4 h-4" />
-                          <span>创建于 {formatDateOnly(conversation.created_at)}</span>
+                          <span>{t('conversations.stats.createdAt').replace('{date}', formatDateOnly(conversation.created_at))}</span>
                         </div>
                         <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                           <Clock className="w-4 h-4" />
-                          <span>更新于 {formatTime(conversation.updated_at)}</span>
+                          <span>{t('conversations.stats.updatedAt').replace('{time}', formatTime(conversation.updated_at))}</span>
                         </div>
                       </div>
                     </div>
@@ -324,7 +332,7 @@ export function DateGroupedConversationList({
                           e.currentTarget.style.color = 'var(--color-foreground-muted)';
                           e.currentTarget.style.backgroundColor = 'transparent';
                         }}
-                        title="删除对话"
+                        title={t('conversations.hints.deleteConversation')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -343,7 +351,7 @@ export function DateGroupedConversationList({
                     color: 'var(--color-primary)',
                     fontWeight: '500'
                   }}>
-                    {isSelectionMode ? '点击选择对话' : '点击进入对话'} →
+                    {isSelectionMode ? t('conversations.hints.clickToSelect') : t('conversations.hints.clickToEnter')} →
                   </p>
                 </div>
               </motion.div>

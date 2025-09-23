@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Bot, Camera, X } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Electron环境类型声明
 declare global {
@@ -24,6 +25,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   onAvatarChange,
   agentName 
 }) => {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatar);
@@ -78,13 +80,13 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
     
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      alert('请选择图片文件');
+      alert(t('agents.form.avatar.selectImageFile'));
       return;
     }
     
     // 验证文件大小 (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('图片文件不能超过5MB');
+      alert(t('agents.form.avatar.fileSizeLimit'));
       return;
     }
     
@@ -107,7 +109,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       });
       
       if (!uploadResponse.ok) {
-        throw new Error('上传失败');
+        throw new Error(t('agents.form.avatar.uploadFailed'));
       }
       
       const { url, apiUrl, base64 } = await uploadResponse.json();
@@ -128,8 +130,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       setPreviewUrl(avatarUrl);
       onAvatarChange(avatarUrl);
     } catch (error) {
-      console.error('头像上传失败:', error);
-      alert('头像上传失败，请重试');
+      console.error(t('agents.form.avatar.uploadFailedConsole'), error);
+      alert(t('agents.form.avatar.uploadFailed'));
     } finally {
       setIsUploading(false);
     }
@@ -150,12 +152,12 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           {previewUrl ? (
             <Image 
               src={previewUrl} 
-              alt="头像预览" 
+              alt={t('agents.form.avatar.preview')} 
               width={80}
               height={80}
               className="w-full h-full object-cover"
               onError={(e) => {
-                console.error('头像预览加载失败:', previewUrl);
+                console.error(t('agents.form.avatar.previewLoadFailed'), previewUrl);
                 console.log('错误详情:', e);
               }}
             />
@@ -195,17 +197,17 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           {isUploading ? (
             <>
               <div className="w-4 h-4 bg-theme-primary rounded-full animate-spin" />
-              上传中...
+              {t('agents.form.avatar.uploading')}
             </>
           ) : (
             <>
               <Camera className="w-4 h-4" />
-              {previewUrl ? '更换头像' : '上传头像'}
+              {previewUrl ? t('agents.form.avatar.change') : t('agents.form.avatar.upload')}
             </>
           )}
         </button>
         <p className="text-xs text-theme-foreground-muted mt-1">
-          支持 JPG、PNG 格式，建议尺寸 200x200px，最大 5MB
+          {t('agents.form.avatar.supportedFormats')}
         </p>
       </div>
     </div>

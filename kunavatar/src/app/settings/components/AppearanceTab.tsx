@@ -5,6 +5,8 @@ import { Palette, Monitor, Sun, Moon, MessageSquare, Bot, Check, Minimize2 } fro
 import { useTheme } from '@/theme/contexts/ThemeContext';
 import { ChatStyle, DisplaySize } from '@/app/chat/components/input-controls';
 import { useUserSettings } from '@/contexts/UserSettingsContext';
+import { useI18n } from '@/contexts/I18nContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 interface AppearanceTabProps {
   // 可以接收一些props
@@ -13,6 +15,7 @@ interface AppearanceTabProps {
 export function AppearanceTab({}: AppearanceTabProps) {
   const { theme: contextTheme, setTheme: setContextTheme } = useTheme();
   const { settings, loading, error, updateSetting, updateAppearanceSettings } = useUserSettings();
+  const { t } = useI18n();
   
   // 从用户设置中获取当前值
   const themePreference = settings.themePreference as 'light' | 'dark' | 'system';
@@ -127,7 +130,7 @@ export function AppearanceTab({}: AppearanceTabProps) {
         {/* 错误提示 */}
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-600 dark:text-red-400 text-sm">加载设置时出错: {error}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm">{t('errors.generic')}: {error}</p>
           </div>
         )}
         
@@ -135,7 +138,7 @@ export function AppearanceTab({}: AppearanceTabProps) {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-theme-foreground flex items-center gap-2">
             <Palette className="w-5 h-5" />
-            界面设置
+            {t('settings.appearance.title')}
           </h2>
         </div>
         
@@ -143,14 +146,14 @@ export function AppearanceTab({}: AppearanceTabProps) {
         <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium text-theme-foreground mb-1">界面主题色</h3>
-              <p className="text-sm text-theme-foreground-muted">选择浅色或深色主题</p>
+              <h3 className="text-lg font-medium text-theme-foreground mb-1">{t('settings.appearance.theme.title')}</h3>
+              <p className="text-sm text-theme-foreground-muted">{t('settings.appearance.theme.description')}</p>
             </div>
             <div className="flex gap-2">
               {[
-                { value: 'light', label: '浅色', icon: Sun },
-                { value: 'dark', label: '深色', icon: Moon },
-                { value: 'system', label: '跟随系统', icon: Monitor }
+                { value: 'light', label: t('settings.appearance.theme.light'), icon: Sun },
+                { value: 'dark', label: t('settings.appearance.theme.dark'), icon: Moon },
+                { value: 'system', label: t('settings.appearance.theme.system'), icon: Monitor }
               ].map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
@@ -173,22 +176,22 @@ export function AppearanceTab({}: AppearanceTabProps) {
         <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium text-theme-foreground mb-1">元素主题色</h3>
-              <p className="text-sm text-theme-foreground-muted">选择应用的主题色调</p>
+              <h3 className="text-lg font-medium text-theme-foreground mb-1">{t('settings.appearance.colorTheme.title')}</h3>
+              <p className="text-sm text-theme-foreground-muted">{t('settings.appearance.colorTheme.description')}</p>
             </div>
             <div className="flex gap-2 flex-wrap">
               {colorThemes.map((theme) => (
                 <button
                   key={theme.name}
                   onClick={() => updateColorTheme(theme.name)}
-                  title={theme.displayName}
+                  title={t(`settings.appearance.colorTheme.themes.${theme.name}`, theme.displayName)}
                   className={`relative group w-8 h-8 rounded-full transition-all duration-200 ${colorTheme === theme.name ? 'transform scale-110 ring-2 ring-theme-primary ring-offset-2 ring-offset-theme-background' : 'hover:scale-110'}`}
                   style={{ 
                     backgroundColor: theme.color
                   }}
                 >
                   <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-xs bg-gray-900/80 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-                    {theme.displayName}
+                    {t(`settings.appearance.colorTheme.themes.${theme.name}`, theme.displayName)}
                   </span>
                 </button>
               ))}
@@ -201,13 +204,13 @@ export function AppearanceTab({}: AppearanceTabProps) {
         <div className="bg-theme-card rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium text-theme-foreground mb-1">对话样式</h3>
-              <p className="text-sm text-theme-foreground-muted">选择聊天界面的显示样式</p>
+              <h3 className="text-lg font-medium text-theme-foreground mb-1">{t('settings.appearance.chatStyle.title')}</h3>
+              <p className="text-sm text-theme-foreground-muted">{t('settings.appearance.chatStyle.description')}</p>
             </div>
             <div className="flex gap-2">
               {[
-                { value: 'conversation', label: '对话模式', icon: MessageSquare },
-                { value: 'assistant', label: '助手模式', icon: Bot }
+                { value: 'conversation', label: t('settings.appearance.chatStyle.conversation'), icon: MessageSquare },
+                { value: 'assistant', label: t('settings.appearance.chatStyle.assistant'), icon: Bot }
               ].map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
@@ -225,6 +228,9 @@ export function AppearanceTab({}: AppearanceTabProps) {
             </div>
           </div>
         </div>
+
+        {/* 语言设置 */}
+        <LanguageSelector />
       </div>
     </div>
   );
