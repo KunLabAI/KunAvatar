@@ -7,6 +7,7 @@ import { PageLoading } from '@/components/Loading';
 import { useNotification } from '@/components/notification';
 import { useAuthErrorHandler } from '@/lib/utils/auth-utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Role {
   id: string;
@@ -36,25 +37,15 @@ interface RoleForm {
   permissions: string[];
 }
 
-// 资源显示名称映射
-const getResourceDisplayName = (resource: string): string => {
-  const resourceNames: Record<string, string> = {
-    users: '👥 用户管理',
-    roles: '🛡️ 角色管理',
-    permissions: '🔐 权限管理',
-    conversations: '💬 对话管理',
-    agents: '🤖 智能体管理',
-    models: '🧠 模型管理',
-    settings: '⚙️ 系统设置',
-    system: '🔧 系统管理',
-    notes: '📝 笔记管理',
-  };
-  return resourceNames[resource] || resource;
-};
-
 export function RoleManagementTab() {
+  const { t } = useI18n();
   const { success, error: notifyError } = useNotification();
   const { handleAuthError } = useAuthErrorHandler();
+  
+  // 资源显示名称映射
+  const getResourceDisplayName = useCallback((resource: string): string => {
+    return t(`settings.roles.resourceNames.${resource}`) || resource;
+  }, [t]);
   
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -84,7 +75,7 @@ export function RoleManagementTab() {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        setError('请先登录');
+        setError(t('settings.roles.pleaseLogin'));
         return;
       }
 
@@ -99,18 +90,18 @@ export function RoleManagementTab() {
           handleAuthError();
           return;
         }
-        throw new Error('获取角色列表失败');
+        throw new Error(t('settings.roles.messages.fetchRolesFailed'));
       }
 
       const data = await response.json();
       if (data.success) {
         setRoles(data.roles);
       } else {
-        setError(data.error || '获取角色列表失败');
+        setError(data.error || t('settings.roles.messages.fetchRolesFailed'));
       }
     } catch (error) {
-      console.error('获取角色列表失败:', error);
-      setError(error instanceof Error ? error.message : '获取角色列表失败');
+      console.error(t('settings.roles.messages.fetchRolesFailed') + ':', error);
+      setError(error instanceof Error ? error.message : t('settings.roles.messages.fetchRolesFailed'));
     } finally {
       setLoading(false);
     }
@@ -138,7 +129,7 @@ export function RoleManagementTab() {
         }
       }
     } catch (error) {
-      console.error('获取权限列表失败:', error);
+      console.error(t('settings.roles.messages.fetchPermissionsFailed') + ':', error);
     }
   }, [handleAuthError]);
 
@@ -169,13 +160,13 @@ export function RoleManagementTab() {
           permissions: [],
         });
         fetchRoles();
-        success('创建成功', '角色创建成功');
+        success(t('settings.roles.messages.createSuccess'), t('settings.roles.messages.roleCreatedSuccess'));
       } else {
-        notifyError('创建失败', data.error || '创建角色失败');
+        notifyError(t('settings.roles.messages.createFailed'), data.error || t('settings.roles.messages.createRoleFailed'));
       }
     } catch (error) {
-      console.error('创建角色失败:', error);
-      notifyError('创建失败', '创建角色失败');
+      console.error(t('settings.roles.messages.createRoleFailed') + ':', error);
+      notifyError(t('settings.roles.messages.createFailed'), t('settings.roles.messages.createRoleFailed'));
     }
   };
 
@@ -207,19 +198,19 @@ export function RoleManagementTab() {
           permissions: [],
         });
         fetchRoles();
-        success('编辑成功', '角色信息更新成功');
+        success(t('settings.roles.messages.editSuccess'), t('settings.roles.messages.roleUpdatedSuccess'));
       } else {
-        notifyError('编辑失败', data.error || '更新角色信息失败');
+        notifyError(t('settings.roles.messages.editFailed'), data.error || t('settings.roles.messages.updateRoleFailed'));
       }
     } catch (error) {
-      console.error('更新角色信息失败:', error);
-      notifyError('编辑失败', '更新角色信息失败');
+      console.error(t('settings.roles.messages.updateRoleFailed') + ':', error);
+      notifyError(t('settings.roles.messages.editFailed'), t('settings.roles.messages.updateRoleFailed'));
     }
   };
 
   // 删除角色
   const handleDeleteRole = async (roleId: string, roleName: string) => {
-    if (!confirm(`确定要删除角色 "${roleName}" 吗？此操作不可撤销。`)) {
+    if (!confirm(t('settings.roles.confirmDeleteRole').replace('{roleName}', roleName))) {
       return;
     }
 
@@ -235,13 +226,13 @@ export function RoleManagementTab() {
       const data = await response.json();
       if (data.success) {
         fetchRoles();
-        success('删除成功', '角色删除成功');
+        success(t('settings.roles.messages.deleteSuccess'), t('settings.roles.messages.roleDeletedSuccess'));
       } else {
-        notifyError('删除失败', data.error || '删除角色失败');
+        notifyError(t('settings.roles.messages.deleteFailed'), data.error || t('settings.roles.messages.deleteRoleFailed'));
       }
     } catch (error) {
-      console.error('删除角色失败:', error);
-      notifyError('删除失败', '删除角色失败');
+      console.error(t('settings.roles.messages.deleteRoleFailed') + ':', error);
+      notifyError(t('settings.roles.messages.deleteFailed'), t('settings.roles.messages.deleteRoleFailed'));
     }
   };
 
@@ -265,13 +256,13 @@ export function RoleManagementTab() {
         setShowPermissionModal(false);
         setSelectedRole(null);
         fetchRoles();
-        success('权限更新成功', '角色权限更新成功');
+        success(t('settings.roles.messages.permissionUpdateSuccess'), t('settings.roles.messages.rolePermissionUpdatedSuccess'));
       } else {
-        notifyError('权限更新失败', data.error || '更新角色权限失败');
+        notifyError(t('settings.roles.messages.permissionUpdateFailed'), data.error || t('settings.roles.messages.updateRolePermissionFailed'));
       }
     } catch (error) {
-      console.error('更新角色权限失败:', error);
-      notifyError('权限更新失败', '更新角色权限失败');
+      console.error(t('settings.roles.messages.updateRolePermissionFailed') + ':', error);
+      notifyError(t('settings.roles.messages.permissionUpdateFailed'), t('settings.roles.messages.updateRolePermissionFailed'));
     }
   };
 
@@ -309,7 +300,7 @@ export function RoleManagementTab() {
   if (loading) {
     return (
       <PageLoading 
-        text="loading..." 
+        text={t('settings.roles.loading')} 
         fullScreen={false}
       />
     );
@@ -321,14 +312,14 @@ export function RoleManagementTab() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-theme-foreground flex items-center gap-2">
           <Shield className="w-5 h-5" />
-          角色管理
+          {t('settings.roles.title')}
         </h2>
         <button 
           onClick={openCreateModal}
           className="bg-theme-primary text-white px-4 py-2 rounded-lg hover:bg-theme-primary-hover flex items-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          创建角色
+          {t('settings.roles.createRole')}
         </button>
       </div>
 
@@ -345,19 +336,19 @@ export function RoleManagementTab() {
           <thead className="bg-theme-background-tertiary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                角色信息
+                {t('settings.roles.roleInfo')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                用户数量
+                {t('settings.roles.userCount')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                权限数量
+                {t('settings.roles.permissionCount')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                类型
+                {t('settings.roles.type')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-theme-foreground-muted uppercase tracking-wider">
-                操作
+                {t('settings.roles.actions')}
               </th>
             </tr>
           </thead>
@@ -397,7 +388,7 @@ export function RoleManagementTab() {
                       ? 'bg-blue-100 text-blue-800' 
                       : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {role.is_system ? '系统角色' : '自定义角色'}
+                    {role.is_system ? t('settings.roles.systemRole') : t('settings.roles.customRole')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -405,7 +396,7 @@ export function RoleManagementTab() {
                     <button 
                       onClick={() => openPermissionModal(role)}
                       className="text-theme-primary hover:text-theme-primary-hover transition-colors"
-                      title="管理权限"
+                      title={t('settings.roles.managePermissions')}
                     >
                       <Shield className="w-4 h-4" />
                     </button>
@@ -414,14 +405,14 @@ export function RoleManagementTab() {
                         <button 
                           onClick={() => openEditModal(role)}
                           className="text-theme-primary hover:text-theme-primary-hover transition-colors"
-                          title="编辑角色"
+                          title={t('settings.roles.editRole')}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDeleteRole(role.id, role.display_name)}
                           className="text-red-600 hover:text-red-800 transition-colors"
-                          title="删除角色"
+                          title={t('settings.roles.deleteRole')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -460,8 +451,8 @@ export function RoleManagementTab() {
                     <Plus className="w-5 h-5 text-theme-primary" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-theme-foreground">创建角色</h2>
-                    <p className="text-sm text-theme-foreground-muted">为系统创建新的角色并分配权限</p>
+                    <h2 className="text-xl font-semibold text-theme-foreground">{t('settings.roles.createRole')}</h2>
+                    <p className="text-sm text-theme-foreground-muted">{t('settings.roles.createNewRole')}</p>
                   </div>
                 </div>
                 <button
@@ -477,32 +468,32 @@ export function RoleManagementTab() {
                 {/* 基本信息 */}
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-theme-foreground mb-4">基本信息</h3>
+                    <h3 className="text-lg font-medium text-theme-foreground mb-4">{t('settings.roles.basicInfo')}</h3>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          角色名称 <span className="text-red-500">*</span>
+                          {t('settings.roles.roleName')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={roleForm.display_name}
                           onChange={(e) => updateRoleForm({ display_name: e.target.value })}
                           className="form-input-base w-full"
-                          placeholder="例如: 编辑者"
+                          placeholder={t('settings.roles.enterRoleName')}
                         />
                         <p className="text-xs text-theme-foreground-muted mt-1">
-                          💡 系统将自动生成唯一的角色标识符，您只需输入易于理解的显示名称
+                          {t('settings.roles.roleNameHint')}
                         </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-theme-foreground mb-2">
-                          描述
+                          {t('settings.roles.description')}
                         </label>
                         <textarea
                           value={roleForm.description}
                           onChange={(e) => updateRoleForm({ description: e.target.value })}
                           className="form-input-base w-full h-20 resize-none"
-                          placeholder="描述此角色的功能和用途..."
+                          placeholder={t('settings.roles.descriptionPlaceholder')}
                         />
                       </div>
                     </div>
@@ -514,11 +505,11 @@ export function RoleManagementTab() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-medium text-theme-foreground">权限分配</h3>
-                        <p className="text-sm text-theme-foreground-muted">为此角色分配相应的权限</p>
+                        <h3 className="text-lg font-medium text-theme-foreground">{t('settings.roles.permissionAssignment')}</h3>
+                        <p className="text-sm text-theme-foreground-muted">{t('settings.roles.assignPermissions')}</p>
                       </div>
                       <div className="text-sm text-theme-foreground-muted">
-                         已选择 {roleForm.permissions.length} / {permissions.length} 项权限
+                         {t('settings.roles.permissionsSelected').replace('{count}', roleForm.permissions.length.toString()).replace('{total}', permissions.length.toString())}
                        </div>
                     </div>
                     
@@ -594,14 +585,14 @@ export function RoleManagementTab() {
                   onClick={() => setShowCreateModal(false)}
                   className="btn-base btn-secondary px-6 py-3"
                 >
-                  取消
+                  {t('settings.roles.cancel')}
                 </button>
                 <button
                   onClick={handleCreateRole}
                   className="btn-base btn-primary px-6 py-3"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  创建角色
+                  {t('settings.roles.createRole')}
                 </button>
               </div>
             </motion.div>
@@ -634,8 +625,8 @@ export function RoleManagementTab() {
                     <Edit className="w-5 h-5 text-theme-primary" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-theme-foreground">编辑角色</h2>
-                    <p className="text-sm text-theme-foreground-muted">修改角色的基本信息</p>
+                    <h2 className="text-xl font-semibold text-theme-foreground">{t('settings.roles.editRole')}</h2>
+                    <p className="text-sm text-theme-foreground-muted">{t('settings.roles.editRoleInfo')}</p>
                   </div>
                 </div>
                 <button
@@ -651,25 +642,25 @@ export function RoleManagementTab() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-theme-foreground mb-2">
-                      显示名称 <span className="text-red-500">*</span>
+                      {t('settings.roles.roleDisplayName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={roleForm.display_name}
                       onChange={(e) => updateRoleForm({ display_name: e.target.value })}
                       className="form-input-base w-full"
-                      placeholder="例如: 编辑者"
+                      placeholder={t('settings.roles.enterRoleName')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-theme-foreground mb-2">
-                      描述
+                      {t('settings.roles.description')}
                     </label>
                     <textarea
                       value={roleForm.description}
                       onChange={(e) => updateRoleForm({ description: e.target.value })}
                       className="form-input-base w-full h-20 resize-none"
-                      placeholder="描述此角色的功能和用途..."
+                      placeholder={t('settings.roles.descriptionPlaceholder')}
                     />
                   </div>
                 </div>
@@ -681,14 +672,14 @@ export function RoleManagementTab() {
                   onClick={() => setShowEditModal(false)}
                   className="btn-base btn-secondary px-6 py-2"
                 >
-                  取消
+                  {t('settings.roles.cancel')}
                 </button>
                 <button
                   onClick={handleEditRole}
                   className="btn-base btn-primary px-6 py-2"
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  保存修改
+                  {t('settings.roles.saveChanges')}
                 </button>
               </div>
             </motion.div>
@@ -700,13 +691,13 @@ export function RoleManagementTab() {
       <Modal
         open={showPermissionModal}
         onClose={() => setShowPermissionModal(false)}
-        title="管理角色权限"
+        title={t('settings.roles.manageRolePermissions')}
       >
         {selectedRole && (
           <div className="space-y-4">
             <div>
               <p className="text-sm text-theme-foreground-muted mb-4">
-                为角色 &ldquo;{selectedRole.display_name}&rdquo; 分配权限
+                {t('settings.roles.assignPermissionsTo').replace('{roleName}', selectedRole.display_name)}
               </p>
               <div className="space-y-4 max-h-64 overflow-y-auto border border-theme-border rounded-lg p-3">
                 {Object.entries(
@@ -758,13 +749,13 @@ export function RoleManagementTab() {
                 onClick={handleUpdateRolePermissions}
                 className="btn-base btn-primary flex-1"
               >
-                更新权限
+                {t('settings.roles.updatePermissions')}
               </button>
               <button
                 onClick={() => setShowPermissionModal(false)}
                 className="btn-base btn-secondary flex-1"
               >
-                取消
+                {t('settings.roles.cancel')}
               </button>
             </div>
           </div>

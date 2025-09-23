@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, PlugZap, XCircle, Server, Wrench, Unplug } from 'lucide-react';
 import { McpServer } from '../types';
 import ModalWrapper from '@/app/model-manager/components/ModalWrapper';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ValidationResult {
   success: boolean;
@@ -69,6 +70,7 @@ export function AddServerModal({
   onSubmit,
   onClose
 }: AddServerModalProps) {
+  const { t } = useI18n();
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [showToolConfig, setShowToolConfig] = useState(false);
@@ -109,7 +111,7 @@ export function AddServerModal({
   const validateServer = async () => {
     // 检查URL是否填写（SSE和Streamable HTTP都需要URL）
     if (!newServer.url) {
-      alert('请先填写服务器URL');
+      alert(t('mcp.addServer.connection.urlRequired'));
       return;
     }
 
@@ -134,7 +136,7 @@ export function AddServerModal({
       });
 
       if (!response.ok) {
-        throw new Error(`服务器响应错误: ${response.status} ${response.statusText}`);
+        throw new Error(t('mcp.addServer.connection.serverError').replace('{status}', response.status.toString()).replace('{statusText}', response.statusText));
       }
 
       const result = await response.json();
@@ -165,7 +167,7 @@ export function AddServerModal({
     } catch (error) {
       const errorResult = {
         success: false,
-        error: error instanceof Error ? error.message : '连接测试失败'
+        error: error instanceof Error ? error.message : t('mcp.addServer.connection.connectionFailed')
       };
       setValidationResult(errorResult);
     } finally {
@@ -177,7 +179,7 @@ export function AddServerModal({
   const handleAdd = async () => {
     // 验证服务器名称
     if (!newServer.name || !newServer.name.trim()) {
-      setNameError('服务器名称不能为空');
+      setNameError(t('mcp.addServer.fields.serverNameRequired'));
       return;
     }
     
@@ -192,7 +194,7 @@ export function AddServerModal({
     
     // 验证连接是否通过
     if (!resultToUse?.success) {
-      alert('请先测试服务器连接并确保连接成功');
+      alert(t('mcp.addServer.connection.testFirst'));
       return;
     }
     
@@ -246,8 +248,8 @@ export function AddServerModal({
     <ModalWrapper
       isOpen={isOpen}
       onClose={handleClose}
-      title="添加 MCP 服务器"
-      subtitle="配置新的模型上下文协议服务器"
+      title={t('mcp.addServer.title')}
+      subtitle={t('mcp.addServer.subtitle')}
       maxWidth="4xl"
       icon={modalIcon}
     >
@@ -256,10 +258,10 @@ export function AddServerModal({
         <div className="flex-1 overflow-y-auto scrollbar-thin">
           <div className="p-8 space-y-8">
             {/* 基本配置 */}
-            <FormSection title="基本配置">
+            <FormSection title={t('mcp.addServer.sections.basicConfig')}>
               <div className="space-y-6">
                 <FormInput
-                  label="服务器名称"
+                  label={t('mcp.addServer.fields.serverName')}
                   required={true}
                   error={nameError}
                 >
@@ -275,17 +277,17 @@ export function AddServerModal({
                       }
                     }}
                     className="form-input-base"
-                    placeholder="用于识别服务器的唯一名称"
+                    placeholder={t('mcp.addServer.fields.serverNamePlaceholder')}
                   />
                 </FormInput>
                 <FormInput
-                  label="描述"
+                  label={t('mcp.addServer.fields.description')}
                 >
                   <textarea
                     value={newServer.description || ''}
                     onChange={(e) => onServerChange({ ...newServer, description: e.target.value })}
                     className="form-input-base h-20 resize-none"
-                    placeholder="可选：描述服务器的用途和功能"
+                    placeholder={t('mcp.addServer.fields.descriptionPlaceholder')}
                   />
                 </FormInput>
                
@@ -293,9 +295,9 @@ export function AddServerModal({
             </FormSection>
 
             {/* 连接配置 */}
-            <FormSection title="连接配置">
+            <FormSection title={t('mcp.addServer.sections.connectionConfig')}>
                <FormInput
-                  label="服务器类型（选择服务器的连接方式）"
+                  label={t('mcp.addServer.fields.serverType')}
                 >
                   <select
                     value={newServer.type}
@@ -313,7 +315,7 @@ export function AddServerModal({
                   </select>
                 </FormInput>
               <FormInput
-                label="服务器URL"
+                label={t('mcp.addServer.fields.serverUrl')}
                 required={true}
               >
                 <div className="flex gap-3">
@@ -325,7 +327,7 @@ export function AddServerModal({
                       url: e.target.value 
                     })}
                     className="form-input-base flex-1"
-                    placeholder={newServer.type === 'sse' ? "例如: https://mcp.api-inference.modelscope.net/******/sse" : "例如: http://localhost:8080/mcp"}
+                    placeholder={newServer.type === 'sse' ? t('mcp.addServer.fields.urlPlaceholder.sse') : t('mcp.addServer.fields.urlPlaceholder.streamableHttp')}
                   />
                   {/* 连接/断开按钮组 */}
                   <div className="flex">
@@ -342,7 +344,7 @@ export function AddServerModal({
                         className="btn-base bg-theme-error text-white hover:bg-theme-error/80 px-4 py-2 flex-shrink-0"
                       >
                         <Unplug className="w-4 h-4 mr-2" />
-                        断开
+                        {t('mcp.addServer.connection.disconnect')}
                       </button>
                     ) : (
                       <button
@@ -353,12 +355,12 @@ export function AddServerModal({
                         {isValidating ? (
                           <>
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                            连接中...
+                            {t('mcp.addServer.connection.connecting')}
                           </>
                         ) : (
                           <>
                             <PlugZap className="w-4 h-4" />
-                            连接
+                            {t('mcp.addServer.connection.connect')}
                           </>
                         )}
                       </button>
@@ -391,7 +393,7 @@ export function AddServerModal({
                       {validationResult.success && validationResult.toolCount !== undefined && (
                         <div className="mt-2 flex items-center justify-between">
                           <p className="text-sm text-theme-success">
-                            发现 {validationResult.toolCount} 个可用工具
+                            {t('mcp.addServer.validation.toolsFound').replace('{count}', validationResult.toolCount.toString())}
                           </p>
                           {validationResult.toolCount > 0 && (
                             <button
@@ -399,7 +401,7 @@ export function AddServerModal({
                               className="btn-base bg-theme-card text-theme-primary hover:bg-theme-background-secondary px-3 py-1 text-sm"
                             >
                               <Wrench className="w-4 h-4 mr-2" />
-                              {showToolConfig ? '隐藏' : '查看'}工具参数
+                              {showToolConfig ? t('mcp.addServer.validation.hideTools') : t('mcp.addServer.validation.showTools')}
                             </button>
                           )}
                         </div>
@@ -412,7 +414,7 @@ export function AddServerModal({
 
             {/* 工具配置 */}
             {showToolConfig && validationResult?.success && validationResult.tools && (
-              <FormSection title="工具参数配置">
+              <FormSection title={t('mcp.addServer.sections.toolConfig')}>
                   <div className="space-y-6 max-h-80 overflow-y-auto scrollbar-thin pr-2">
                     {validationResult.tools.map((tool) => (
                       <div key={tool.name} className="bg-theme-background rounded-lg p-4 border border-theme-border">
@@ -460,20 +462,20 @@ export function AddServerModal({
         </div>
 
         {/* 底部操作栏 */}
-        <div className="flex-shrink-0 p-8 pt-6 border-t border-theme-border bg-theme-background-secondary rounded-b-2xl">
+        <div className="flex-shrink-0 p-8 border-t border-theme-border bg-theme-background-secondary rounded-b-2xl">
           <div className="flex justify-end gap-3">
             <button
               onClick={handleClose}
               className="btn-base btn-secondary px-6 py-3"
             >
-              取消
+              {t('mcp.addServer.actions.cancel')}
             </button>
             <button 
               onClick={handleAdd}
               disabled={!canSubmit}
               className="btn-base btn-primary px-6 py-3"
             >
-              添加服务器
+              {t('mcp.addServer.actions.add')}
             </button>
           </div>
         </div>

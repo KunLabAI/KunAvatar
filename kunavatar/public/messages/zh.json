@@ -1,0 +1,1222 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "search": "搜索",
+    "close": "关闭",
+    "open": "打开",
+    "copy": "复制",
+    "paste": "粘贴",
+    "cut": "剪切",
+    "refresh": "刷新",
+    "reset": "重置"
+  },
+  "app": {
+    "title": "Kun Avatar",
+    "description": "AI助手应用"
+  },
+  "sidebar": {
+    "newChat": "新建对话",
+    "startChat": "开始对话",
+    "enterLatestChat": "进入最新对话",
+    "startNewChat": "开始新对话",
+    "mcpConfig": "MCP配置",
+    "modelManager": "模型管理",
+    "agentManager": "智能体管理",
+    "notes": "笔记",
+    "chatHistory": "对话历史",
+    "settings": "设置",
+    "expandSidebar": "展开侧边栏",
+    "collapseSidebar": "收起侧边栏"
+  },
+  "settings": {
+    "title": "设置",
+    "tabs": {
+      "account": "账户管理",
+      "users": "用户管理",
+      "roles": "角色管理", 
+      "assistant": "辅助模型",
+      "inference": "推理引擎",
+      "appearance": "界面设置",
+      "logs": "日志管理",
+      "appinfo": "应用信息"
+    },
+    "account": {
+      "title": "账户管理",
+      "personalInfo": "个人信息",
+      "accountStatus": "账户状态",
+      "passwordSecurity": "密码安全",
+      "username": "用户名",
+      "email": "邮箱",
+      "firstName": "名字",
+      "lastName": "姓氏",
+      "emailVerification": "邮箱验证",
+      "roles": "角色",
+      "registrationTime": "注册时间",
+      "lastLogin": "最后登录",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认新密码",
+      "changePassword": "修改密码",
+      "logout": "退出登录",
+      "verified": "已验证",
+      "unverified": "未验证",
+      "noRoles": "无角色",
+      "editPasswordHint": "点击编辑按钮可以修改您的密码",
+      "status": {
+        "pending": "待审核",
+        "active": "活跃",
+        "inactive": "未激活",
+        "suspended": "已暂停"
+      },
+      "messages": {
+        "authFailed": "认证失败，请先登录",
+        "loginExpired": "登录已过期，请重新登录",
+        "updateSuccess": "用户信息已成功更新",
+        "updateFailed": "更新用户信息失败",
+        "logoutSuccess": "您已成功退出登录",
+        "logoutFailed": "退出登录时发生错误",
+        "passwordMismatch": "新密码确认不匹配",
+        "passwordChangeSuccess": "您的密码已成功更新",
+        "passwordChangeFailed": "密码修改失败",
+        "userNotFound": "未找到用户信息",
+        "getFailed": "获取用户信息失败"
+      }
+    },
+    "assistant": {
+      "promptOptimize": "提示优化",
+      "titleSummary": "标题总结",
+      "systemPrompt": "系统提示词",
+      "promptOptimizeModel": "优化模型",
+      "configureSystemPrompt": "配置系统提示词",
+      "systemPromptSettings": "系统提示词设置",
+      "guidanceRules": "配置AI优化提示词的指导规则",
+      "inputPrompt": "输入提示词优化系统提示词...",
+      "resetToDefault": "重置为默认",
+      "update": "更新",
+      "titleSummarySettings": "标题总结设置",
+      "autoGenerate": "自动生成对话标题",
+      "titleGenerateRules": "配置AI生成标题的指导规则",
+      "inputTitlePrompt": "输入标题生成系统提示词...",
+      "memoryFunction": "记忆功能",
+      "memoryDescription": "自动总结对话内容，提升对话连贯性",
+      "triggerRounds": "触发轮数",
+      "triggerTokens": "触发令牌数",
+      "maxEntries": "最大条目数",
+      "summarizeStyle": "总结风格",
+      "globalMemory": "全局记忆",
+      "memorySettings": "记忆设置",
+      "configureMemoryParams": "配置全局记忆功能的参数和行为",
+      "basicSettings": "基础设置",
+      "promptSettings": "提示词设置",
+      "promptMode": "提示词模式",
+      "presetStyle": "预设风格",
+      "customPrompt": "自定义提示词",
+      "memoryLimit": "记忆上限",
+      "customSystemPrompt": "自定义系统提示词",
+      "triggerRoundsHint": "每隔多少轮对话触发一次记忆总结",
+      "memoryLimitHint": "最多保存多少条记忆",
+      "summaryStyleHint": "选择记忆总结的详细程度和组织方式",
+      "customPromptHint": "配置记忆总结的指导规则，帮助AI更好地理解对话内容并生成合适的记忆摘要",
+      "inputMemoryPrompt": "输入记忆总结系统提示词...",
+      "saving": "保存中...",
+      "updateSettings": "更新设置",
+      "summaryStyles": {
+        "brief": "简洁 - 提取关键信息点",
+        "detailed": "详细 - 保留更多上下文",
+        "structured": "结构化 - 按主题分类整理"
+      },
+      "loadMemorySettingsFailed": "无法加载记忆设置。"
+    },
+    "appearance": {
+      "title": "界面设置",
+      "theme": {
+        "title": "界面主题色",
+        "description": "选择浅色或深色主题",
+        "light": "浅色",
+        "dark": "深色",
+        "system": "跟随系统"
+      },
+      "colorTheme": {
+        "title": "元素主题色",
+        "description": "选择应用的主题色调",
+        "themes": {
+          "kun": "默认",
+          "green": "翡翠绿",
+          "purple": "优雅紫",
+          "orange": "巨人橙",
+          "blue": "伯克利蓝",
+          "raspberry": "葡萄柚",
+          "moonstone": "月长石"
+        }
+      },
+      "chatStyle": {
+        "title": "对话样式",
+        "description": "选择聊天界面的显示样式",
+        "conversation": "对话模式",
+        "assistant": "助手模式"
+      },
+      "language": {
+        "title": "语言设置",
+        "description": "选择界面显示语言",
+        "current": "当前语言"
+      }
+    },
+    "appinfo": {
+      "title": "应用信息",
+      "appVersion": "应用版本",
+      "checkUpdate": "检查更新",
+      "updateAvailable": "发现新版本",
+      "latestVersion": "已是最新版本",
+      "versionHistory": "版本历史",
+      "downloadUpdate": "下载更新",
+      "installUpdate": "安装更新",
+      "checkingUpdate": "检查更新中...",
+      "downloadingUpdate": "下载更新中...",
+      "updateCheckFailed": "更新检查失败",
+      "networkError": "网络连接问题",
+      "networkErrorDesc": "无法连接到更新服务器，请检查网络连接后重试",
+      "githubUnavailable": "GitHub服务暂时不可用",
+      "githubUnavailableDesc": "无法访问GitHub更新服务，请稍后重试",
+      "noVersionsAvailable": "暂无可用版本",
+      "noVersionsDesc": "当前项目暂未发布正式版本，请关注项目更新",
+      "permissionDenied": "权限不足",
+      "permissionDeniedDesc": "没有足够权限执行更新操作，请以管理员身份运行",
+      "updateCheckFailedGeneric": "检查更新时遇到问题，请稍后重试",
+      "getAppInfoFailed": "获取应用信息失败",
+      "getVersionHistoryFailed": "获取版本历史失败",
+      "getLocalVersionHistoryFailed": "获取本地版本历史也失败",
+      "developmentUpdateError": "开发模式更新检查错误（已忽略）",
+      "newVersionAvailable": "新版本 {version} 可用",
+      "currentVersionLatest": "当前版本已是最新版本",
+      "updateDownloaded": "更新已下载完成",
+      "installAndRestart": "安装并重启",
+      "updateLog": "更新日志",
+      "viewTechnicalDetails": "查看技术详情",
+      "developmentModeUpdateLimited": "开发模式下的更新检查功能受限，这是正常现象。在正式发布版本中，更新功能将正常工作。",
+      "networkCheckConnection": "网络连接问题，请检查您的网络连接后重试。",
+      "githubServiceUnavailableDesc": "GitHub服务暂时不可用，请稍后重试。这可能是由于GitHub服务器维护或网络问题导致的。",
+      "noOfficialVersionYet": "当前项目暂未发布正式版本，请关注项目更新。",
+      "updateCheckProblem": "检查更新时遇到问题，请稍后重试。",
+      "appDetails": "应用详情",
+      "developmentTeam": "开发团队",
+      "officialWebsite": "官方网站",
+      "supportEmail": "支持邮箱",
+      "supportDescription": "如有任何问题或建议，请随时联系我们的支持团队",
+      "versionInfo": "版本信息",
+      "currentVersion": "当前版本",
+      "downloadCompleted": "下载完成",
+      "updateDownloadedRestart": "更新已下载完成，重启应用以安装更新",
+      "functionalityLimited": "功能限制",
+      "updateOnlyDesktop": "更新检查功能仅在桌面应用中可用",
+      "checkUpdateFailed": "检查更新失败",
+      "cannotStartUpdateCheck": "无法启动更新检查，请稍后重试",
+      "downloadFailed": "下载失败",
+      "updateDownloadFailed": "更新下载失败，请稍后重试",
+      "installFailed": "安装失败",
+      "updateInstallFailed": "更新安装失败，请稍后重试",
+      "developmentMode": "开发模式",
+      "noDetailedDescription": "暂无详细说明",
+      "source": "来源",
+      "viewCompleteUpdateLog": "查看完整更新日志",
+      "thankYouForUsing": "感谢您使用 Kun Avatar！我们会持续改进产品体验。",
+      "updateFeatureDesktopOnly": "更新功能仅在桌面应用中可用"
+    },
+    "inference": {
+      "title": "推理引擎",
+      "ollamaDescription": "本地大语言模型推理引擎",
+      "connectionStatus": "连接状态",
+      "versionInfo": "版本信息",
+      "connectionSettings": "连接设置",
+      "online": "online",
+      "offline": "offline",
+      "detecting": "检测中...",
+      "cannotConnect": "无法连接",
+      "detectionFailed": "检测失败",
+      "unknown": "未知",
+      "serviceUnavailable": "服务不可用",
+      "networkError": "网络错误",
+      "saving": "保存中...",
+      "detectOllamaStatusFailed": "检测 Ollama 状态失败",
+      "getOllamaConfigFailed": "获取 Ollama 配置失败",
+      "saveConfigFailed": "保存配置失败",
+      "saveOllamaConfigFailed": "保存 Ollama 配置失败"
+    },
+    "users": {
+      "title": "用户管理",
+      "addUser": "添加用户",
+      "createUser": "创建用户",
+      "userDetails": "用户详情",
+      "manageUserRoles": "管理用户角色",
+      "activateUser": "激活用户",
+      "pendingActivation": "个待激活",
+      "loading": "加载中...",
+      "user": "用户",
+      "roles": "角色",
+      "createdTime": "创建时间",
+      "lastLogin": "最后登录",
+      "actions": "操作",
+      "neverLoggedIn": "从未登录",
+      "viewDetails": "查看详情",
+      "editUser": "编辑用户",
+      "managePermissions": "管理权限",
+      "deleteUser": "删除用户",
+      "cannotDeleteSelf": "不能删除自己的账户",
+      "noUsersFound": "没有找到用户",
+      "basicInfo": "基本信息",
+      "otherSettings": "其他设置",
+      "roleAssignment": "角色分配",
+      "assignRoles": "为此用户分配相应的角色",
+      "selectedRoles": "已选择角色",
+      "pleaseSelectRole": "请选择一个角色",
+      "noDescription": "暂无描述",
+      "username": "用户名",
+      "email": "邮箱",
+      "password": "密码",
+      "firstName": "名字",
+      "lastName": "姓氏",
+      "emailVerified": "邮箱已验证",
+      "verified": "已验证",
+      "unverified": "未验证",
+      "notSet": "未设置",
+      "enterUsername": "输入用户名",
+      "enterEmail": "输入邮箱地址",
+      "enterPassword": "输入密码",
+      "enterFirstName": "输入名字",
+      "enterLastName": "输入姓氏",
+      "selectRole": "选择角色",
+      "updateRole": "更新角色",
+      "updateUser": "更新用户",
+      "cancel": "取消",
+      "requiredField": "必填项",
+      "addNewUser": "为系统添加新的用户账户",
+      "activationNotice": "激活用户后，用户将可以正常登录系统。请为用户选择一个角色以确保其拥有适当的权限。",
+      "confirmDelete": "确定要删除这个用户吗？",
+      "viewUserDetails": "查看用户详情",
+      "name": "姓名",
+      "userStatus": "用户状态",
+      "emailVerificationStatus": "邮箱验证状态",
+      "createdAt": "创建时间",
+      "lastLoginAt": "最后登录",
+      "userRoles": "用户角色",
+      "fullName": "全名",
+      "editUserInfo": "编辑用户信息",
+      "manageRoles": "管理角色",
+      "activateUserWithRole": "激活用户",
+      "activateDescription": "激活用户后，用户将可以正常登录系统。请为用户选择一个角色以确保其拥有适当的权限。",
+      "selectRoleRequired": "选择角色",
+      "activateUserButton": "激活用户",
+      "status": {
+        "pending": "待激活",
+        "active": "活跃",
+        "inactive": "未激活",
+        "suspended": "已暂停"
+      },
+      "messages": {
+        "pleaseLogin": "请先登录",
+        "fetchUsersFailed": "获取用户列表失败",
+        "fetchCurrentUserFailed": "获取当前用户信息失败",
+        "fetchRolesFailed": "获取角色列表失败",
+        "createSuccess": "创建成功",
+        "userCreated": "用户创建成功",
+        "createFailed": "创建失败",
+        "createUserFailed": "创建用户失败",
+        "updateSuccess": "更新成功",
+        "userUpdated": "用户信息更新成功",
+        "updateFailed": "更新失败",
+        "updateUserFailed": "更新用户失败",
+        "roleUpdateSuccess": "角色更新成功",
+        "userRoleUpdated": "用户角色更新成功",
+        "roleUpdateFailed": "角色更新失败",
+        "updateUserRoleFailed": "更新用户角色失败",
+        "activationFailed": "激活失败",
+        "activateUserFailed": "激活用户失败",
+        "roleAssignFailed": "角色分配失败",
+        "assignUserRoleFailed": "分配用户角色失败",
+        "activationSuccess": "激活成功",
+        "userActivated": "用户已成功激活并分配角色，现在可以正常登录系统",
+        "operationFailed": "操作失败",
+        "cannotDeleteSelf": "不能删除自己的账户",
+        "deleteSuccess": "删除成功",
+        "userDeleted": "用户删除成功",
+        "deleteFailed": "删除失败",
+        "deleteUserFailed": "删除用户失败"
+      }
+    },
+    "roles": {
+      "title": "角色管理",
+      "createRole": "创建角色",
+      "editRole": "编辑角色",
+      "deleteRole": "删除角色",
+      "managePermissions": "管理权限",
+      "roleInfo": "角色信息",
+      "userCount": "用户数量",
+      "permissionCount": "权限数量",
+      "type": "类型",
+      "actions": "操作",
+      "systemRole": "系统角色",
+      "customRole": "自定义角色",
+      "roleId": "角色ID",
+      "roleName": "角色名称",
+      "roleDisplayName": "显示名称",
+      "description": "描述",
+      "basicInfo": "基本信息",
+      "permissionAssignment": "权限分配",
+      "createNewRole": "为系统创建新的角色并分配权限",
+      "editRoleInfo": "修改角色的基本信息",
+      "manageRolePermissions": "管理角色权限",
+      "assignPermissions": "为此角色分配相应的权限",
+      "selectedPermissions": "已选择权限",
+      "selectPermissionsPrompt": "请选择权限",
+      "permissionsSelected": "已选择 {count} / {total} 项权限",
+      "enterRoleName": "例如: 编辑者",
+      "roleNameHint": "💡 系统将自动生成唯一的角色标识符，您只需输入易于理解的显示名称",
+      "descriptionPlaceholder": "描述此角色的功能和用途...",
+      "requiredField": "必填项",
+      "cancel": "取消",
+      "saveChanges": "保存修改",
+      "updatePermissions": "更新权限",
+      "loading": "loading...",
+      "pleaseLogin": "请先登录",
+      "confirmDeleteRole": "确定要删除角色 \"{roleName}\" 吗？此操作不可撤销。",
+      "assignPermissionsTo": "为角色 \"{roleName}\" 分配权限",
+      "resourceNames": {
+        "users": "👥 用户管理",
+        "roles": "🛡️ 角色管理",
+        "permissions": "🔐 权限管理",
+        "conversations": "💬 对话管理",
+        "agents": "🤖 智能体管理",
+        "models": "🧠 模型管理",
+        "settings": "⚙️ 系统设置",
+        "system": "🔧 系统管理",
+        "notes": "📝 笔记管理"
+      },
+      "messages": {
+        "fetchRolesFailed": "获取角色列表失败",
+        "fetchPermissionsFailed": "获取权限列表失败",
+        "createSuccess": "创建成功",
+        "roleCreatedSuccess": "角色创建成功",
+        "createFailed": "创建失败",
+        "createRoleFailed": "创建角色失败",
+        "editSuccess": "编辑成功",
+        "roleUpdatedSuccess": "角色信息更新成功",
+        "editFailed": "编辑失败",
+        "updateRoleFailed": "更新角色信息失败",
+        "deleteSuccess": "删除成功",
+        "roleDeletedSuccess": "角色删除成功",
+        "deleteFailed": "删除失败",
+        "deleteRoleFailed": "删除角色失败",
+        "permissionUpdateSuccess": "权限更新成功",
+        "rolePermissionUpdatedSuccess": "角色权限更新成功",
+        "permissionUpdateFailed": "权限更新失败",
+        "updateRolePermissionFailed": "更新角色权限失败"
+      }
+    },
+    "models": {
+      "title": "模型管理",
+      "subtitle": "管理和配置 AI 模型",
+      "modelCount": "共 {count} 个模型",
+      "loading": "loading...",
+      "sync": "同步",
+      "syncing": "同步中...",
+      "pull": "拉取",
+      "upload": "上传",
+      "createModelfile": "创建 Modelfile",
+      "actions": {
+        "edit": "编辑",
+        "delete": "删除",
+        "details": "详情",
+        "chat": "对话",
+        "sync": "同步模型",
+        "pullModel": "拉取模型",
+        "uploadModel": "上传模型",
+        "createFromModelfile": "从 Modelfile 创建"
+      },
+      "processing": {
+        "deleting": "正在删除模型...",
+        "creating": "正在创建模型...",
+        "updating": "正在更新模型...",
+        "creatingModelfile": "正在创建Modelfile模型...",
+        "processing": "处理中..."
+      },
+      "deleteModal": {
+        "title": "确认删除模型",
+        "content": "确定要删除模型「{modelName}」吗？此操作不可撤销。",
+        "cancel": "取消",
+        "confirm": "确认删除"
+      },
+      "messages": {
+        "syncFailed": "同步失败",
+        "syncFailedDesc": "请检查Ollama服务是否正常运行",
+        "syncSuccess": "同步成功",
+        "syncSuccessDesc": "已同步 {count} 个模型",
+        "loadFailed": "加载模型列表失败",
+        "networkError": "网络错误",
+        "networkErrorDesc": "请检查网络连接后重试",
+        "createSuccess": "模型创建成功",
+        "createSuccessDesc": "新模型已添加到列表中",
+        "createFailed": "创建模型失败",
+        "updateSuccess": "模型更新成功",
+        "updateSuccessDesc": "模型信息已保存",
+        "updateFailed": "更新模型失败",
+        "deleteSuccess": "模型删除成功",
+        "deleteSuccessDesc": "模型已从列表中移除",
+        "deleteFailed": "删除模型失败",
+        "modelfileCreateSuccess": "Modelfile模型创建成功",
+        "modelfileCreateSuccessDesc": "模型 \"{modelName}\" 已创建",
+        "modelfileCreateFailed": "创建Modelfile模型失败"
+      },
+      "modelfileForm": {
+        "title": "创建 Modelfile",
+        "subtitle": "基于 Ollama Modelfile 自定义模型",
+        "basicInfo": "基本信息",
+        "systemPrompt": "系统提示词",
+        "modelParameters": "模型参数",
+        "advancedSettings": "高级设置",
+        "fields": {
+          "displayName": "模型别名",
+          "displayNamePlaceholder": "用户友好的显示名称，支持中文",
+          "displayNameRequired": "模型别名不能为空",
+          "baseModel": "基础模型",
+          "baseModelRequired": "请选择基础模型",
+          "baseModelLoading": "加载模型列表...",
+          "tags": "标签",
+          "tagsPlaceholder": "按回车或逗号添加标签，最多6个",
+          "tagsPlaceholderEmpty": "添加标签...",
+          "selectNote": "选择笔记",
+          "promptContent": "提示词内容",
+          "promptContentPlaceholder": "定义模型的角色和行为...",
+          "template": "对话模板",
+          "templatePlaceholder": "{{ if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant\n{{ .Response }}<|im_end|>\n",
+          "license": "许可证",
+          "licensePlaceholder": "请输入许可证信息..."
+        },
+        "parameters": {
+          "temperature": "Temperature",
+          "temperatureHint": "创造性程度 (0.0-2.0)",
+          "topP": "Top P",
+          "topPHint": "核心采样 (0.0-1.0)",
+          "topK": "Top K",
+          "topKHint": "候选词数量 (1-100)",
+          "repeatPenalty": "重复惩罚",
+          "repeatPenaltyHint": "防止重复 (0.0-2.0)",
+          "contextLength": "上下文长度",
+          "contextLengthHint": "上下文窗口大小",
+          "maxGeneration": "最大生成数",
+          "maxGenerationHint": "-1 为无限制"
+        },
+        "actions": {
+          "cancel": "取消",
+          "createModel": "创建模型",
+          "previewModelfile": "预览 Modelfile",
+          "hidePreview": "隐藏预览",
+          "downloadModelfile": "下载 Modelfile",
+          "optimizePrompt": "优化当前提示词",
+          "optimizing": "正在优化...",
+          "expand": "展开",
+          "collapse": "收起"
+        },
+        "preview": {
+          "title": "Modelfile 预览"
+        },
+        "messages": {
+          "authFailed": "认证失败，请重新登录",
+          "loadModelsFailed": "加载可用模型失败",
+          "optimizePromptConfigFirst": "请先在设置中配置提示词优化功能",
+          "optimizePromptFailed": "提示词优化失败：{error}",
+          "optimizePromptEmpty": "请先输入提示词内容",
+          "optimizePromptDisabled": "请先在设置中配置提示词优化"
+        }
+      },
+      "fileUploadForm": {
+        "title": "从文件创建模型",
+        "subtitle": "选择本地 GGUF 文件来创建自定义模型",
+        "basicInfo": "基本信息",
+        "modelFile": "模型文件",
+        "advancedSettings": "高级设置",
+        "fields": {
+          "modelAlias": "模型别名",
+          "modelAliasPlaceholder": "例如：我的自定义模型",
+          "modelAliasRequired": "模型名称不能为空",
+          "ggufFilePath": "GGUF 文件路径",
+          "filePathRequired": "请输入有效的文件路径",
+          "fileFormatError": "文件必须是 .gguf 或 .bin 格式",
+          "filePathInvalid": "请输入有效的文件路径（绝对路径或相对路径）",
+          "quantization": "量化选项",
+          "quantizationHint": "量化可以减少模型大小但可能影响质量"
+        },
+        "quantizationOptions": {
+          "none": "不量化",
+          "q4_K_M": "Q4_K_M (推荐, 中等质量)",
+          "q4_K_S": "Q4_K_S (小尺寸)",
+          "q8_0": "Q8_0 (推荐, 高质量)"
+        },
+        "placeholders": {
+          "windows": "例如: D:\\Models\\your-model.gguf",
+          "mac": "例如: /Users/yourname/Models/your-model.gguf",
+          "linux": "例如: /home/yourname/models/your-model.gguf"
+        },
+        "actions": {
+          "cancel": "取消",
+          "createModel": "创建模型",
+          "creating": "创建中..."
+        },
+        "errors": {
+          "validation": {
+            "title": "输入验证失败",
+            "message": "请检查输入的信息是否正确"
+          },
+          "nameConflict": {
+            "title": "模型名称冲突",
+            "message": "模型名称已存在，请尝试使用不同的名称"
+          },
+          "fileError": {
+            "title": "文件访问错误",
+            "message": "无法访问指定的文件，请检查文件路径和权限"
+          },
+          "ollamaNotFound": {
+            "title": "Ollama 未安装",
+            "message": "Ollama 未正确安装或配置，请先安装 Ollama 并确保其在系统 PATH 中"
+          },
+          "permissionError": {
+            "title": "权限不足",
+            "message": "权限不足，请以管理员身份运行或检查文件权限"
+          },
+          "timeoutError": {
+            "title": "操作超时",
+            "message": "操作超时，可能是文件过大导致的。请稍后重试或使用较小的文件"
+          },
+          "storageError": {
+            "title": "存储空间不足",
+            "message": "磁盘空间不足，请清理磁盘空间后重试"
+          },
+          "commandError": {
+            "title": "Ollama 命令失败",
+            "message": "模型创建命令执行失败，请检查文件格式是否正确"
+          },
+          "serverError": {
+            "title": "服务器错误",
+            "message": "服务器处理请求时发生错误，请稍后重试"
+          },
+          "default": {
+            "title": "创建失败",
+            "message": "模型创建失败，请重试"
+          },
+          "networkError": {
+            "title": "网络错误",
+            "message": "无法连接到服务器: {error}"
+          }
+        },
+        "messages": {
+          "createSuccess": "模型创建成功",
+          "createSuccessDesc": "模型 \"{modelName}\" 已成功创建并添加到列表中",
+          "createSuccessShort": "模型 \"{modelName}\" 创建成功！"
+        }
+      },
+      "pullModelModal": {
+        "title": "拉取模型",
+        "subtitle": "从 Ollama 仓库下载模型到本地",
+        "fields": {
+          "modelName": "模型名称",
+          "modelNamePlaceholder": "例如: llama3.2:latest 或直接粘贴 ollama run 命令"
+        },
+        "progress": {
+          "downloadProgress": "下载进度",
+          "calculating": "计算中...",
+          "processing": "处理中...",
+          "layer": "层"
+        },
+        "status": {
+          "pullCompleted": "拉取完成！",
+          "pullCancelled": "拉取已取消",
+          "error": "错误: {message}"
+        },
+        "actions": {
+          "startPull": "开始拉取",
+          "cancelDownload": "取消下载",
+          "close": "关闭",
+          "complete": "完成"
+        },
+        "external": {
+          "ollamaLibrary": "访问 Ollama 模型库",
+          "modelscopeLibrary": "访问魔搭社区模型库"
+        },
+        "messages": {
+          "enterModelName": "请输入模型名称",
+          "pullFailed": "拉取模型失败",
+          "responseEmpty": "响应体为空",
+          "pullSuccess": "拉取成功",
+          "pullSuccessDesc": "模型 \"{modelName}\" 已成功拉取",
+          "cancelled": "已取消",
+          "pullCancelledDesc": "模型拉取已取消",
+          "pullFailedDesc": "拉取失败"
+        }
+      },
+      "modelList": {
+        "loading": "正在加载模型...",
+        "empty": {
+          "title": "未找到任何模型",
+          "description": "尝试同步Ollama或调整搜索和过滤条件。您也可以创建自定义模型配置。"
+        },
+        "actions": {
+          "startChat": "开始对话",
+          "viewDetails": "查看详情",
+          "edit": "编辑",
+          "delete": "删除"
+        },
+        "tags": {
+          "noTags": "无标签"
+        }
+      },
+      "modelDetails": {
+        "title": "模型详情",
+        "sections": {
+          "basicInfo": "基本信息",
+          "advancedConfig": "高级配置",
+          "license": "许可证"
+        },
+        "fields": {
+          "modelAlias": "模型别名",
+          "baseModel": "基础模型",
+          "modelFamily": "模型家族",
+          "architecture": "架构",
+          "parameterScale": "参数规模",
+          "fileSize": "文件大小",
+          "contextLength": "上下文长度",
+          "embeddingLength": "嵌入长度",
+          "quantizationLevel": "量化级别",
+          "fileFormat": "文件格式",
+          "modelCapabilities": "模型能力",
+          "updateTime": "更新时间",
+          "ollamaModifiedTime": "Ollama修改时间",
+          "systemPrompt": "系统提示",
+          "modelParameters": "模型参数",
+          "template": "模板",
+          "licenseInfo": "许可证信息"
+        },
+        "values": {
+          "unknown": "未知",
+          "notSet": "未设置"
+        }
+      }
+    }
+  },
+  "agents": {
+    "title": "智能体管理",
+    "subtitle": "创建和管理 AI 智能体",
+    "count": "共 {count} 个智能体",
+    "actions": {
+      "create": "创建智能体",
+      "edit": "编辑",
+      "delete": "删除",
+      "startChat": "开始对话",
+      "showMemory": "查看记忆",
+      "showDetails": "查看详情",
+      "loading": "加载中...",
+      "processing": "处理中...",
+      "reset": "重置",
+      "cancel": "取消",
+      "save": "保存",
+      "update": "更新",
+      "saving": "保存中..."
+    },
+    "list": {
+      "loading": "正在加载智能体...",
+      "empty": {
+        "title": "未找到任何智能体",
+        "description": "点击上方的\"创建智能体\"按钮开始创建您的第一个智能体。"
+      },
+      "noDescription": "暂无描述"
+    },
+    "form": {
+      "createTitle": "创建智能体",
+      "editTitle": "编辑智能体",
+      "subtitle": "配置智能体的模型、工具和行为特征",
+      "operationFailed": "操作失败",
+      "sections": {
+        "basicInfo": "基本信息",
+        "modelConfig": "模型配置",
+        "toolConfig": "工具配置"
+      },
+      "fields": {
+        "avatar": "头像",
+        "name": "智能体名称",
+        "namePlaceholder": "such as: Lucy、Tifa Lockhart、2B...",
+        "description": "描述",
+        "descriptionPlaceholder": "描述这个智能体的主要功能和使用场景...",
+        "model": "搭载模型",
+        "mcpServersAndTools": "MCP服务器和工具"
+      },
+      "validation": {
+        "modelSupportsTools": "✅ 模型支持工具调用功能",
+        "maxToolsReached": "已达到最大工具数量限制",
+        "maxToolsError": "最多只能选择10个工具",
+        "toolsSelected": "已选择 {servers} 个服务器，{tools}/10 个工具"
+      },
+      "toolConfig": {
+        "noServersAvailable": "暂无可用的MCP服务器",
+        "clearAll": "清除所有选择",
+        "removeToolTitle": "移除工具: {name}",
+        "collapseToolList": "收起工具列表",
+        "expandToolList": "展开工具列表",
+        "selectTools": "选择工具 ({selected}/{total})",
+        "toolsCount": "({count} 个工具)"
+      },
+      "avatar": {
+        "preview": "头像预览",
+        "uploading": "上传中...",
+        "upload": "上传头像",
+        "change": "更换头像",
+        "supportedFormats": "支持 JPG、PNG 格式，建议尺寸 200x200px，最大 5MB",
+        "selectImageFile": "请选择图片文件",
+        "fileSizeLimit": "图片文件不能超过5MB",
+        "uploadFailed": "头像上传失败，请重试",
+        "uploadFailedConsole": "头像上传失败:",
+        "previewLoadFailed": "头像预览加载失败:"
+      },
+      "memory": {
+        "enableMemory": "启用记忆功能",
+        "loadingSettings": "加载记忆设置...",
+        "enabled": "已启用",
+        "disabled": "已关闭",
+        "hint": "开启后，智能体将自动总结对话历史，节省上下文空间。详细配置请前往设置页面。"
+      },
+      "resetForm": "重置表单"
+    },
+    "memory": {
+      "title": "{name} 的记忆",
+      "statsInfo": "共 {count} 条记忆，节省 {tokens} tokens",
+      "memoryList": "记忆列表",
+      "memoryContent": "记忆内容",
+      "editMemory": "编辑记忆",
+      "editMemoryTitle": "编辑记忆",
+      "deleteMemoryTitle": "删除记忆",
+      "loading": "加载记忆中...",
+      "loadFailed": "加载失败",
+      "empty": {
+        "title": "暂无记忆",
+        "description": "该智能体还没有任何记忆记录"
+      },
+      "actions": {
+        "save": "保存",
+        "cancel": "取消",
+        "edit": "编辑记忆",
+        "delete": "删除记忆"
+      },
+      "deleteModal": {
+        "title": "确认删除记忆",
+        "content": "确定要删除这条记忆吗？此操作不可撤销。",
+        "memoryPreview": "记忆内容：{content}...",
+        "confirm": "确认删除",
+        "cancel": "取消"
+      },
+      "messages": {
+        "loadFailed": "获取记忆数据失败",
+        "requestFailed": "请求失败 ({status})",
+        "networkError": "网络错误",
+        "loadError": "加载记忆失败:",
+        "contentEmpty": "记忆内容不能为空",
+        "jsonFormatError": "JSON格式错误，请检查格式",
+        "updateSuccess": "记忆更新成功",
+        "updateFailed": "更新失败: {error}",
+        "updateError": "更新记忆失败，请稍后重试",
+        "updateErrorConsole": "更新记忆时发生错误:",
+        "deleteSuccess": "记忆删除成功",
+        "deleteFailed": "删除失败: {error}",
+        "deleteError": "删除记忆失败，请稍后重试",
+        "deleteErrorConsole": "删除记忆时发生错误:",
+        "processing": "处理中...",
+        "noContent": "无内容"
+      },
+      "placeholder": {
+        "editContent": "请输入JSON格式的记忆内容..."
+      }
+    },
+    "deleteModal": {
+      "title": "确认删除智能体",
+      "content": "确定要删除智能体「{name}」吗？此操作不可撤销。",
+      "confirm": "确认删除",
+      "cancel": "取消"
+    },
+    "messages": {
+      "loadFailed": "加载智能体失败",
+      "deleteFailed": "删除智能体失败",
+      "deleteSuccess": "删除成功",
+      "deleteSuccessDesc": "智能体 \"{name}\" 已删除",
+      "createSuccess": "创建成功",
+      "createSuccessDesc": "新智能体已创建",
+      "updateSuccess": "更新成功",
+      "updateSuccessDesc": "智能体已更新",
+      "tokenNotFound": "未找到访问令牌，请重新登录",
+      "loadFormDataFailed": "加载表单数据失败",
+      "cannotOpenEditor": "无法打开智能体编辑器",
+      "unknownError": "发生未知错误"
+    }
+  },
+  "mcp": {
+    "title": "MCP 服务器管理",
+    "subtitle": "管理模型上下文协议服务器，配置工具和连接",
+    "actions": {
+      "addServer": "添加服务器",
+      "deleteServer": "删除服务器",
+      "checkStatus": "检查连接状态",
+      "syncTools": "同步本地工具到数据库",
+      "loading": "loading..."
+    },
+    "tabs": {
+      "all": "全部",
+      "local": "本地服务器",
+      "external": "外部服务器"
+    },
+    "server": {
+      "status": "状态: {status}",
+      "error": "错误: {message}",
+      "toolsCount": "{count} 工具",
+      "type": {
+        "stdio": "本地",
+        "sse": "外部",
+        "websocket": "WebSocket"
+      }
+    },
+    "deleteModal": {
+      "title": "确认删除服务器",
+      "content": "确定要删除服务器「{name}」吗？此操作不可撤销。",
+      "confirm": "确认删除",
+      "cancel": "取消"
+    },
+    "messages": {
+      "localServerCannotDelete": "本地服务器不支持删除操作",
+      "deleteSuccess": "服务器删除成功",
+      "deleteSuccessDesc": "服务器「{name}」已删除",
+      "deleteConfigFailed": "删除配置文件失败",
+      "deleteServerFailed": "删除服务器失败",
+      "unknownError": "未知错误"
+    },
+    "execution": {
+      "resultTitle": "工具执行结果 - {toolName}",
+      "success": "执行成功",
+      "failed": "执行失败",
+      "close": "✕"
+    },
+    "addServer": {
+      "title": "添加 MCP 服务器",
+      "subtitle": "配置新的模型上下文协议服务器",
+      "sections": {
+        "basicConfig": "基本配置",
+        "connectionConfig": "连接配置",
+        "toolConfig": "工具参数配置"
+      },
+      "fields": {
+        "serverName": "服务器名称",
+        "serverNamePlaceholder": "用于识别服务器的唯一名称",
+        "serverNameRequired": "服务器名称不能为空",
+        "description": "描述",
+        "descriptionPlaceholder": "可选：描述服务器的用途和功能",
+        "serverType": "服务器类型（选择服务器的连接方式）",
+        "serverUrl": "服务器URL",
+        "urlPlaceholder": {
+          "sse": "例如: https://mcp.api-inference.modelscope.net/******/sse",
+          "streamableHttp": "例如: http://localhost:8080/mcp"
+        }
+      },
+      "connection": {
+        "connect": "连接",
+        "disconnect": "断开",
+        "connecting": "连接中...",
+        "urlRequired": "请先填写服务器URL",
+        "testFirst": "请先测试服务器连接并确保连接成功",
+        "serverError": "服务器响应错误: {status} {statusText}",
+        "connectionFailed": "连接测试失败"
+      },
+      "validation": {
+        "toolsFound": "发现 {count} 个可用工具",
+        "showTools": "查看工具参数",
+        "hideTools": "隐藏工具参数"
+      },
+      "actions": {
+        "cancel": "取消",
+        "add": "添加服务器"
+      }
+    },
+    "tools": {
+      "modalTitle": "{serverName} - 工具列表",
+      "modalSubtitle": "共 {count} 个工具",
+      "empty": {
+        "title": "暂无可用工具",
+        "selectPrompt": "选择工具查看详情"
+      },
+      "tool": {
+        "noDescription": "无描述",
+        "enable": "启用工具",
+        "disable": "禁用工具",
+        "paramConfig": "参数配置",
+        "noParams": "该工具无需参数",
+        "required": "*",
+        "selectOption": "请选择...",
+        "parseError": "参数模式解析失败",
+        "executing": "工具执行中...",
+        "useTool": "使用工具"
+      },
+      "messages": {
+        "configSaved": "工具配置已保存",
+        "saveConfigFailed": "保存配置失败",
+        "updateStatusFailed": "更新工具状态失败",
+        "parseSchemeFailed": "解析工具参数模式失败:"
+      }
+    }
+  },
+  "chat": {
+    "placeholder": "输入消息...",
+    "send": "发送",
+    "newConversation": "新对话",
+    "regenerate": "重新生成",
+    "copy": "复制",
+    "copySuccess": "已复制!",
+    "copyCode": "复制代码",
+    "copyFailed": "复制失败"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "登出",
+    "register": "注册",
+    "username": "用户名",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码",
+    "rememberMe": "记住我"
+  },
+  "conversations": {
+    "title": "对话历史",
+    "subtitle": "查看和管理所有历史对话记录 · 共 {count} 个对话",
+    "loading": "正在加载对话...",
+    "actions": {
+      "batchSelect": "批量选择",
+      "newConversation": "新建对话",
+      "selectAll": "全选",
+      "deselectAll": "取消全选",
+      "deleteSelected": "删除选中",
+      "cancel": "取消",
+      "retry": "重试"
+    },
+    "selection": {
+      "selected": "已选择 {count} 个",
+      "selectedAll": "全选",
+      "deselectAll": "取消全选"
+    },
+    "search": {
+      "placeholder": "搜索对话标题或模型..."
+    },
+    "empty": {
+      "noConversations": "暂无对话历史",
+      "noSearchResults": "未找到匹配的对话"
+    },
+    "error": {
+      "loadFailed": "加载对话列表失败",
+      "retryPrompt": "请检查网络连接后重试"
+    },
+    "deleteModal": {
+      "title": "删除对话",
+      "content": "确定要删除对话 \"{title}\" 吗？",
+      "warning": "此操作将永久删除对话及其所有消息，无法恢复。",
+      "confirm": "确认删除",
+      "cancel": "取消",
+      "deleting": "删除中..."
+    },
+    "batchDeleteModal": {
+      "title": "批量删除对话",
+      "content": "确定要删除选中的 {count} 个对话吗？",
+      "warning": "此操作将永久删除这些对话及其所有消息，无法恢复。",
+      "listTitle": "将要删除的对话：",
+      "confirm": "确认删除",
+      "cancel": "取消",
+      "deleting": "删除中..."
+    },
+    "timeGroups": {
+      "today": "今天",
+      "yesterday": "昨天",
+      "threeDaysAgo": "三天前",
+      "pastWeek": "过去一周",
+      "older": "更久以前"
+    },
+    "stats": {
+      "messages": "{count} 条消息",
+      "tokens": "{count} tokens",
+      "characters": "{count} 字符",
+      "createdAt": "创建于 {date}",
+      "updatedAt": "更新于 {time}"
+    },
+    "hints": {
+      "clickToEnter": "点击进入对话",
+      "clickToSelect": "点击选择对话",
+      "deleteConversation": "删除对话"
+    },
+    "messages": {
+      "loadFailed": "加载对话列表失败",
+      "deleteSuccess": "删除成功",
+      "deleteSuccessDesc": "对话 \"{title}\" 已删除",
+      "deleteFailed": "删除失败",
+      "batchDeleteSuccess": "批量删除成功",
+      "batchDeleteSuccessDesc": "已删除 {count} 个对话",
+      "batchDeleteFailed": "批量删除失败",
+      "networkError": "网络错误",
+      "authError": "认证失败，请重新登录",
+      "unknownError": "加载对话时发生未知错误"
+    }
+  },
+  "notes": {
+    "title": "笔记管理",
+    "subtitle": {
+      "private": "记录想法，整理知识，分享见解 · 共 {count} 个我的笔记",
+      "public": "发现精彩内容，学习他人见解 · 共 {count} 个公开笔记"
+    },
+    "loading": "正在加载笔记...",
+    "loadingShort": "加载中...",
+    "create": {
+      "title": "新建笔记",
+      "titleField": "笔记标题",
+      "titlePlaceholder": "输入笔记标题...",
+      "contentPlaceholder": "开始编写你的笔记内容...",
+      "tagsField": "标签",
+      "tagsPlaceholder": "按回车或逗号添加标签，最多6个",
+      "tagsAddPlaceholder": "添加标签...",
+      "saveButton": "创建",
+      "savingButton": "保存中...",
+      "publicNote": "公开笔记",
+      "privateNote": "我的笔记"
+    },
+    "edit": {
+      "title": "编辑笔记",
+      "saveButton": "保存笔记",
+      "savingButton": "保存中...",
+      "notFound": "笔记不存在",
+      "notFoundDesc": "请检查链接是否正确",
+      "noPermission": "无权限",
+      "noPermissionDesc": "只有笔记作者可以编辑"
+    },
+    "detail": {
+      "title": "笔记详情",
+      "notFound": "笔记不存在",
+      "notFoundDesc": "请检查链接是否正确",
+      "shareLink": "分享链接",
+      "copyLink": "复制",
+      "linkCopied": "已复制"
+    },
+    "tabs": {
+      "private": "我的笔记",
+      "public": "公开笔记"
+    },
+    "actions": {
+      "create": "创建笔记",
+      "edit": "编辑",
+      "view": "查看详情",
+      "share": "分享笔记",
+      "sharing": "分享中...",
+      "delete": "删除",
+      "deleting": "删除中...",
+      "back": "返回",
+      "save": "保存",
+      "clearSearch": "清除搜索",
+      "returnToList": "返回笔记列表"
+    },
+    "search": {
+      "placeholder": "搜索笔记标题或内容..."
+    },
+    "sort": {
+      "updatedAt": "更新时间",
+      "createdAt": "创建时间",
+      "title": "标题",
+      "ascending": "升序排列",
+      "descending": "降序排列"
+    },
+    "status": {
+      "public": "公开",
+      "private": "私有",
+      "noTags": "无标签"
+    },
+    "time": {
+      "createdAt": "创建于 {time}",
+      "updatedAt": "更新于 {time}",
+      "unknownAuthor": "未知作者"
+    },
+    "empty": {
+      "noNotes": {
+        "title": "还没有笔记",
+        "description": "开始创建您的第一个笔记，记录想法、整理知识、分享见解"
+      },
+      "noSearchResults": {
+        "title": "未找到匹配的笔记",
+        "description": "尝试使用不同的关键词搜索"
+      }
+    },
+    "deleteModal": {
+      "title": "确认删除笔记",
+      "content": "确定要删除笔记「{title}」吗？此操作不可撤销。",
+      "contentDetail": "此操作不可撤销。确定要删除这篇笔记吗？",
+      "noteTitle": "笔记标题：{title}",
+      "confirm": "确认删除",
+      "cancel": "取消"
+    },
+    "confirmModal": {
+      "leaveTitle": "确认离开",
+      "leaveContent": "确定要离开吗？未保存的更改将丢失。",
+      "unsavedContent": "您有未保存的内容，确定要离开吗？",
+      "confirmLeave": "确定离开",
+      "cancel": "取消"
+    },
+    "validation": {
+      "titleRequired": "请输入标题",
+      "titleEmpty": "标题不能为空",
+      "contentRequired": "请输入内容",
+      "contentEmpty": "笔记内容不能为空"
+    },
+    "messages": {
+      "fetchFailed": "获取笔记失败",
+      "fetchFailedDesc": "请稍后重试",
+      "authFailed": "认证失败",
+      "authFailedDesc": "请重新登录",
+      "shareSuccess": "分享链接已复制",
+      "shareSuccessDesc": "可以将链接分享给其他人",
+      "shareFailed": "分享失败",
+      "shareFailedDesc": "网络错误，请稍后重试",
+      "shareFailedUnknown": "未知错误",
+      "shareSuccessPublic": "分享成功",
+      "shareSuccessPublicDesc": "笔记已设为公开",
+      "deleteSuccess": "删除成功",
+      "deleteSuccessDesc": "笔记已删除",
+      "deleteFailed": "删除失败",
+      "deleteFailedDesc": "网络错误，请稍后重试",
+      "deleteFailedUnknown": "未知错误",
+      "createSuccess": "笔记创建成功",
+      "createSuccessDesc": "正在跳转到笔记管理页面",
+      "createFailed": "创建失败",
+      "createFailedDesc": "网络错误，请稍后重试",
+      "createFailedUnknown": "未知错误",
+      "updateSuccess": "笔记更新成功",
+      "updateSuccessDesc": "正在跳转到笔记列表页面",
+      "updateFailed": "更新失败",
+      "updateFailedDesc": "网络错误，请稍后重试",
+      "updateFailedUnknown": "未知错误",
+      "getFailed": "获取失败",
+      "getFailedDesc": "无法获取笔记详情",
+      "copySuccess": "复制成功",
+      "copySuccessDesc": "分享链接已复制到剪贴板",
+      "copyFailed": "复制失败",
+      "copyFailedDesc": "请手动复制链接",
+      "networkError": "网络错误，请稍后重试"
+    }
+  },
+  "errors": {
+    "generic": "发生错误，请稍后重试",
+    "network": "网络错误，请检查网络连接",
+    "auth": "认证失败，请重新登录",
+    "notFound": "未找到请求的资源",
+    "permission": "权限不足"
+  }
+}

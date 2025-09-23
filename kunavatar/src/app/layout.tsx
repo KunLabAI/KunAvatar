@@ -9,6 +9,7 @@ import { NotificationManager } from '@/components/notification/NotificationManag
 import { AuthProvider } from '@/components/AuthProvider'
 import { AuthErrorBoundary } from '@/components/AuthErrorBoundary'
 import { UserSettingsProvider } from '@/contexts/UserSettingsContext'
+import { I18nProvider } from '@/contexts/I18nContext'
 import { DownloadManagerProvider } from '@/contexts/DownloadManagerContext'
 import { CleanModeProvider } from '@/contexts/CleanModeContext'
 import { GlobalDownloadManager } from '@/components/GlobalDownloadManager'
@@ -39,24 +40,26 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} bg-theme-background text-theme-foreground transition-opacity duration-200`} suppressHydrationWarning>
         <ThemeProvider>
-          <AuthErrorBoundary>
-            <AuthProvider>
-              <UserSettingsProvider>
-                <DownloadManagerProvider>
-                  <NotificationProvider>
-                    <CleanModeProvider>
-                    <ElectronLayout className="min-h-screen overflow-hidden">
-                      {children}
-                    </ElectronLayout>
-                    <NotificationManager />
-                    <GlobalDownloadManager />
-                    <OllamaStatusChecker />
-                    </CleanModeProvider>
-                  </NotificationProvider>
-                </DownloadManagerProvider>
-              </UserSettingsProvider>
-            </AuthProvider>
-          </AuthErrorBoundary>
+          <I18nProvider>
+            <AuthErrorBoundary>
+              <AuthProvider>
+                <UserSettingsProvider>
+                  <DownloadManagerProvider>
+                    <NotificationProvider>
+                      <CleanModeProvider>
+                      <ElectronLayout className="min-h-screen overflow-hidden">
+                        {children}
+                      </ElectronLayout>
+                      <NotificationManager />
+                      <GlobalDownloadManager />
+                      <OllamaStatusChecker />
+                      </CleanModeProvider>
+                    </NotificationProvider>
+                  </DownloadManagerProvider>
+                </UserSettingsProvider>
+              </AuthProvider>
+            </AuthErrorBoundary>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CustomModel } from '@/lib/database/custom-models';
+import { useI18n } from '@/contexts/I18nContext';
 import ModelList from './components/ModelList';
 import ModelForm from './components/ModelForm';
 import ModelDetailsModal from './components/ModelDetailsModal';
@@ -19,6 +20,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 
 function ModelManagerPageContent() {
+  const { t } = useI18n();
   const [models, setModels] = useState<CustomModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -51,8 +53,8 @@ function ModelManagerPageContent() {
       setIsProcessing(true);
       await loadModels(true);
     } catch (error) {
-      console.error('同步模型失败:', error);
-      notification.error('同步失败', '请检查Ollama服务是否正常运行');
+      console.error(t('settings.models.messages.syncFailed') + ':', error);
+      notification.error(t('settings.models.messages.syncFailed'), t('settings.models.messages.syncFailedDesc'));
     } finally {
       setIsProcessing(false);
     }
@@ -77,15 +79,15 @@ function ModelManagerPageContent() {
         setModels(data.models);
         
         if (forceSync && data.models.length > 0) {
-          notification.success('同步成功', `已同步 ${data.models.length} 个模型`);
+          notification.success(t('settings.models.messages.syncSuccess'), t('settings.models.messages.syncSuccessDesc').replace('{count}', data.models.length.toString()));
         }
       } else {
-        console.error('加载模型失败:', data.error);
-        notification.error('加载模型列表失败', data.error);
+        console.error(t('settings.models.messages.loadFailed') + ':', data.error);
+        notification.error(t('settings.models.messages.loadFailed'), data.error);
       }
     } catch (error) {
-      console.error('加载模型失败:', error);
-      notification.error('网络错误', '请检查网络连接后重试');
+      console.error(t('settings.models.messages.loadFailed') + ':', error);
+      notification.error(t('settings.models.messages.networkError'), t('settings.models.messages.networkErrorDesc'));
     } finally {
       setIsLoading(false);
     }
@@ -111,14 +113,14 @@ function ModelManagerPageContent() {
         setShowForm(false);
         setIsModalOpen(false);
         await loadModels();
-        notification.success('模型创建成功', '新模型已添加到列表中');
+        notification.success(t('settings.models.messages.createSuccess'), t('settings.models.messages.createSuccessDesc'));
       } else {
-        throw new Error(data.message || '创建模型失败');
+        throw new Error(data.message || t('settings.models.messages.createFailed'));
       }
     } catch (error) {
-      console.error('创建模型失败:', error);
-      const message = error instanceof Error ? error.message : '创建模型失败';
-      notification.error('创建模型失败', message);
+      console.error(t('settings.models.messages.createFailed') + ':', error);
+      const message = error instanceof Error ? error.message : t('settings.models.messages.createFailed');
+      notification.error(t('settings.models.messages.createFailed'), message);
     } finally {
       setIsProcessing(false);
     }
@@ -145,14 +147,14 @@ function ModelManagerPageContent() {
         setEditingModel(null);
         setIsModalOpen(false);
         await loadModels();
-        notification.success('模型更新成功', '模型信息已保存');
+        notification.success(t('settings.models.messages.updateSuccess'), t('settings.models.messages.updateSuccessDesc'));
       } else {
-        throw new Error(data.message || '更新模型失败');
+        throw new Error(data.message || t('settings.models.messages.updateFailed'));
       }
     } catch (error) {
-      console.error('更新模型失败:', error);
-      const message = error instanceof Error ? error.message : '更新模型失败';
-      notification.error('更新模型失败', message);
+      console.error(t('settings.models.messages.updateFailed') + ':', error);
+      const message = error instanceof Error ? error.message : t('settings.models.messages.updateFailed');
+      notification.error(t('settings.models.messages.updateFailed'), message);
     } finally {
       setIsProcessing(false);
     }
@@ -186,14 +188,14 @@ function ModelManagerPageContent() {
       const data = await response.json();
       if (data.success) {
         await loadModels();
-        notification.success('模型删除成功', '模型已从列表中移除');
+        notification.success(t('settings.models.messages.deleteSuccess'), t('settings.models.messages.deleteSuccessDesc'));
       } else {
-        throw new Error(data.message || '删除模型失败');
+        throw new Error(data.message || t('settings.models.messages.deleteFailed'));
       }
     } catch (error) {
-      console.error('删除模型失败:', error);
-      const message = error instanceof Error ? error.message : '删除模型失败';
-      notification.error('删除模型失败', message);
+      console.error(t('settings.models.messages.deleteFailed') + ':', error);
+      const message = error instanceof Error ? error.message : t('settings.models.messages.deleteFailed');
+      notification.error(t('settings.models.messages.deleteFailed'), message);
     } finally {
       setIsProcessing(false);
       setModelToDelete(null);
@@ -280,14 +282,14 @@ function ModelManagerPageContent() {
       if (data.success) {
         setShowModelfileForm(false);
         await loadModels();
-        notification.success('Modelfile模型创建成功', `模型 "${modelfileData.display_name}" 已创建`);
+        notification.success(t('settings.models.messages.modelfileCreateSuccess'), t('settings.models.messages.modelfileCreateSuccessDesc').replace('{modelName}', modelfileData.display_name));
       } else {
-        throw new Error(data.message || '创建模型失败');
+        throw new Error(data.message || t('settings.models.messages.createFailed'));
       }
     } catch (error) {
-      console.error('创建 Modelfile 模型失败:', error);
-      const message = error instanceof Error ? error.message : '创建模型失败';
-      notification.error('创建Modelfile模型失败', message);
+      console.error(t('settings.models.messages.modelfileCreateFailed') + ':', error);
+      const message = error instanceof Error ? error.message : t('settings.models.messages.createFailed');
+      notification.error(t('settings.models.messages.modelfileCreateFailed'), message);
     } finally {
       setIsProcessing(false);
     }
@@ -326,7 +328,7 @@ function ModelManagerPageContent() {
         />
         <div className="flex-1 overflow-auto scrollbar-thin">
           <PageLoading 
-            text="loading..." 
+            text={t('settings.models.loading')} 
             fullScreen={true}
           />
         </div>
@@ -352,11 +354,11 @@ function ModelManagerPageContent() {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                    模型管理
+                    {t('settings.models.title')}
                     </h1>          
                     
                     <p className="page-subtitle mt-2">
-                      管理和配置 AI 模型 · 共 {models.length} 个模型
+                      {t('settings.models.subtitle')} · {t('settings.models.modelCount').replace('{count}', models.length.toString())}
                     </p>
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-2">
@@ -366,28 +368,28 @@ function ModelManagerPageContent() {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <RefreshCw className={`w-4 h-4 ${(isProcessing && processingType === 'sync') ? 'animate-spin' : ''}`} />
-                      <span className="hidden sm:inline">{(isProcessing && processingType === 'sync') ? '同步中...' : '同步'}</span>
+                      <span className="hidden sm:inline">{(isProcessing && processingType === 'sync') ? t('settings.models.syncing') : t('settings.models.sync')}</span>
                     </button>
                     <button
                       onClick={() => setShowPullModelModal(true)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <Download className="w-4 h-4" />
-                      <span className="hidden sm:inline">拉取</span>
+                      <span className="hidden sm:inline">{t('settings.models.pull')}</span>
                     </button>
                     <button
                       onClick={() => setShowFileUploadForm(true)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
                     >
                       <Upload className="w-4 h-4" />
-                      <span className="hidden sm:inline">上传</span>
+                      <span className="hidden sm:inline">{t('settings.models.upload')}</span>
                     </button>
                     <button
                       onClick={() => setShowModelfileForm(true)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium"
                     >
                       <Code className="w-4 h-4" />
-                      <span className="hidden sm:inline">创建 Modelfile</span>
+                      <span className="hidden sm:inline">{t('settings.models.createModelfile')}</span>
                     </button>
                   </div>
                 </div>
@@ -401,11 +403,11 @@ function ModelManagerPageContent() {
                   <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-2 shadow-lg">
                     <InlineLoading 
                       text={
-                        processingType === 'delete' ? '正在删除模型...' :
-                        processingType === 'create' ? '正在创建模型...' :
-                        processingType === 'update' ? '正在更新模型...' :
-                        processingType === 'modelfile' ? '正在创建Modelfile模型...' :
-                        '处理中...'
+                        processingType === 'delete' ? t('settings.models.processing.deleting') :
+                        processingType === 'create' ? t('settings.models.processing.creating') :
+                        processingType === 'update' ? t('settings.models.processing.updating') :
+                        processingType === 'modelfile' ? t('settings.models.processing.creatingModelfile') :
+                        t('settings.models.processing.processing')
                       }
                       size="small"
                     />
@@ -476,16 +478,16 @@ function ModelManagerPageContent() {
             <Modal
               open={deleteModalOpen}
               onClose={() => { setDeleteModalOpen(false); setModelToDelete(null); }}
-              title="确认删除模型"
+              title={t('settings.models.deleteModal.title')}
               icon={<Loader className="w-6 h-6 text-theme-warning" />}
               actions={[
                 {
-                  label: '取消',
+                  label: t('settings.models.deleteModal.cancel'),
                   onClick: () => { setDeleteModalOpen(false); setModelToDelete(null); },
                   variant: 'secondary',
                 },
                 {
-                  label: '确认删除',
+                  label: t('settings.models.deleteModal.confirm'),
                   onClick: confirmDeleteModel,
                   variant: 'danger',
                   autoFocus: true,
@@ -495,7 +497,7 @@ function ModelManagerPageContent() {
             >
               {modelToDelete && (
                 <span>
-                  确定要删除模型「<b>{modelToDelete.display_name || modelToDelete.base_model}</b>」吗？此操作不可撤销。
+                  {t('settings.models.deleteModal.content').replace('{modelName}', modelToDelete.display_name || modelToDelete.base_model)}
                 </span>
               )}
             </Modal>

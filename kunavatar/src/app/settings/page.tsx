@@ -9,6 +9,7 @@ import { NotificationProvider, NotificationContainer, useNotification } from '@/
 import { PageLoading } from '@/components/Loading';
 import { useConversations } from '@/hooks/useConversations';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useI18n } from '@/contexts/I18nContext';
 
 // 禁用静态生成
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,7 @@ function ConnectedNotificationContainer() {
 function SettingsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useI18n();
   
   // 从URL参数获取初始标签页，如果没有则默认为'account'
   const initialTab = searchParams.get('tab') || 'account';
@@ -155,9 +157,9 @@ function SettingsPageContent() {
               <h1 
                 className="inline-block text-2xl font-bold mb-6 text-theme-foreground cursor-pointer select-none"
                 onClick={handleTitleClick}
-                title={showLogsTab ? "日志管理已解锁" : "连续点击三次解锁更多功能"}
+                title={showLogsTab ? t('settings.tabs.logs') + "已解锁" : "连续点击三次解锁更多功能"}
               >
-                设置
+                {t('settings.title')}
               </h1>
               
               {/* 标签页导航 */}

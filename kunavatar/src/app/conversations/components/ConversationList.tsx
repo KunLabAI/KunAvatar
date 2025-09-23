@@ -3,6 +3,7 @@ import { MessageSquare, Trash2, Calendar, Clock, Bot, CheckSquare, Square, Hash,
 import { formatTime, formatDate as formatDateOnly } from '@/lib/utils/time';
 import { motion } from 'framer-motion';
 import { Conversation } from '@/lib/database';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -21,6 +22,7 @@ export function ConversationList({
   selectedConversations = new Set(),
   onToggleSelection,
 }: ConversationListProps) {
+  const { t } = useI18n();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
@@ -126,15 +128,15 @@ export function ConversationList({
                   }}>
                     <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                       <MessageSquare className="w-4 h-4" />
-                      <span>{conversation.stats.message_count} 条消息</span>
+                      <span>{t('conversations.stats.messages').replace('{count}', conversation.stats.message_count.toString())}</span>
                     </div>
                     <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                       <Hash className="w-4 h-4" />
-                      <span>{conversation.stats.total_tokens.toLocaleString()} tokens</span>
+                      <span>{t('conversations.stats.tokens').replace('{count}', conversation.stats.total_tokens.toLocaleString())}</span>
                     </div>
                     <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                       <Type className="w-4 h-4" />
-                      <span>{conversation.stats.total_characters.toLocaleString()} 字符</span>
+                      <span>{t('conversations.stats.characters').replace('{count}', conversation.stats.total_characters.toLocaleString())}</span>
                     </div>
                   </div>
                 )}
@@ -147,11 +149,11 @@ export function ConversationList({
                 }}>
                   <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                     <Calendar className="w-4 h-4" />
-                    <span>创建于 {formatDateOnly(conversation.created_at)}</span>
+                    <span>{t('conversations.stats.createdAt').replace('{date}', formatDateOnly(conversation.created_at))}</span>
                   </div>
                   <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
                     <Clock className="w-4 h-4" />
-                    <span>更新于 {formatTime(conversation.updated_at)}</span>
+                    <span>{t('conversations.stats.updatedAt').replace('{time}', formatTime(conversation.updated_at))}</span>
                   </div>
                 </div>
               </div>
@@ -179,7 +181,7 @@ export function ConversationList({
                     e.currentTarget.style.color = 'var(--color-foreground-muted)';
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }}
-                  title="删除对话"
+                  title={t('conversations.hints.deleteConversation')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -198,7 +200,7 @@ export function ConversationList({
                 color: 'var(--color-primary)',
                 fontWeight: '500'
               }}>
-                {isSelectionMode ? '点击选择对话' : '点击进入对话'} →
+                {isSelectionMode ? t('conversations.hints.clickToSelect') : t('conversations.hints.clickToEnter')} →
               </p>
             </div>
         </motion.div>

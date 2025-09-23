@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, Folder, Zap, AlertCircle } from 'lucide-react';
 import ModalWrapper from './ModalWrapper';
 import { useNotification } from '@/components/notification';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface FileUploadModelFormProps {
   onSave?: (modelData: FileUploadModelData) => void;
@@ -27,13 +28,6 @@ interface FileUploadInfo {
   uploadStatus?: 'completed';
   uploadProgress?: number;
 }
-
-const QUANTIZATION_OPTIONS = [
-  { value: '', label: '不量化' },
-  { value: 'q4_K_M', label: 'Q4_K_M (推荐, 中等质量)' },
-  { value: 'q4_K_S', label: 'Q4_K_S (小尺寸)' },
-  { value: 'q8_0', label: 'Q8_0 (推荐, 高质量)' }
-];
 
 // 统一的表单区域组件
 const FormSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -68,6 +62,16 @@ const FormInput = ({
 );
 
 export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: FileUploadModelFormProps) {
+  const { t } = useI18n();
+  
+  // 动态生成量化选项
+  const getQuantizationOptions = () => [
+    { value: '', label: t('settings.models.fileUploadForm.quantizationOptions.none') },
+    { value: 'q4_K_M', label: t('settings.models.fileUploadForm.quantizationOptions.q4_K_M') },
+    { value: 'q4_K_S', label: t('settings.models.fileUploadForm.quantizationOptions.q4_K_S') },
+    { value: 'q8_0', label: t('settings.models.fileUploadForm.quantizationOptions.q8_0') }
+  ];
+  
   const [formData, setFormData] = useState<FileUploadModelData>({
     display_name: '',
     files: [],
@@ -89,19 +93,19 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
     
     // 验证模型名称
     if (!formData.display_name.trim()) {
-      newErrors.display_name = '模型名称不能为空';
+      newErrors.display_name = t('settings.models.fileUploadForm.fields.modelAliasRequired');
     }
 
     // 验证文件路径
     if (formData.files.length === 0 || !formData.files[0].path) {
-      newErrors.file_path = '请输入有效的文件路径';
+      newErrors.file_path = t('settings.models.fileUploadForm.fields.filePathRequired');
     } else {
       const filePath = formData.files[0].path;
       // 验证文件路径格式
       if (!filePath.match(/\.(gguf|bin)$/i)) {
-        newErrors.file_path = '文件必须是 .gguf 或 .bin 格式';
+        newErrors.file_path = t('settings.models.fileUploadForm.fields.fileFormatError');
       } else if (!filePath.match(/^[a-zA-Z]:|^\/|^\\\\|^\./)) {
-        newErrors.file_path = '请输入有效的文件路径（绝对路径或相对路径）';
+        newErrors.file_path = t('settings.models.fileUploadForm.fields.filePathInvalid');
       }
     }
 
@@ -116,62 +120,62 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
     switch (errorType) {
       case 'validation':
         return { 
-          title: '输入验证失败', 
-          message: errorData.message || '请检查输入的信息是否正确' 
+          title: t('settings.models.fileUploadForm.errors.validation.title'), 
+          message: errorData.message || t('settings.models.fileUploadForm.errors.validation.message')
         };
         
       case 'name_conflict':
         return { 
-          title: '模型名称冲突', 
-          message: '模型名称已存在，请尝试使用不同的名称' 
+          title: t('settings.models.fileUploadForm.errors.nameConflict.title'), 
+          message: t('settings.models.fileUploadForm.errors.nameConflict.message')
         };
         
       case 'file_error':
         return { 
-          title: '文件访问错误', 
-          message: errorData.message || '无法访问指定的文件，请检查文件路径和权限' 
+          title: t('settings.models.fileUploadForm.errors.fileError.title'), 
+          message: errorData.message || t('settings.models.fileUploadForm.errors.fileError.message')
         };
         
       case 'ollama_not_found':
         return { 
-          title: 'Ollama 未安装', 
-          message: 'Ollama 未正确安装或配置，请先安装 Ollama 并确保其在系统 PATH 中' 
+          title: t('settings.models.fileUploadForm.errors.ollamaNotFound.title'), 
+          message: t('settings.models.fileUploadForm.errors.ollamaNotFound.message')
         };
         
       case 'permission_error':
         return { 
-          title: '权限不足', 
-          message: '权限不足，请以管理员身份运行或检查文件权限' 
+          title: t('settings.models.fileUploadForm.errors.permissionError.title'), 
+          message: t('settings.models.fileUploadForm.errors.permissionError.message')
         };
         
       case 'timeout_error':
         return { 
-          title: '操作超时', 
-          message: '操作超时，可能是文件过大导致的。请稍后重试或使用较小的文件' 
+          title: t('settings.models.fileUploadForm.errors.timeoutError.title'), 
+          message: t('settings.models.fileUploadForm.errors.timeoutError.message')
         };
         
       case 'storage_error':
         return { 
-          title: '存储空间不足', 
-          message: '磁盘空间不足，请清理磁盘空间后重试' 
+          title: t('settings.models.fileUploadForm.errors.storageError.title'), 
+          message: t('settings.models.fileUploadForm.errors.storageError.message')
         };
         
       case 'command_error':
         return { 
-          title: 'Ollama 命令失败', 
-          message: '模型创建命令执行失败，请检查文件格式是否正确' 
+          title: t('settings.models.fileUploadForm.errors.commandError.title'), 
+          message: t('settings.models.fileUploadForm.errors.commandError.message')
         };
         
       case 'server_error':
         return { 
-          title: '服务器错误', 
-          message: '服务器处理请求时发生错误，请稍后重试' 
+          title: t('settings.models.fileUploadForm.errors.serverError.title'), 
+          message: t('settings.models.fileUploadForm.errors.serverError.message')
         };
         
       default:
         return { 
-          title: '创建失败', 
-          message: errorData.message || '模型创建失败，请重试' 
+          title: t('settings.models.fileUploadForm.errors.default.title'), 
+          message: errorData.message || t('settings.models.fileUploadForm.errors.default.message')
         };
     }
   };
@@ -201,11 +205,11 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
         
         // 使用成功通知
         notification.success(
-          '模型创建成功', 
-          `模型 "${formData.display_name}" 已成功创建并添加到列表中`
+          t('settings.models.fileUploadForm.messages.createSuccess'), 
+          t('settings.models.fileUploadForm.messages.createSuccessDesc').replace('{modelName}', formData.display_name)
         );
         if (onSuccess) {
-          onSuccess(`模型 "${formData.display_name}" 创建成功！`);
+          onSuccess(t('settings.models.fileUploadForm.messages.createSuccessShort').replace('{modelName}', formData.display_name));
         }
         
         return;
@@ -217,9 +221,10 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
       console.error('创建模型失败:', error);
       
       // 处理网络错误等异常
+      const errorMessage = error instanceof Error ? error.message : t('errors.network');
       notification.error(
-        '网络错误', 
-        `无法连接到服务器: ${error instanceof Error ? error.message : '请检查网络连接'}`
+        t('settings.models.fileUploadForm.errors.networkError.title'), 
+        t('settings.models.fileUploadForm.errors.networkError.message').replace('{error}', errorMessage)
       );
     } finally {
       setIsUploading(false);
@@ -237,11 +242,11 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
     const platform = navigator.platform.toLowerCase();
     
     if (platform.includes('win')) {
-      return '例如: D:\\Models\\your-model.gguf';
+      return t('settings.models.fileUploadForm.placeholders.windows');
     } else if (platform.includes('mac')) {
-      return '例如: /Users/yourname/Models/your-model.gguf';
+      return t('settings.models.fileUploadForm.placeholders.mac');
     } else {
-      return '例如: /home/yourname/models/your-model.gguf';
+      return t('settings.models.fileUploadForm.placeholders.linux');
     }
   };
 
@@ -249,8 +254,8 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
     <ModalWrapper
       isOpen={true}
       onClose={onCancel}
-      title="从文件创建模型"
-      subtitle="选择本地 GGUF 文件来创建自定义模型"
+      title={t('settings.models.fileUploadForm.title')}
+      subtitle={t('settings.models.fileUploadForm.subtitle')}
       icon={modalIcon}
       maxWidth="2xl"
     >
@@ -258,9 +263,9 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
         {/* 内容区域 - 可滚动 */}
         <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-8">
           {/* 基本信息 */}
-          <FormSection title="基本信息">
+          <FormSection title={t('settings.models.fileUploadForm.basicInfo')}>
             <FormInput 
-              label="模型别名" 
+              label={t('settings.models.fileUploadForm.fields.modelAlias')} 
               required 
             >
               <input
@@ -274,7 +279,7 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
                   }
                 }}
                 className="form-input-base"
-                placeholder="例如：我的自定义模型"
+                placeholder={t('settings.models.fileUploadForm.fields.modelAliasPlaceholder')}
               />
               {errors.display_name && (
                 <p className="mt-1 text-sm text-red-600">{errors.display_name}</p>
@@ -283,9 +288,9 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
           </FormSection>
 
           {/* 文件选择 */}
-          <FormSection title="模型文件">
+          <FormSection title={t('settings.models.fileUploadForm.modelFile')}>
             <FormInput 
-              label="GGUF 文件路径" 
+              label={t('settings.models.fileUploadForm.fields.ggufFilePath')} 
               required 
             >
               <input
@@ -352,8 +357,8 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
           </FormSection>
 
           {/* 高级设置 */}
-          <FormSection title="高级设置">
-            <FormInput label="量化选项" hint="量化可以减少模型大小但可能影响质量">
+          <FormSection title={t('settings.models.fileUploadForm.advancedSettings')}>
+            <FormInput label={t('settings.models.fileUploadForm.fields.quantization')} hint={t('settings.models.fileUploadForm.fields.quantizationHint')}>
               <select
                 value={formData.quantize || ''}
                 onChange={(e) => setFormData(prev => ({ 
@@ -362,7 +367,7 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
                 }))}
                 className="form-input-base"
               >
-                {QUANTIZATION_OPTIONS.map(option => (
+                {getQuantizationOptions().map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -380,7 +385,7 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
               disabled={isUploading}
               className="btn-base btn-secondary px-6 py-3"
             >
-              取消
+              {t('settings.models.fileUploadForm.actions.cancel')}
             </button>
             <button 
               onClick={handleSave}
@@ -390,12 +395,12 @@ export default function FileUploadModelForm({ onSave, onCancel, onSuccess }: Fil
               {isUploading ? (
                 <>
                   <div className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  创建中...
+                  {t('settings.models.fileUploadForm.actions.creating')}
                 </>
               ) : (
                 <>
                   <Zap className="w-4 h-4" />
-                  创建模型
+                  {t('settings.models.fileUploadForm.actions.createModel')}
                 </>
               )}
             </button>

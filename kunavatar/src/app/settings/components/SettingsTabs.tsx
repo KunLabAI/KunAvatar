@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 
 const TABS = [
-  { key: 'account', label: '账户管理' },
-  { key: 'users', label: '用户管理', adminOnly: true },
-  { key: 'roles', label: '角色管理', adminOnly: true },
-  { key: 'assistant', label: '辅助模型' },
-  { key: 'inference', label: '推理引擎' },
-  { key: 'appearance', label: '界面设置' },
-  { key: 'logs', label: '日志管理', electronOnly: true },
-  { key: 'appinfo', label: '应用信息' },
+  { key: 'account', label: 'settings.tabs.account' },
+  { key: 'users', label: 'settings.tabs.users', adminOnly: true },
+  { key: 'roles', label: 'settings.tabs.roles', adminOnly: true },
+  { key: 'assistant', label: 'settings.tabs.assistant' },
+  { key: 'inference', label: 'settings.tabs.inference' },
+  { key: 'appearance', label: 'settings.tabs.appearance' },
+  { key: 'logs', label: 'settings.tabs.logs', electronOnly: true },
+  { key: 'appinfo', label: 'settings.tabs.appinfo' },
 ];
 
 interface SettingsTabsProps {
@@ -23,6 +24,7 @@ interface SettingsTabsProps {
 
 export function SettingsTabs({ activeTab, onTabChange, isAdmin, showLogsTab = false }: SettingsTabsProps) {
   const [isElectron, setIsElectron] = useState(false);
+  const { t } = useI18n();
 
   // 检查是否在Electron环境中
   useEffect(() => {
@@ -55,7 +57,7 @@ export function SettingsTabs({ activeTab, onTabChange, isAdmin, showLogsTab = fa
                     : 'border-transparent text-theme-foreground-muted hover:text-theme-foreground hover:border-theme-border-secondary'
                 } whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 focus:outline-none`}
               >
-                <span>{tab.label}</span>
+                <span>{t(tab.label)}</span>
               </button>
             );
           })}

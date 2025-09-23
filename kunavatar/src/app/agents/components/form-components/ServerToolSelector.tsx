@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Server, Axe, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { McpServer, McpTool } from '@/lib/database';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ServerToolSelectorProps {
   availableServers: McpServer[];
@@ -25,6 +26,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
   maxTools = 10,
   disabled = false
 }) => {
+  const { t } = useI18n();
   // 管理每个服务器的展开状态
   const [expandedServers, setExpandedServers] = useState<Set<number>>(new Set());
   
@@ -138,7 +140,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                     </span>
                     {serverTools.length > 0 && (
                       <span className="text-xs text-theme-foreground-muted">
-                        ({serverTools.length} 个工具)
+                        {t('agents.form.toolConfig.toolsCount').replace('{count}', serverTools.length.toString())}
                       </span>
                     )}
                   </div>
@@ -157,7 +159,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                           <button
                             onClick={(e) => handleRemoveTool(tool.id, e)}
                             className="flex-shrink-0 hover:bg-white/20 rounded-sm p-0.5 transition-colors"
-                            title={`移除工具: ${tool.name}`}
+                            title={t('agents.form.toolConfig.removeToolTitle').replace('{name}', tool.name)}
                           >
                             <X className="w-3 h-3 text-white" />
                           </button>
@@ -174,7 +176,7 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                   onClick={() => !disabled && toggleServerExpanded(server.id)}
                   disabled={disabled}
                   className="p-1 rounded hover:bg-theme-background-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-0.5"
-                  title={isExpanded ? '收起工具列表' : '展开工具列表'}
+                  title={isExpanded ? t('agents.form.toolConfig.collapseToolList') : t('agents.form.toolConfig.expandToolList')}
                 >
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4 text-theme-foreground-muted" />
@@ -191,7 +193,9 @@ export const ServerToolSelector: React.FC<ServerToolSelectorProps> = ({
                 <div className="p-3">
                   <div className="flex items-center gap-2 mb-3 text-xs text-theme-foreground-muted">
                     <Axe className="w-3 h-3" />
-                    <span>选择工具 ({selectedServerTools.length}/{serverTools.length})</span>
+                    <span>{t('agents.form.toolConfig.selectTools')
+                      .replace('{selected}', selectedServerTools.length.toString())
+                      .replace('{total}', serverTools.length.toString())}</span>
                   </div>
                   <div className="space-y-2">
                     {serverTools.map(tool => {

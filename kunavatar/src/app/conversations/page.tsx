@@ -13,6 +13,7 @@ import { DateGroupedConversationList, SearchBar } from './components';
 import { Button } from '@/app/model-manager/components/FormComponents';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { authenticatedFetch, useAuthErrorHandler } from '@/lib/utils/auth-utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 function ConversationsPageContent() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -36,6 +37,9 @@ function ConversationsPageContent() {
   // 使用新的通知系统和认证错误处理
   const notification = useNotification();
   const { handleAuthError } = useAuthErrorHandler();
+  
+  // 多语言支持
+  const { t } = useI18n();
 
   // 加载智能体列表
   const fetchAgents = useCallback(async () => {
@@ -48,7 +52,7 @@ function ConversationsPageContent() {
       }
       
       if (!response.ok) {
-        throw new Error('加载智能体列表失败');
+        throw new Error(t('conversations.messages.loadFailed'));
       }
       
       const agentList = await response.json();
@@ -57,7 +61,7 @@ function ConversationsPageContent() {
       console.error('Failed to fetch agents:', err);
       
       // 如果是认证相关错误，触发认证错误处理
-      if (err instanceof Error && err.message.includes('访问令牌')) {
+      if (err instanceof Error && err.message.includes(t('conversations.messages.authError'))) {
         handleAuthError();
       }
       // 不显示错误，因为这不是关键功能
@@ -76,7 +80,7 @@ function ConversationsPageContent() {
           handleAuthError();
           return;
         }
-        throw new Error('加载对话列表失败');
+        throw new Error(t('conversations.messages.loadFailed'));
       }
       
       const data = await response.json();
@@ -84,9 +88,9 @@ function ConversationsPageContent() {
       setConversations(conversationList);
       setFilteredConversations(conversationList);
     } catch (err) {
-      const message = err instanceof Error ? err.message : '加载对话时发生未知错误';
+      const message = err instanceof Error ? err.message : t('conversations.messages.unknownError');
       setError(message);
-      notification.error('加载失败', message);
+      notification.error(t('conversations.messages.loadFailed'), message);
       
       // 如果是token相关错误，触发认证错误处理
       if (message.includes('访问令牌')) {
@@ -170,15 +174,15 @@ function ConversationsPageContent() {
       }
       
       if (!response.ok) {
-        throw new Error('删除对话失败');
+        throw new Error(t('conversations.messages.deleteFailed'));
       }
       
       await fetchConversations();
-      notification.success('删除成功', `对话 "${conversationToDelete.title}" 已删除`);
+      notification.success(t('conversations.messages.deleteSuccess'), t('conversations.messages.deleteSuccessDesc').replace('{title}', conversationToDelete.title));
     } catch (err) {
-      const message = err instanceof Error ? err.message : '删除对话失败';
+      const message = err instanceof Error ? err.message : t('conversations.messages.deleteFailed');
       setError(message);
-      notification.error('删除失败', message);
+      notification.error(t('conversations.messages.deleteFailed'), message);
       
       // 如果是token相关错误，触发认证错误处理
       if (message.includes('访问令牌')) {
@@ -248,11 +252,11 @@ function ConversationsPageContent() {
         });
         
         if (response.status === 401) {
-          throw new Error('认证失败，请重新登录');
+          throw new Error(t('conversations.messages.authError'));
         }
         
         if (!response.ok) {
-          throw new Error(`删除对话 ${conversationId} 失败`);
+          throw new Error(t('conversations.messages.deleteFailed').replace('{id}', conversationId));
         }
         return conversationId;
       });
@@ -260,18 +264,18 @@ function ConversationsPageContent() {
       await Promise.all(deletePromises);
       
       await fetchConversations();
-      notification.success('批量删除成功', `已删除 ${selectedConversations.size} 个对话`);
+      notification.success(t('conversations.messages.batchDeleteSuccess'), t('conversations.messages.batchDeleteSuccessDesc').replace('{count}', selectedConversations.size.toString()));
       
       // 退出选择模式
       setIsSelectionMode(false);
       setSelectedConversations(new Set());
     } catch (err) {
-      const message = err instanceof Error ? err.message : '批量删除失败';
+      const message = err instanceof Error ? err.message : t('conversations.messages.batchDeleteFailed');
       setError(message);
-      notification.error('批量删除失败', message);
+      notification.error(t('conversations.messages.batchDeleteFailed'), message);
       
       // 如果是认证相关错误，触发认证错误处理
-      if (message.includes('认证失败') || message.includes('访问令牌')) {
+      if (message.includes(t('conversations.messages.authError')) || message.includes('访问令牌')) {
         handleAuthError();
       }
     } finally {
@@ -287,7 +291,7 @@ function ConversationsPageContent() {
           conversations={conversations}
         />
         <div className="flex-1">
-          <PageLoading text="loading..." fullScreen={true} />
+          <PageLoading text={t('conversations.loading')} fullScreen={true} />
         </div>
       </div>
     );
@@ -310,10 +314,10 @@ function ConversationsPageContent() {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between" style={{ gap: 'var(--spacing-md)' }}>
                   <div>
                     <h1 className="page-title">
-                      对话历史
+                      {t('conversations.title')}
                     </h1>
                     <p className="page-subtitle mt-2">
-                      查看和管理所有历史对话记录 · 共 {conversations.length} 个对话
+                      {t('conversations.subtitle').replace('{count}', conversations.length.toString())}
                     </p>
                   </div>
                   <div className="flex-shrink-0 flex items-center" style={{ gap: 'var(--spacing-sm)' }}>
@@ -326,7 +330,7 @@ function ConversationsPageContent() {
                           style={{ gap: 'var(--spacing-xs)' }}
                         >
                           <CheckSquare className="w-4 h-4" />
-                          <span className="hidden sm:inline">批量选择</span>
+                          <span className="hidden sm:inline">{t('conversations.actions.batchSelect')}</span>
                         </Button>
                         <Button
                           onClick={handleCreateConversation}
@@ -339,7 +343,7 @@ function ConversationsPageContent() {
                           }}
                         >
                           <Plus className="w-4 h-4" />
-                          <span className="hidden sm:inline">新建对话</span>
+                          <span className="hidden sm:inline">{t('conversations.actions.newConversation')}</span>
                         </Button>
                       </>
                     ) : (
@@ -357,14 +361,14 @@ function ConversationsPageContent() {
                               <Square className="w-4 h-4" />
                             )}
                             <span className="hidden sm:inline">
-                              {selectedConversations.size === filteredConversations.length ? '取消全选' : '全选'}
+                              {selectedConversations.size === filteredConversations.length ? t('conversations.actions.deselectAll') : t('conversations.actions.selectAll')}
                             </span>
                           </Button>
                           <span style={{ 
                             fontSize: 'var(--font-size-sm)', 
                             color: 'var(--color-foreground-muted)' 
                           }}>
-                            已选择 {selectedConversations.size} 个
+                            {t('conversations.selection.selected').replace('{count}', selectedConversations.size.toString())}
                           </span>
                         </div>
                         <div className="flex items-center" style={{ gap: 'var(--spacing-xs)' }}>
@@ -379,7 +383,7 @@ function ConversationsPageContent() {
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
-                            <span className="hidden sm:inline">删除选中</span>
+                            <span className="hidden sm:inline">{t('conversations.actions.deleteSelected')}</span>
                           </Button>
                           <Button
                             onClick={toggleSelectionMode}
@@ -387,7 +391,7 @@ function ConversationsPageContent() {
                             className="flex items-center"
                             style={{ gap: 'var(--spacing-xs)' }}
                           >
-                            取消
+                            {t('conversations.actions.cancel')}
                           </Button>
                         </div>
                       </>
@@ -399,7 +403,7 @@ function ConversationsPageContent() {
                   <SearchBar
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
-                    placeholder="搜索对话标题或模型..."
+                    placeholder={t('conversations.search.placeholder')}
                   />
                 </div>
               </div>
@@ -419,7 +423,7 @@ function ConversationsPageContent() {
                         <div style={{ color: 'var(--color-error)', marginBottom: 'var(--spacing-xs)', fontSize: 'var(--font-size-4xl)' }}>⚠️</div>
                         <p style={{ color: 'var(--color-foreground-muted)', marginBottom: 'var(--spacing-md)' }}>{error}</p>
                         <Button onClick={fetchConversations} variant="primary">
-                          重试
+                          {t('conversations.actions.retry')}
                         </Button>
                       </div>
                     </div>
@@ -428,7 +432,7 @@ function ConversationsPageContent() {
                       <div className="text-center">
                         <MessageSquare className="w-16 h-16 mx-auto" style={{ color: 'var(--color-foreground-muted)', marginBottom: 'var(--spacing-md)' }} />
                         <p style={{ color: 'var(--color-foreground-muted)', marginBottom: 'var(--spacing-md)' }}>
-                          {searchQuery ? '未找到匹配的对话' : '暂无对话历史'}
+                          {searchQuery ? t('conversations.empty.noSearchResults') : t('conversations.empty.noConversations')}
                         </p>
                       </div>
                     </div>
@@ -454,16 +458,16 @@ function ConversationsPageContent() {
       <Modal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="删除对话"
+        title={t('conversations.deleteModal.title')}
         actions={[
           {
-            label: '取消',
+            label: t('conversations.deleteModal.cancel'),
             onClick: () => setDeleteModalOpen(false),
             variant: 'secondary',
             disabled: isProcessing
           },
           {
-            label: isProcessing ? '删除中...' : '确认删除',
+            label: isProcessing ? t('conversations.deleteModal.deleting') : t('conversations.deleteModal.confirm'),
             onClick: confirmDeleteConversation,
             variant: 'danger',
             disabled: isProcessing
@@ -472,10 +476,10 @@ function ConversationsPageContent() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           <p style={{ color: 'var(--color-foreground)' }}>
-            确定要删除对话 <strong>&ldquo;{conversationToDelete?.title}&rdquo;</strong> 吗？
+            {t('conversations.deleteModal.content').replace('{title}', conversationToDelete?.title || '')}
           </p>
           <p style={{ color: 'var(--color-foreground-muted)', fontSize: 'var(--font-size-sm)' }}>
-            此操作将永久删除对话及其所有消息，无法恢复。
+            {t('conversations.deleteModal.warning')}
           </p>
         </div>
       </Modal>
@@ -484,16 +488,16 @@ function ConversationsPageContent() {
       <Modal
         open={batchDeleteModalOpen}
         onClose={() => setBatchDeleteModalOpen(false)}
-        title="批量删除对话"
+        title={t('conversations.batchDeleteModal.title')}
         actions={[
           {
-            label: '取消',
+            label: t('conversations.batchDeleteModal.cancel'),
             onClick: () => setBatchDeleteModalOpen(false),
             variant: 'secondary',
             disabled: isProcessing
           },
           {
-            label: isProcessing ? '删除中...' : '确认删除',
+            label: isProcessing ? t('conversations.batchDeleteModal.deleting') : t('conversations.batchDeleteModal.confirm'),
             onClick: confirmBatchDelete,
             variant: 'danger',
             disabled: isProcessing
@@ -502,10 +506,10 @@ function ConversationsPageContent() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           <p style={{ color: 'var(--color-foreground)' }}>
-            确定要删除选中的 <strong>{selectedConversations.size}</strong> 个对话吗？
+            {t('conversations.batchDeleteModal.content').replace('{count}', selectedConversations.size.toString())}
           </p>
           <p style={{ color: 'var(--color-foreground-muted)', fontSize: 'var(--font-size-sm)' }}>
-            此操作将永久删除这些对话及其所有消息，无法恢复。
+            {t('conversations.batchDeleteModal.warning')}
           </p>
           {selectedConversations.size > 0 && (
             <div style={{ 
@@ -520,7 +524,7 @@ function ConversationsPageContent() {
                 color: 'var(--color-foreground-muted)',
                 marginBottom: 'var(--spacing-xs)'
               }}>
-                将要删除的对话：
+                {t('conversations.batchDeleteModal.listTitle')}
               </p>
               {Array.from(selectedConversations).map(id => {
                 const conversation = conversations.find(conv => conv.id === id);

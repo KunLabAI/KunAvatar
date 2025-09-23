@@ -3,6 +3,7 @@
 import React from 'react';
 import { Brain } from 'lucide-react';
 import { FormInput } from './FormSection';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface MemorySettingsProps {
   memoryEnabled: boolean;
@@ -15,19 +16,20 @@ export const MemorySettings: React.FC<MemorySettingsProps> = ({
   memoryLoading,
   onMemoryEnabledChange
 }) => {
+  const { t } = useI18n();
   if (memoryLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-theme-primary"></div>
-        <span className="ml-2 text-theme-foreground-muted">加载记忆设置...</span>
+        <span className="ml-2 text-theme-foreground-muted">{t('agents.form.memory.loadingSettings')}</span>
       </div>
     );
   }
 
   return (
     <FormInput 
-      label="启用记忆功能"
-      hint="开启后，智能体将自动总结对话历史，节省上下文空间。详细配置请前往设置页面。"
+      label={t('agents.form.memory.enableMemory')}
+      hint={t('agents.form.memory.hint')}
     >
       <div className="flex items-center gap-3">
         <button
@@ -44,7 +46,7 @@ export const MemorySettings: React.FC<MemorySettingsProps> = ({
           />
         </button>
         <span className="text-sm text-theme-foreground-muted">
-          {memoryEnabled ? '已启用' : '已关闭'}
+          {memoryEnabled ? t('agents.form.memory.enabled') : t('agents.form.memory.disabled')}
         </span>
         <Brain className={`w-4 h-4 ${memoryEnabled ? 'text-theme-primary' : 'text-gray-400'}`} />
       </div>

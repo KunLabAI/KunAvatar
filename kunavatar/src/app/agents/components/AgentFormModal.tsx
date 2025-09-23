@@ -13,6 +13,7 @@ import {
   useAgentForm,
   AgentFormModalProps
 } from './form-components';
+import { useI18n } from '@/contexts/I18nContext';
 
 const AgentFormModal: React.FC<AgentFormModalProps> = ({
   agent,
@@ -22,6 +23,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
   availableServers,
   allAvailableTools,
 }) => {
+  const { t } = useI18n();
   const {
     formData,
     setFormData,
@@ -81,10 +83,10 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
               </div>
               <div>
                 <h2 className="page-title text-theme-foreground">
-                  {isEditMode ? '编辑智能体' : '创建智能体'}
+                  {isEditMode ? t('agents.form.editTitle') : t('agents.form.createTitle')}
                 </h2>
                 <p className="text-theme-foreground-muted text-sm">
-                  配置智能体的模型、工具和行为特征
+                  {t('agents.form.subtitle')}
                 </p>
               </div>
             </div>
@@ -103,17 +105,17 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
               <div className="flex items-start gap-3 p-4 bg-theme-error/10 border border-theme-error/20 text-theme-error rounded-lg">
                 <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">操作失败</p>
+                  <p className="font-medium">{t('agents.form.operationFailed')}</p>
                   <p className="text-sm mt-1">{apiError}</p>
                 </div>
               </div>
             )}
             
             {/* 基本信息 */}
-            <FormSection title="基本信息">
+            <FormSection title={t('agents.form.sections.basicInfo')}>
               <div className="grid grid-cols-1 gap-6">
                 <FormInput 
-                  label="头像" 
+                  label={t('agents.form.fields.avatar')} 
                   error={getFieldError('avatar')}
                 >
                   <AvatarUpload
@@ -124,7 +126,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                 </FormInput>
                 
                 <FormInput 
-                  label="智能体名称" 
+                  label={t('agents.form.fields.name')} 
                   required 
                   error={getFieldError('name')}
                 >
@@ -133,29 +135,29 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="form-input-base"
-                    placeholder="such as: Lucy、Tifa Lockhart、2B..."
+                    placeholder={t('agents.form.fields.namePlaceholder')}
                   />
                 </FormInput>
                 
                 <FormInput 
-                  label="描述" 
+                  label={t('agents.form.fields.description')} 
                   error={getFieldError('description')}
                 >
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     className="form-input-base h-20 resize-none"
-                    placeholder="描述这个智能体的主要功能和使用场景..."
+                    placeholder={t('agents.form.fields.descriptionPlaceholder')}
                   />
                 </FormInput>
               </div>
             </FormSection>
 
             {/* 模型配置 */}
-            <FormSection title="模型配置">
+            <FormSection title={t('agents.form.sections.modelConfig')}>
               <div className="grid grid-cols-1 gap-6">
                 <FormInput 
-                  label="搭载模型" 
+                  label={t('agents.form.fields.model')} 
                   required 
                   error={getFieldError('model_id')}
                 >
@@ -198,7 +200,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                         <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <div>
                            {validationResult.isValid ? (
-                             <span>{validationResult.message || '✅ 模型支持工具调用功能'}</span>
+                             <span>{validationResult.message || t('agents.form.validation.modelSupportsTools')}</span>
                            ) : (
                              <span>{validationResult.message}</span>
                            )}
@@ -213,12 +215,12 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
             </FormSection>
             
             {/* 工具配置 */}
-            <FormSection title="工具配置">
+            <FormSection title={t('agents.form.sections.toolConfig')}>
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-theme-foreground block">
-                      MCP服务器和工具
+                      {t('agents.form.fields.mcpServersAndTools')}
                     </label>
                     {(formData.server_ids.length > 0 || formData.tool_ids.length > 0) && (
                       <button
@@ -228,7 +230,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                           setApiError(null);
                         }}
                         className="flex items-center gap-2 text-theme-error hover:bg-theme-error/10 "
-                        title="清除所有选择"
+                        title={t('agents.form.toolConfig.clearAll')}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -247,7 +249,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                         }}
                         onToolChange={(toolIds) => {
                           if (toolIds.length > 10) {
-                            setApiError("最多只能选择10个工具");
+                            setApiError(t('agents.form.validation.maxToolsError'));
                             return;
                           }
                           setApiError(null);
@@ -259,7 +261,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                       {formData.tool_ids.length >= 10 && (
                         <p className="text-sm text-theme-warning flex items-center gap-2">
                           <AlertCircle className="w-4 h-4" />
-                          已达到最大工具数量限制
+                          {t('agents.form.validation.maxToolsReached')}
                         </p>
                       )}
                     </div>
@@ -267,14 +269,16 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                     <div className="p-4 bg-theme-background-tertiary rounded-lg">
                       <div className="flex items-center gap-2 text-theme-foreground-muted">
                         <AlertCircle className="w-5 h-5" />
-                        <p className="text-sm">暂无可用的MCP服务器</p>
+                        <p className="text-sm">{t('agents.form.toolConfig.noServersAvailable')}</p>
                       </div>
                     </div>
                   )}
                    </div>
                    {(formData.server_ids.length > 0 || formData.tool_ids.length > 0) && (
                      <p className="text-xs text-theme-foreground-muted">
-                       已选择 {formData.server_ids.length} 个服务器，{formData.tool_ids.length}/10 个工具
+                       {t('agents.form.validation.toolsSelected')
+                         .replace('{servers}', formData.server_ids.length.toString())
+                         .replace('{tools}', formData.tool_ids.length.toString())}
                      </p>
                    )}
                  </div>
@@ -290,16 +294,16 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
           </div>
 
           {/* 底部操作 */}
-          <div className="p-4 flex justify-between items-center border-t border-theme-border bg-theme-background-secondary">
+          <div className="p-8 flex justify-between items-center border-t border-theme-border bg-theme-background-secondary">
             <div className="flex items-center gap-3">
               {!isEditMode && (
                 <button
                   onClick={resetForm}
                   className="btn-base text-theme-foreground-muted hover:text-theme-foreground hover:bg-theme-background-secondary border border-theme-border px-4 py-2 flex items-center gap-2"
-                  title="重置表单"
+                  title={t('agents.form.resetForm')}
                 >
                   <RotateCcw className="w-4 h-4" />
-                  重置
+                  {t('agents.actions.reset')}
                 </button>
               )}
             </div>
@@ -308,7 +312,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                  onClick={handleClose}
                  className="btn-base btn-secondary px-6 py-3"
                >
-                 取消
+                 {t('agents.actions.cancel')}
                </button>
               <button
                 onClick={handleSubmit}
@@ -316,7 +320,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                 className="btn-base btn-primary px-6 py-3"
               >
                 <Sparkles className="w-4 h-4" />
-                {isSaving ? '保存中...' : (isEditMode ? '更新' : '创建')}
+                {isSaving ? t('agents.actions.saving') : (isEditMode ? t('agents.actions.update') : t('agents.actions.create'))}
               </button>
             </div>
           </div>

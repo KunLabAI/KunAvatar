@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '@/components/Modal';
 import { useNotification } from '@/components/notification/NotificationContext';
 import { formatTime } from '@/lib/utils/time';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface MemoryItem {
   id: number;
@@ -40,6 +41,7 @@ interface AgentMemoryModalProps {
 }
 
 export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentMemoryModalProps) {
+  const { t } = useI18n();
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [stats, setStats] = useState<MemoryStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -73,14 +75,14 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
           setMemories(data.memories || []);
           setStats(data.stats || null);
         } else {
-          setError('获取记忆数据失败');
+          setError(t('agents.memory.messages.loadFailed'));
         }
       } else {
-        setError(`请求失败 (${response.status})`);
+        setError(t('agents.memory.messages.requestFailed').replace('{status}', response.status.toString()));
       }
     } catch (err) {
-      setError('网络错误');
-      console.error('加载记忆失败:', err);
+      setError(t('agents.memory.messages.networkError'));
+      console.error(t('agents.memory.messages.loadError'), err);
     } finally {
       setLoading(false);
     }
@@ -157,7 +159,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
   // 保存编辑
   const handleSaveEdit = async (memoryId: number) => {
     if (editingContent.trim() === '') {
-      notification.error('记忆内容不能为空');
+      notification.error(t('agents.memory.messages.contentEmpty'));
       return;
     }
     
@@ -171,7 +173,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
       try {
         parsedData = JSON.parse(editingContent);
       } catch (error) {
-        notification.error('JSON格式错误，请检查格式');
+        notification.error(t('agents.memory.messages.jsonFormatError'));
         return;
       }
       
@@ -198,15 +200,15 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
         loadMemories();
         setEditingMemoryId(null);
         setEditingContent('');
-        notification.success('记忆更新成功');
+        notification.success(t('agents.memory.messages.updateSuccess'));
       } else {
         const errorData = await updateResponse.json();
-        notification.error(`更新失败: ${errorData.error}`);
+        notification.error(t('agents.memory.messages.updateFailed').replace('{error}', errorData.error));
       }
       
     } catch (error) {
-      console.error('更新记忆时发生错误:', error);
-      notification.error('更新记忆失败，请稍后重试');
+      console.error(t('agents.memory.messages.updateErrorConsole'), error);
+      notification.error(t('agents.memory.messages.updateError'));
     } finally {
       setIsProcessing(false);
     }
@@ -249,14 +251,14 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
         setDeleteModalOpen(false);
         setMemoryToDelete(null);
         
-        notification.success('记忆删除成功');
+        notification.success(t('agents.memory.messages.deleteSuccess'));
       } else {
         const errorData = await response.json();
-        notification.error(`删除失败: ${errorData.error}`);
+        notification.error(t('agents.memory.messages.deleteFailed').replace('{error}', errorData.error));
       }
     } catch (error) {
-      console.error('删除记忆时发生错误:', error);
-      notification.error('删除记忆失败，请稍后重试');
+      console.error(t('agents.memory.messages.deleteErrorConsole'), error);
+      notification.error(t('agents.memory.messages.deleteError'));
     } finally {
       setIsProcessing(false);
     }
@@ -264,7 +266,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
 
   // 格式化记忆内容用于列表显示
   const formatMemoryContent = (content: string): string => {
-    if (!content) return '无内容';
+    if (!content) return t('agents.memory.messages.noContent');
     
     // 如果内容太长，截取前100个字符
     if (content.length > 100) {
@@ -382,11 +384,13 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                   </div>
                   <div>
                     <h2 className="page-title text-theme-foreground">
-                      {agentName} 的记忆
+                      {t('agents.memory.title').replace('{name}', agentName)}
                     </h2>
                     {stats && (
                       <p className="text-theme-foreground-muted text-sm">
-                        共 {stats.total_memories} 条记忆，节省 {stats.total_tokens_saved} tokens
+                        {t('agents.memory.statsInfo')
+                          .replace('{count}', stats.total_memories.toString())
+                          .replace('{tokens}', stats.total_tokens_saved.toString())}
                       </p>
                     )}
                   </div>
@@ -404,14 +408,14 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-16 w-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mb-4"></div>
-                    <p className="text-theme-foreground-muted">加载记忆中...</p>
+                    <p className="text-theme-foreground-muted">{t('agents.memory.loading')}</p>
                   </div>
                 ) : error ? (
                   <div className="flex flex-col items-center justify-center py-16 w-full">
                     <div className="w-16 h-16 rounded-xl bg-theme-error/10 flex items-center justify-center mb-4">
                       <Brain className="w-8 h-8 text-theme-error" />
                     </div>
-                    <h3 className="text-lg font-medium text-theme-foreground mb-2">加载失败</h3>
+                    <h3 className="text-lg font-medium text-theme-foreground mb-2">{t('agents.memory.loadFailed')}</h3>
                     <p className="text-theme-error text-center max-w-md">{error}</p>
                   </div>
                 ) : memories.length === 0 ? (
@@ -419,14 +423,14 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                     <div className="w-16 h-16 rounded-xl bg-theme-primary/10 flex items-center justify-center mb-4">
                       <Brain className="w-8 h-8 text-theme-primary" />
                     </div>
-                    <h3 className="text-lg font-medium text-theme-foreground mb-2">暂无记忆</h3>
+                    <h3 className="text-lg font-medium text-theme-foreground mb-2">{t('agents.memory.empty.title')}</h3>
                   </div>
                 ) : (
                   <>
                     {/* 左侧：记忆简述列表 */}
                     <div className="w-1/3 border-r border-theme-border flex flex-col">
                       <div className="p-6 border-b border-theme-border">
-                        <h3 className="text-lg font-medium text-theme-foreground">记忆列表</h3>
+                        <h3 className="text-lg font-medium text-theme-foreground">{t('agents.memory.memoryList')}</h3>
                       </div>
                       <div className="flex-1 overflow-y-auto scrollbar-thin">
                         <div className="p-4 space-y-2">
@@ -477,7 +481,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                             {/* 标题和操作按钮 */}
                             <div className="flex items-center justify-between mb-4 flex-shrink-0">
                               <h4 className="text-lg font-medium text-theme-foreground">
-                                {editingMemoryId === selectedMemory.id ? '编辑记忆' : '记忆内容'}
+                                {editingMemoryId === selectedMemory.id ? t('agents.memory.editMemory') : t('agents.memory.memoryContent')}
                               </h4>
                               <div className="flex items-center gap-2">
                                 {editingMemoryId === selectedMemory.id ? (
@@ -486,13 +490,13 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                                       onClick={() => handleSaveEdit(selectedMemory.id)}
                                       className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors duration-200 font-medium text-sm"
                                     >
-                                      保存
+                                      {t('agents.memory.actions.save')}
                                     </button>
                                     <button
                                       onClick={handleCancelEdit}
                                       className="px-4 py-2 bg-theme-background border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card transition-colors duration-200 text-sm"
                                     >
-                                      取消
+                                      {t('agents.memory.actions.cancel')}
                                     </button>
                                   </>
                                 ) : (
@@ -500,14 +504,14 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                                     <button
                                       onClick={() => handleEditMemory(selectedMemory.id)}
                                       className="w-9 h-9 rounded-lg bg-theme-background hover:bg-theme-primary/10 flex items-center justify-center text-theme-foreground-muted hover:text-theme-primary transition-all duration-200 border border-theme-border"
-                                      title="编辑记忆"
+                                      title={t('agents.memory.actions.edit')}
                                     >
                                       <Edit3 className="w-4 h-4" />
                                     </button>
                                     <button
                                       onClick={() => handleDeleteMemory(selectedMemory)}
                                       className="w-9 h-9 rounded-lg bg-theme-background hover:bg-theme-error/10 flex items-center justify-center text-theme-foreground-muted hover:text-theme-error transition-all duration-200 border border-theme-border"
-                                      title="删除记忆"
+                                      title={t('agents.memory.actions.delete')}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </button>
@@ -524,7 +528,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                                   value={editingContent}
                                   onChange={(e) => setEditingContent(e.target.value)}
                                   className="w-full h-full p-4 text-sm bg-transparent border-none resize-none focus:outline-none font-mono text-theme-foreground"
-                                  placeholder="请输入JSON格式的记忆内容..."
+                                  placeholder={t('agents.memory.placeholder.editContent')}
                                   autoFocus
                                 />
                               ) : (
@@ -548,7 +552,7 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
                   <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-2 shadow-lg">
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-theme-primary"></div>
-                      <span className="text-sm text-theme-foreground">处理中...</span>
+                      <span className="text-sm text-theme-foreground">{t('agents.memory.messages.processing')}</span>
                     </div>
                   </div>
                 </div>
@@ -560,16 +564,16 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
           <Modal
             open={deleteModalOpen}
             onClose={() => { setDeleteModalOpen(false); setMemoryToDelete(null); }}
-            title="确认删除记忆"
+            title={t('agents.memory.deleteModal.title')}
             icon={<AlertTriangle className="w-6 h-6 text-theme-warning" />}
             actions={[
               {
-                label: '取消',
+                label: t('agents.memory.deleteModal.cancel'),
                 onClick: () => { setDeleteModalOpen(false); setMemoryToDelete(null); },
                 variant: 'secondary',
               },
               {
-                label: '确认删除',
+                label: t('agents.memory.deleteModal.confirm'),
                 onClick: confirmDeleteMemory,
                 variant: 'danger',
                 autoFocus: true,
@@ -580,10 +584,10 @@ export function AgentMemoryModal({ isOpen, onClose, agentId, agentName }: AgentM
           >
             {memoryToDelete && (
               <span>
-                确定要删除这条记忆吗？此操作不可撤销。
+                {t('agents.memory.deleteModal.content')}
                 <br />
                 <span className="text-theme-foreground-muted text-sm mt-2 block">
-                  记忆内容：{formatMemoryContent(memoryToDelete.parsedContent.summary).slice(0, 50)}...
+                  {t('agents.memory.deleteModal.memoryPreview').replace('{content}', formatMemoryContent(memoryToDelete.parsedContent.summary).slice(0, 50))}
                 </span>
               </span>
             )}

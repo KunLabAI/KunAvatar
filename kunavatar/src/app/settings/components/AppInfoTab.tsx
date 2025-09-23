@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Users, Globe, Mail, Package, Info, Code, Download, RefreshCw, CheckCircle, AlertCircle, History, ExternalLink } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 import { useNotification } from '@/components/notification';
 import { MarkdownRenderer } from '../../chat/components/ui/MarkdownRenderer';
 
@@ -12,6 +13,7 @@ interface AppInfoTabProps {
 }
 
 export function AppInfoTab({}: AppInfoTabProps) {
+  const { t } = useI18n();
   const notification = useNotification();
   
   // 状态管理
@@ -62,7 +64,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
         setAppInfo(info);
       }
     } catch (error) {
-      console.error('获取应用信息失败:', error);
+      console.error(t('settings.appinfo.getAppInfoFailed') + ':', error);
     }
   };
 
@@ -87,7 +89,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
         }
       }
     } catch (error) {
-      console.error('获取版本历史失败:', error);
+      console.error(t('settings.appinfo.getVersionHistoryFailed') + ':', error);
       // 出错时尝试获取本地版本历史
       try {
         if (window.electronAPI) {
@@ -95,7 +97,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
           setVersionHistory(localHistory || []);
         }
       } catch (localError) {
-        console.error('获取本地版本历史也失败:', localError);
+        console.error(t('settings.appinfo.getLocalVersionHistoryFailed') + ':', localError);
         setVersionHistory([]);
       }
     }
@@ -114,13 +116,13 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setUpdateStatus('available');
       setUpdateInfo(info);
       setIsCheckingUpdate(false);
-      notification.info('发现新版本', `新版本 ${info.version} 可用`);
+      notification.info(t('settings.appinfo.updateAvailable'), t('settings.appinfo.newVersionAvailable').replace('{version}', info.version));
     });
 
     window.electronAPI.onUpdateNotAvailable(() => {
       setUpdateStatus('idle');
       setIsCheckingUpdate(false);
-      notification.success('已是最新版本', '当前版本已是最新版本');
+      notification.success(t('settings.appinfo.latestVersion'), t('settings.appinfo.currentVersionLatest'));
     });
 
     window.electronAPI.onUpdateError((error) => {
@@ -146,7 +148,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
         );
         
         if (isDevelopmentError) {
-          console.warn('开发模式更新检查错误（已忽略）:', errorMessage);
+          console.warn(t('settings.appinfo.developmentUpdateError') + ':', errorMessage);
           return null; // 不显示给用户
         }
         
@@ -156,8 +158,8 @@ export function AppInfoTab({}: AppInfoTabProps) {
             errorMessage.includes('ECONNREFUSED') ||
             errorMessage.includes('ENOTFOUND')) {
           return {
-            title: '网络连接问题',
-            message: '无法连接到更新服务器，请检查网络连接后重试'
+            title: t('settings.appinfo.networkError'),
+            message: t('settings.appinfo.networkErrorDesc')
           };
         }
         
@@ -166,8 +168,8 @@ export function AppInfoTab({}: AppInfoTabProps) {
             errorMessage.includes('api.github.com') ||
             errorMessage.includes('releases')) {
           return {
-            title: 'GitHub服务暂时不可用',
-            message: '无法访问GitHub更新服务，请稍后重试'
+            title: t('settings.appinfo.githubUnavailable'),
+            message: t('settings.appinfo.githubUnavailableDesc')
           };
         }
         
@@ -175,8 +177,8 @@ export function AppInfoTab({}: AppInfoTabProps) {
         if (errorMessage.includes('No published versions') ||
             errorMessage.includes('no releases found')) {
           return {
-            title: '暂无可用版本',
-            message: '当前项目暂未发布正式版本，请关注项目更新'
+            title: t('settings.appinfo.noVersionsAvailable'),
+            message: t('settings.appinfo.noVersionsDesc')
           };
         }
         
@@ -184,15 +186,15 @@ export function AppInfoTab({}: AppInfoTabProps) {
         if (errorMessage.includes('permission') || 
             errorMessage.includes('EACCES')) {
           return {
-            title: '权限不足',
-            message: '没有足够权限执行更新操作，请以管理员身份运行'
+            title: t('settings.appinfo.permissionDenied'),
+            message: t('settings.appinfo.permissionDeniedDesc')
           };
         }
         
         // 其他未知错误
         return {
-          title: '更新检查失败',
-          message: '检查更新时遇到问题，请稍后重试'
+          title: t('settings.appinfo.updateCheckFailed'),
+          message: t('settings.appinfo.updateCheckFailedGeneric')
         };
       };
       
@@ -213,13 +215,13 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setUpdateStatus('downloaded');
       setIsDownloading(false);
       setDownloadProgress(100);
-      notification.success('下载完成', '更新已下载完成，重启应用以安装更新');
+      notification.success(t('settings.appinfo.downloadCompleted'), t('settings.appinfo.updateDownloadedRestart'));
     });
 
     // 监听开发模式下的模拟安装事件
     if (window.electronAPI.onUpdateInstallSimulated) {
       window.electronAPI.onUpdateInstallSimulated((data) => {
-        notification.info('开发模式', data.message);
+        notification.info(t('settings.appinfo.developmentMode'), data.message);
       });
     }
   };
@@ -227,7 +229,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
   // 检查更新
   const handleCheckUpdate = async () => {
     if (!window.electronAPI) {
-      notification.warning('功能限制', '更新检查功能仅在桌面应用中可用');
+      notification.warning(t('settings.appinfo.functionalityLimited'), t('settings.appinfo.updateOnlyDesktop'));
       return;
     }
 
@@ -243,7 +245,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setUpdateStatus('error');
       const errorMsg = error instanceof Error ? error.message : String(error);
       setLastError(errorMsg);
-      notification.error('检查更新失败', '无法启动更新检查，请稍后重试');
+      notification.error(t('settings.appinfo.checkUpdateFailed'), t('settings.appinfo.cannotStartUpdateCheck'));
     }
   };
 
@@ -261,7 +263,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
       setUpdateStatus('error');
       const errorMsg = error instanceof Error ? error.message : String(error);
       setLastError(errorMsg);
-      notification.error('下载失败', '更新下载失败，请稍后重试');
+      notification.error(t('settings.appinfo.downloadFailed'), t('settings.appinfo.updateDownloadFailed'));
     }
   };
 
@@ -275,7 +277,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       setLastError(errorMsg);
       setUpdateStatus('error');
-      notification.error('安装失败', '更新安装失败，请稍后重试');
+      notification.error(t('settings.appinfo.installFailed'), t('settings.appinfo.updateInstallFailed'));
     }
   };
 
@@ -289,20 +291,20 @@ export function AppInfoTab({}: AppInfoTabProps) {
       <div className="space-y-6">
         <div className="flex items-center gap-2 mb-6">
         <Info className="w-5 h-5" />
-        <h2 className="text-xl font-semibold text-theme-foreground">应用信息</h2>
+        <h2 className="text-xl font-semibold text-theme-foreground">{t('settings.appinfo.title')}</h2>
       </div>
         
         <div className="space-y-8">
         {/* 应用详情板块 */}
         <div className="bg-theme-card rounded-lg p-6 ">
-          <h3 className="text-lg font-semibold text-theme-foreground mb-4">应用详情</h3>
+          <h3 className="text-lg font-semibold text-theme-foreground mb-4">{t('settings.appinfo.appDetails')}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 开发团队 */}
             <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
               <div className="flex items-center gap-3 mb-3">
                 <Code className="w-5 h-5 text-theme-primary" />
-                <h3 className="font-medium text-theme-foreground">开发团队</h3>
+                <h3 className="font-medium text-theme-foreground">{t('settings.appinfo.developmentTeam')}</h3>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -324,7 +326,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
             <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
               <div className="flex items-center gap-3 mb-3">
                 <Globe className="w-5 h-5 text-theme-primary" />
-                <h3 className="font-medium text-theme-foreground">官方网站</h3>
+                <h3 className="font-medium text-theme-foreground">{t('settings.appinfo.officialWebsite')}</h3>
               </div>
               <a 
                 href="https://kunlabai.com" 
@@ -340,7 +342,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
             <div className="bg-theme-card rounded-lg p-4 border border-theme-border md:col-span-2">
               <div className="flex items-center gap-3 mb-3">
                 <Mail className="w-5 h-5 text-theme-primary" />
-                <h3 className="font-medium text-theme-foreground">支持邮箱</h3>
+                <h3 className="font-medium text-theme-foreground">{t('settings.appinfo.supportEmail')}</h3>
               </div>
               <a 
                 href="mailto:info@kunpuai.com" 
@@ -350,7 +352,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                 <Mail className="w-4 h-4" />
               </a>
               <p className="text-theme-foreground-muted text-sm mt-2">
-                如有任何问题或建议，请随时联系我们的支持团队
+                {t('settings.appinfo.supportDescription')}
               </p>
             </div>
           </div>
@@ -358,13 +360,13 @@ export function AppInfoTab({}: AppInfoTabProps) {
 
         {/* 版本信息板块 */}
         <div className="bg-theme-card rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-theme-foreground mb-4">版本信息</h3>
+          <h3 className="text-lg font-semibold text-theme-foreground mb-4">{t('settings.appinfo.versionInfo')}</h3>
 
           {/* 当前版本信息 */}
           <div className="bg-theme-card rounded-lg p-4 border border-theme-border mb-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h4 className="font-medium text-theme-foreground mb-1">当前版本</h4>
+                <h4 className="font-medium text-theme-foreground mb-1">{t('settings.appinfo.currentVersion')}</h4>
                 {isElectron && appInfo && (
                   <p className="text-sm text-theme-foreground-muted">
                     {appInfo.platform} • {appInfo.arch}
@@ -386,39 +388,39 @@ export function AppInfoTab({}: AppInfoTabProps) {
                   {updateStatus === 'checking' && (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin text-theme-primary" />
-                      <span className="text-sm text-theme-foreground-muted">正在检查更新...</span>
+                      <span className="text-sm text-theme-foreground-muted">{t('settings.appinfo.checkingUpdate')}</span>
                     </>
                   )}
                   {updateStatus === 'available' && updateInfo && (
                     <>
                       <AlertCircle className="w-4 h-4 text-orange-500" />
-                      <span className="text-sm text-theme-foreground">发现新版本 v{updateInfo.version}</span>
+                      <span className="text-sm text-theme-foreground">{t('settings.appinfo.updateAvailable')} v{updateInfo.version}</span>
                     </>
                   )}
                   {updateStatus === 'downloading' && (
                     <>
                       <Download className="w-4 h-4 text-theme-primary" />
                       <span className="text-sm text-theme-foreground-muted">
-                        正在下载... {Math.round(downloadProgress)}%
+                        {t('settings.appinfo.downloadingUpdate')} {Math.round(downloadProgress)}%
                       </span>
                     </>
                   )}
                   {updateStatus === 'downloaded' && (
                     <>
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-theme-foreground">更新已下载完成</span>
+                      <span className="text-sm text-theme-foreground">{t('settings.appinfo.updateDownloaded')}</span>
                     </>
                   )}
                   {updateStatus === 'idle' && (
                     <>
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-theme-foreground-muted">已是最新版本</span>
+                      <span className="text-sm text-theme-foreground-muted">{t('settings.appinfo.latestVersion')}</span>
                     </>
                   )}
                   {updateStatus === 'error' && (
                     <>
                       <AlertCircle className="w-4 h-4 text-red-500" />
-                      <span className="text-sm text-red-500">检查更新失败</span>
+                      <span className="text-sm text-red-500">{t('settings.appinfo.updateCheckFailed')}</span>
                     </>
                   )}
                 </div>
@@ -455,7 +457,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                         
                         if (isDevelopmentError) {
                           return {
-                            userMessage: '开发模式下的更新检查功能受限，这是正常现象。在正式发布版本中，更新功能将正常工作。',
+                            userMessage: t('settings.appinfo.developmentModeUpdateLimited'),
                             showDetails: false,
                             severity: 'info'
                           };
@@ -467,7 +469,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                             errorMessage.includes('ECONNREFUSED') ||
                             errorMessage.includes('ENOTFOUND')) {
                           return {
-                            userMessage: '网络连接问题，请检查您的网络连接后重试。',
+                            userMessage: t('settings.appinfo.networkCheckConnection'),
                             showDetails: true,
                             severity: 'warning'
                           };
@@ -478,7 +480,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                             errorMessage.includes('api.github.com') ||
                             errorMessage.includes('releases')) {
                           return {
-                            userMessage: 'GitHub服务暂时不可用，请稍后重试。这可能是由于GitHub服务器维护或网络问题导致的。',
+                            userMessage: t('settings.appinfo.githubServiceUnavailableDesc'),
                             showDetails: true,
                             severity: 'warning'
                           };
@@ -488,7 +490,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                         if (errorMessage.includes('No published versions') ||
                             errorMessage.includes('no releases found')) {
                           return {
-                            userMessage: '当前项目暂未发布正式版本，请关注项目更新。',
+                            userMessage: t('settings.appinfo.noOfficialVersionYet'),
                             showDetails: false,
                             severity: 'info'
                           };
@@ -496,7 +498,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                         
                         // 默认错误
                         return {
-                          userMessage: '检查更新时遇到问题，请稍后重试。',
+                          userMessage: t('settings.appinfo.updateCheckProblem'),
                           showDetails: true,
                           severity: 'error'
                         };
@@ -521,7 +523,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                           {errorDisplay.showDetails && (
                             <details className="mt-2">
                               <summary className={`text-xs ${textColor} cursor-pointer hover:underline`}>
-                                查看技术详情
+                                {t('settings.appinfo.viewTechnicalDetails')}
                               </summary>
                               <p className={`text-xs ${detailColor} mt-1 font-mono bg-white/50 p-2 rounded border`}>
                                 {lastError}
@@ -541,7 +543,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                     disabled={isCheckingUpdate || isDownloading}
                     className="flex items-center gap-2 px-3 py-2 text-sm bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    检查更新
+                    {t('settings.appinfo.checkUpdate')}
                   </button>
 
                   {updateStatus === 'available' && (
@@ -551,7 +553,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                       className="flex items-center gap-2 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <Download className="w-4 h-4" />
-                      下载更新
+                      {t('settings.appinfo.downloadUpdate')}
                     </button>
                   )}
 
@@ -561,7 +563,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                       className="flex items-center gap-2 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
                     >
                       <Package className="w-4 h-4" />
-                      安装并重启
+                      {t('settings.appinfo.installAndRestart')}
                     </button>
                   )}
                 </div>
@@ -574,7 +576,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
             <div className="bg-theme-card rounded-lg p-4 border border-theme-border">
               <h4 className="font-medium text-theme-foreground mb-4 flex items-center gap-2">
                 <History className="w-4 h-4" />
-                更新日志
+                {t('settings.appinfo.updateLog')}
               </h4>
               <div className="space-y-4 max-h-80 rounded-lg overflow-y-auto scrollbar-thin bg-theme-background">
                 {versionHistory.slice(0, 5).map((version, index) => {
@@ -592,7 +594,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                           </div>
                         ) : (
                           <div className="text-theme-foreground-muted">
-                            <p className="text-sm">暂无详细说明</p>
+                            <p className="text-sm">{t('settings.appinfo.noDetailedDescription')}</p>
                           </div>
                         )}
                         
@@ -600,7 +602,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                         {version.source && (
                           <div className="mt-3 flex justify-end">
                             <span className="text-xs px-2 py-1 bg-theme-primary/10 text-theme-primary rounded-full border border-theme-primary/20">
-                              来源: {version.source}
+                              {t('settings.appinfo.source')}: {version.source}
                             </span>
                           </div>
                         )}
@@ -619,7 +621,7 @@ export function AppInfoTab({}: AppInfoTabProps) {
                   className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  查看完整更新日志
+                  {t('settings.appinfo.viewCompleteUpdateLog')}
                 </a>
               </div>
             </div>
@@ -629,10 +631,10 @@ export function AppInfoTab({}: AppInfoTabProps) {
           {!isElectron && (
             <div className="mt-4 text-center">
               <p className="text-theme-foreground-muted text-sm">
-                感谢您使用 Kun Avatar！我们会持续改进产品体验。
+                {t('settings.appinfo.thankYouForUsing')}
               </p>
               <p className="text-theme-foreground-muted text-xs mt-2">
-                更新功能仅在桌面应用中可用
+                {t('settings.appinfo.updateFeatureDesktopOnly')}
               </p>
             </div>
           )}

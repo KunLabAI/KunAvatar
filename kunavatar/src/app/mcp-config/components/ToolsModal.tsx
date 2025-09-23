@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Settings, Play, Axe, Power, PowerOff, Loader2 } from 'lucide-react';
 import { McpTool } from '../types';
 import ModalWrapper from '../../model-manager/components/ModalWrapper';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ToolsModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function ToolsModal({
   onToolUpdate,
   usingToolId
 }: ToolsModalProps) {
+  const { t } = useI18n();
   const [selectedTool, setSelectedTool] = useState<McpTool | null>(null);
   const [toolConfigs, setToolConfigs] = useState<Record<string, ToolConfig>>({});
   const [showConfig, setShowConfig] = useState(false);
@@ -62,7 +64,7 @@ export function ToolsModal({
           });
         }
       } catch (error) {
-        console.error('解析工具参数模式失败:', error);
+        console.error(t('mcp.tools.messages.parseSchemeFailed'), error);
       }
     }
     
@@ -111,13 +113,13 @@ export function ToolsModal({
       });
       
       if (response.ok) {
-        alert('工具配置已保存');
+        alert(t('mcp.tools.messages.configSaved'));
       } else {
-        alert('保存配置失败');
+        alert(t('mcp.tools.messages.saveConfigFailed'));
       }
     } catch (error) {
-      console.error('保存工具配置失败:', error);
-      alert('保存配置失败');
+      console.error(t('mcp.tools.messages.parseSchemeFailed'), error);
+      alert(t('mcp.tools.messages.saveConfigFailed'));
     }
   };
 
@@ -141,10 +143,10 @@ export function ToolsModal({
           onToolUpdate(result.tool);
         }
       } else {
-        console.error('更新工具状态失败');
+        console.error(t('mcp.tools.messages.updateStatusFailed'));
       }
     } catch (error) {
-      console.error('更新工具状态失败:', error);
+      console.error(t('mcp.tools.messages.updateStatusFailed'), error);
     }
   };
 
@@ -154,8 +156,8 @@ export function ToolsModal({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title={`${serverName} - 工具列表`}
-      subtitle={`共 ${tools.length} 个工具`}
+      title={t('mcp.tools.modalTitle').replace('{serverName}', serverName)}
+      subtitle={t('mcp.tools.modalSubtitle').replace('{count}', tools.length.toString())}
       icon={<Axe className="w-6 h-6 text-theme-primary" />}
       maxWidth="4xl"
     >
@@ -166,7 +168,7 @@ export function ToolsModal({
               {!Array.isArray(tools) || tools.length === 0 ? (
                 <div className="text-center py-8">
                   <Axe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-theme-foreground-muted">暂无可用工具</p>
+                  <p className="text-theme-foreground-muted">{t('mcp.tools.empty.title')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -193,7 +195,7 @@ export function ToolsModal({
                               {tool.name}
                             </h5>
                             <p className="text-xs text-theme-foreground-muted mt-1">
-                              {tool.description || '无描述'}
+                              {tool.description || t('mcp.tools.tool.noDescription')}
                             </p>
                           </div>
                           <div className="flex items-center gap-1 ml-2">
@@ -202,7 +204,7 @@ export function ToolsModal({
                                 e.stopPropagation();
                                 toggleToolEnabled(tool);
                               }}
-                              title={tool.enabled ? "禁用工具" : "启用工具"}
+                              title={tool.enabled ? t('mcp.tools.tool.disable') : t('mcp.tools.tool.enable')}
                               className={`p-1 rounded-md transition-colors ${
                                 tool.enabled 
                                   ? 'text-theme-success hover:text-theme-error hover:bg-theme-error/10' 
@@ -227,7 +229,7 @@ export function ToolsModal({
               {!selectedTool ? (
                 <div className="text-center py-8">
                   <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-theme-foreground-muted">选择工具查看详情</p>
+                  <p className="text-theme-foreground-muted">{t('mcp.tools.empty.selectPrompt')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -237,7 +239,7 @@ export function ToolsModal({
                       {selectedTool.name}
                     </h4>
                     <p className="text-sm text-theme-foreground-muted mb-4">
-                      {selectedTool.description || '无描述'}
+                      {selectedTool.description || t('mcp.tools.tool.noDescription')}
                     </p>
                   </div>
 
@@ -245,7 +247,7 @@ export function ToolsModal({
                   {selectedTool.input_schema && (
                     <div>
                       <h5 className="font-medium text-theme-foreground mb-3">
-                        参数配置
+                        {t('mcp.tools.tool.paramConfig')}
                       </h5>
                       {(() => {
                         try {
@@ -255,7 +257,7 @@ export function ToolsModal({
                           
                           if (!schema.properties) {
                             return (
-                              <p className="text-sm text-theme-foreground-muted">该工具无需参数</p>
+                              <p className="text-sm text-theme-foreground-muted">{t('mcp.tools.tool.noParams')}</p>
                             );
                           }
 
@@ -269,10 +271,10 @@ export function ToolsModal({
                                   <div key={key}>
                                     <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
                                       {key}
-                                      {isRequired && <span className="text-red-500 ml-1">*</span>}
+                                      {isRequired && <span className="text-red-500 ml-1">{t('mcp.tools.tool.required')}</span>}
                                     </label>
                                     <p className="text-xs text-theme-foreground-muted mb-2">
-                                      {prop.description || '无描述'}
+                                      {prop.description || t('mcp.tools.tool.noDescription')}
                                     </p>
                                     {prop.type === 'boolean' ? (
                                       <select
@@ -297,7 +299,7 @@ export function ToolsModal({
                                         )}
                                         className="w-full p-2 border border-theme-border rounded-md bg-theme-input text-theme-foreground text-sm"
                                       >
-                                        <option value="">请选择...</option>
+                                        <option value="">{t('mcp.tools.tool.selectOption')}</option>
                                         {prop.enum.map((option: any) => (
                                           <option key={option} value={option}>
                                             {option}
@@ -338,7 +340,7 @@ export function ToolsModal({
                           );
                         } catch (error) {
                           return (
-                            <p className="text-sm text-theme-error">参数模式解析失败</p>
+                            <p className="text-sm text-theme-error">{t('mcp.tools.tool.parseError')}</p>
                           );
                         }
                       })()}
@@ -350,7 +352,7 @@ export function ToolsModal({
                     <button
                       onClick={() => handleUseTool(selectedTool)}
                       disabled={usingToolId === selectedTool.name}
-                      title={usingToolId === selectedTool.name ? "工具执行中..." : "使用工具"}
+                      title={usingToolId === selectedTool.name ? t('mcp.tools.tool.executing') : t('mcp.tools.tool.useTool')}
                       className={`p-3 rounded-full transition-colors ${
                         usingToolId === selectedTool.name
                           ? 'bg-theme-primary/20 text-theme-primary cursor-not-allowed'

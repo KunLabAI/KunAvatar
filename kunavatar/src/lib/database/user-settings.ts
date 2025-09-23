@@ -271,7 +271,8 @@ export class UserSettingOperations {
       themePreference: result['theme-preference'] || 'system',
       colorTheme: result['color-theme'] || 'kun',
       chatStyle: result['chat-style'] || 'assistant',
-      displaySize: result['display-size'] || 'fullscreen'
+      displaySize: result['display-size'] || 'fullscreen',
+      language: result['language'] || 'zh'
     };
   }
 
@@ -283,6 +284,7 @@ export class UserSettingOperations {
     colorTheme?: string;
     chatStyle?: string;
     displaySize?: string;
+    language?: string;
   }): boolean {
     const settingsArray = [];
     
@@ -297,6 +299,9 @@ export class UserSettingOperations {
     }
     if (settings.displaySize) {
       settingsArray.push({ key: 'display-size', value: settings.displaySize });
+    }
+    if (settings.language) {
+      settingsArray.push({ key: 'language', value: settings.language });
     }
     
     return this.setMultipleValues(userId, settingsArray);

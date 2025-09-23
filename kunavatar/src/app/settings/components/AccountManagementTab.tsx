@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Edit, Save, X, Eye, EyeOff, Shield, Mail, Calendar, Check, LogOut } from 'lucide-react';
 import { useNotification } from '@/components/notification';
+import { useI18n } from '@/contexts/I18nContext';
 import { formatTime } from '@/lib/utils/time';
 import { PageLoading } from '@/components/Loading';
 import type { ElectronAPI } from '@/types/electron';
@@ -47,6 +48,7 @@ interface AccountManagementTabProps {
 export function AccountManagementTab({}: AccountManagementTabProps) {
   const router = useRouter();
   const notification = useNotification();
+  const { t } = useI18n();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        notification.error('认证失败', '请先登录');
+        notification.error(t('settings.account.messages.authFailed'), t('settings.account.messages.authFailed'));
         return;
       }
 
@@ -88,12 +90,12 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
           // 认证失败，清除token并跳转到登录页面
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          notification.error('认证失败', '登录已过期，请重新登录');
+          notification.error(t('settings.account.messages.authFailed'), t('settings.account.messages.loginExpired'));
           // 🔧 安全修复：使用安全导航函数替换直接的 window.location.href
           safeNavigateToLogin(500);
           return;
         }
-        throw new Error('获取用户信息失败');
+        throw new Error(t('settings.account.messages.getFailed'));
       }
 
       const data = await response.json();
@@ -110,11 +112,11 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
           email: data.user.email || '',
         });
       } else {
-        notification.error('获取用户信息失败', data.error || '获取用户信息失败');
+        notification.error(t('settings.account.messages.getFailed'), data.error || t('settings.account.messages.getFailed'));
       }
     } catch (error) {
       console.error('获取用户信息失败:', error);
-      notification.error('获取用户信息失败', error instanceof Error ? error.message : '获取用户信息失败');
+      notification.error(t('settings.account.messages.getFailed'), error instanceof Error ? error.message : t('settings.account.messages.getFailed'));
     } finally {
       setLoading(false);
     }
@@ -152,13 +154,13 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
         setUserInfo(userWithRoles);
         setIsEditing(false);
         setError(null);
-        notification.success('更新成功', '用户信息已成功更新');
+        notification.success(t('common.save'), t('settings.account.messages.updateSuccess'));
       } else {
-        notification.error('更新失败', data.error || '更新用户信息失败');
+        notification.error(t('settings.account.messages.updateFailed'), data.error || t('settings.account.messages.updateFailed'));
       }
     } catch (error) {
       console.error('更新用户信息失败:', error);
-      notification.error('更新失败', error instanceof Error ? error.message : '更新用户信息失败');
+      notification.error(t('settings.account.messages.updateFailed'), error instanceof Error ? error.message : t('settings.account.messages.updateFailed'));
     }
   };
 
@@ -170,7 +172,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
       localStorage.removeItem('refreshToken');
       
       // 显示成功消息
-      notification.success('退出成功', '您已成功退出登录');
+      notification.success(t('settings.account.logout'), t('settings.account.messages.logoutSuccess'));
       
       // 🔧 安全修复：使用安全导航函数替换不安全的导航逻辑
       // 检查是否在Electron环境中并传递给安全导航函数
@@ -178,7 +180,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
       safeNavigateToLogin(500, electronAPI);
     } catch (error) {
       console.error('退出登录失败:', error);
-      notification.error('退出失败', '退出登录时发生错误');
+      notification.error(t('settings.account.messages.logoutFailed'), t('settings.account.messages.logoutFailed'));
       
       // 即使出错也要跳转到登录页
       const electronAPI = typeof window !== 'undefined' ? window.electronAPI : undefined;
@@ -191,7 +193,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
     if (!userInfo) return;
 
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      notification.error('密码确认错误', '新密码确认不匹配');
+      notification.error(t('settings.account.messages.passwordMismatch'), t('settings.account.messages.passwordMismatch'));
       return;
     }
 
@@ -219,13 +221,13 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
         });
         setIsChangingPassword(false);
         setError(null);
-        notification.success('密码修改成功', '您的密码已成功更新');
+        notification.success(t('settings.account.changePassword'), t('settings.account.messages.passwordChangeSuccess'));
       } else {
-        notification.error('密码修改失败', data.error || '密码修改失败');
+        notification.error(t('settings.account.messages.passwordChangeFailed'), data.error || t('settings.account.messages.passwordChangeFailed'));
       }
     } catch (error) {
       console.error('密码修改失败:', error);
-      notification.error('密码修改失败', error instanceof Error ? error.message : '密码修改失败');
+      notification.error(t('settings.account.messages.passwordChangeFailed'), error instanceof Error ? error.message : t('settings.account.messages.passwordChangeFailed'));
     }
   };
 
@@ -237,15 +239,9 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
       inactive: 'bg-gray-100 text-gray-800',
       suspended: 'bg-red-100 text-red-800',
     };
-    const labels = {
-      pending: '待审核',
-      active: '活跃',
-      inactive: '未激活',
-      suspended: '已暂停',
-    };
     return (
       <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels]}
+        {t(`settings.account.status.${status}`)}
       </span>
     );
   };
@@ -253,7 +249,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
   if (loading) {
     return (
       <PageLoading 
-        text="loading..." 
+        text={t('common.loading')} 
         fullScreen={false}
       />
     );
@@ -269,7 +265,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
               onClick={fetchUserInfo}
               className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
             >
-              重试
+              {t('common.refresh')}
             </button>
           </div>
         </div>
@@ -281,7 +277,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
     return (
       <section className="bg-theme-card">
         <div className="flex items-center justify-center min-h-[200px]">
-          <p className="text-theme-foreground-muted">未找到用户信息</p>
+          <p className="text-theme-foreground-muted">{t('settings.account.messages.userNotFound')}</p>
         </div>
       </section>
     );
@@ -294,7 +290,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-theme-foreground flex items-center gap-2">
             <User className="w-5 h-5" />
-            账户管理
+            {t('settings.account.title')}
           </h2>
         </div>
 
@@ -303,7 +299,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
           {/* 个人信息卡片 */}
           <div className="bg-theme-card rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-theme-foreground">个人信息</h3>
+              <h3 className="text-lg font-medium text-theme-foreground">{t('settings.account.personalInfo')}</h3>
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
@@ -316,12 +312,12 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">用户名</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.username')}</span>
                 <div className="text-theme-foreground font-medium">{getSafeUserInfo().username}</div>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">邮箱</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.email')}</span>
                 {isEditing ? (
                     <input
                       type="email"
@@ -340,7 +336,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">名字</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.firstName')}</span>
                 {isEditing ? (
                   <input
                     type="text"
@@ -354,7 +350,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">姓氏</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.lastName')}</span>
                 {isEditing ? (
                   <input
                     type="text"
@@ -375,7 +371,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
                   className="btn-base btn-primary"
                 >
                   <Save className="w-4 h-4" />
-                  保存
+                  {t('common.save')}
                 </button>
                 <button
                   onClick={() => {
@@ -389,7 +385,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
                   className="btn-base btn-secondary"
                 >
                   <X className="w-4 h-4" />
-                  取消
+                  {t('common.cancel')}
                 </button>
               </div>
             )}
@@ -397,23 +393,23 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
 
           {/* 账户状态卡片 */}
           <div className="bg-theme-card rounded-lg p-4">
-            <h3 className="text-lg font-medium text-theme-foreground mb-4">账户状态</h3>
+            <h3 className="text-lg font-medium text-theme-foreground mb-4">{t('settings.account.accountStatus')}</h3>
             
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">状态</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.status')}</span>
                 {getStatusBadge(getSafeUserInfo().status)}
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">邮箱验证</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.emailVerification')}</span>
                 <span className={`text-sm font-medium ${getSafeUserInfo().email_verified ? 'text-green-600' : 'text-red-600'}`}>
-                  {getSafeUserInfo().email_verified ? '已验证' : '未验证'}
+                  {getSafeUserInfo().email_verified ? t('settings.account.verified') : t('settings.account.unverified')}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">角色</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.roles')}</span>
                 <div className="flex gap-1">
                   {getSafeUserInfo().roles.length > 0 ? (
                     getSafeUserInfo().roles.map(role => (
@@ -422,13 +418,13 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
                       </span>
                     ))
                   ) : (
-                    <span className="text-sm text-theme-foreground-muted">无角色</span>
+                    <span className="text-sm text-theme-foreground-muted">{t('settings.account.noRoles')}</span>
                   )}
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-theme-foreground-muted">注册时间</span>
+                <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.registrationTime')}</span>
                 <span className="text-sm text-theme-foreground">
                   {formatTime(getSafeUserInfo().created_at)}
                 </span>
@@ -436,7 +432,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
 
               {getSafeUserInfo().last_login_at && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-theme-foreground-muted">最后登录</span>
+                  <span className="text-sm font-medium text-theme-foreground-muted">{t('settings.account.lastLogin')}</span>
                   <span className="text-sm text-theme-foreground">
                     {formatTime(getSafeUserInfo().last_login_at!)}
                   </span>
@@ -451,7 +447,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-theme-foreground flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              密码安全
+              {t('settings.account.passwordSecurity')}
             </h3>
             {!isChangingPassword && (
               <button
@@ -467,7 +463,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-                  当前密码
+                  {t('settings.account.currentPassword')}
                 </label>
                 <input
                   type="password"
@@ -479,7 +475,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
 
               <div>
                 <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-                  新密码
+                  {t('settings.account.newPassword')}
                 </label>
                 <div className="relative">
                   <input
@@ -500,7 +496,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
 
               <div>
                 <label className="block text-sm font-medium text-theme-foreground-muted mb-1">
-                  确认新密码
+                  {t('settings.account.confirmPassword')}
                 </label>
                 <div className="relative">
                   <input
@@ -525,7 +521,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
                   className="btn-base btn-primary"
                 >
                   <Save className="w-4 h-4" />
-                  修改密码
+                  {t('settings.account.changePassword')}
                 </button>
                 <button
                   onClick={() => {
@@ -539,13 +535,13 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
                   className="btn-base btn-secondary"
                 >
                   <X className="w-4 h-4" />
-                  取消
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
           ) : (
             <div className="text-theme-foreground-muted">
-              <p>点击编辑按钮可以修改您的密码</p>
+              <p>{t('settings.account.editPasswordHint')}</p>
             </div>
           )}
         </div>
@@ -557,7 +553,7 @@ export function AccountManagementTab({}: AccountManagementTabProps) {
             className="btn-base bg-red-500 hover:bg-red-600 text-white px-4 py-2 flex items-center gap-2"
           >
             <LogOut className="w-4 h-4" />
-            退出登录
+            {t('settings.account.logout')}
           </button>
         </div>
 

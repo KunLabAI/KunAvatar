@@ -12,11 +12,13 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { authenticatedFetch } from '@/lib/utils/auth-utils';
 import { formatTime } from '@/lib/utils/time';
 import Modal from '@/components/Modal';
+import { useI18n } from '@/contexts/I18nContext';
 
 function NotesPageContent() {
   const router = useRouter();
   const notification = useNotification();
   const { conversations } = useConversations();
+  const { t } = useI18n(); // 多语言支持
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotesLoading, setIsNotesLoading] = useState(false);
@@ -84,18 +86,18 @@ function NotesPageContent() {
       const response = await authenticatedFetch(endpoint);
       
       if (!response.ok) {
-        throw new Error('获取笔记失败');
+        throw new Error(t('notes.messages.fetchFailed'));
       }
       
       const data = await response.json();
       if (data.success) {
         setNotes(data.data);
       } else {
-        throw new Error(data.error || '获取笔记失败');
+        throw new Error(data.error || t('notes.messages.fetchFailed'));
       }
     } catch (error) {
       console.error('获取笔记失败:', error);
-      notification.error('获取笔记失败', '请稍后重试');
+      notification.error(t('notes.messages.fetchFailed'), t('notes.messages.fetchFailedDesc'));
     } finally {
       if (isTabSwitch) {
         setIsNotesLoading(false);
@@ -149,7 +151,7 @@ function NotesPageContent() {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        notification.error('认证失败', '请重新登录');
+        notification.error(t('notes.messages.authFailed'), t('notes.messages.authFailedDesc'));
         router.push('/login');
         return;
       }
@@ -168,12 +170,12 @@ function NotesPageContent() {
       if (data.success) {
         const url = `${window.location.origin}/notes/shared/${data.data.share_token}`;
         await navigator.clipboard.writeText(url);
-        notification.success('分享链接已复制', '可以将链接分享给其他人');
+        notification.success(t('notes.messages.shareSuccess'), t('notes.messages.shareSuccessDesc'));
       } else {
-        notification.error('分享失败', data.error || '未知错误');
+        notification.error(t('notes.messages.shareFailed'), data.error || t('notes.messages.shareFailedUnknown'));
       }
     } catch (error) {
-      notification.error('分享失败', '网络错误，请稍后重试');
+      notification.error(t('notes.messages.shareFailed'), t('notes.messages.shareFailedDesc'));
     }
   };
 
@@ -196,7 +198,7 @@ function NotesPageContent() {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        notification.error('认证失败', '请重新登录');
+        notification.error(t('notes.messages.authFailed'), t('notes.messages.authFailedDesc'));
         router.push('/login');
         return;
       }
@@ -211,14 +213,14 @@ function NotesPageContent() {
       const data = await response.json();
 
       if (data.success) {
-        notification.success('删除成功', '笔记已删除');
+        notification.success(t('notes.messages.deleteSuccess'), t('notes.messages.deleteSuccessDesc'));
         // 重新获取笔记列表，使用局部刷新
         fetchNotes(true);
       } else {
-        notification.error('删除失败', data.error || '未知错误');
+        notification.error(t('notes.messages.deleteFailed'), data.error || t('notes.messages.deleteFailedUnknown'));
       }
     } catch (error) {
-      notification.error('删除失败', '网络错误，请稍后重试');
+      notification.error(t('notes.messages.deleteFailed'), t('notes.messages.deleteFailedDesc'));
     } finally {
       setNoteToDelete(null);
     }
@@ -237,7 +239,7 @@ function NotesPageContent() {
         <Sidebar conversations={conversations} />
         <div className="flex-1 overflow-auto scrollbar-thin">
           <PageLoading 
-            text="loading..." 
+            text={t('notes.loading')} 
             fullScreen={true}
           />
         </div>
@@ -261,12 +263,12 @@ function NotesPageContent() {
                   <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                     <div>
                       <h1 className="page-title">
-                        笔记管理
+                        {t('notes.title')}
                       </h1>
                       <p className="page-subtitle mt-2">
                         {activeTab === 'private' 
-                          ? `记录想法，整理知识，分享见解 · 共 ${filteredAndSortedNotes.length} 个我的笔记`
-                          : `发现精彩内容，学习他人见解 · 共 ${filteredAndSortedNotes.length} 个公开笔记`
+                          ? t('notes.subtitle.private').replace('{count}', filteredAndSortedNotes.length.toString())
+                          : t('notes.subtitle.public').replace('{count}', filteredAndSortedNotes.length.toString())
                         }
                       </p>
                     </div>
@@ -277,7 +279,7 @@ function NotesPageContent() {
                           className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium"
                         >
                           <Plus className="w-4 h-4" />
-                          <span className="hidden sm:inline">创建笔记</span>
+                          <span className="hidden sm:inline">{t('notes.actions.create')}</span>
                         </button>
                       </div>
                     )}
@@ -288,8 +290,8 @@ function NotesPageContent() {
                     <div className="border-b border-theme-border">
                       <nav className="-mb-px flex space-x-8">
                         {[
-                          { key: 'private', label: '我的笔记', icon: Lock },
-                          { key: 'public', label: '公开笔记', icon: Unlock }
+                          { key: 'private', label: t('notes.tabs.private'), icon: Lock },
+                          { key: 'public', label: t('notes.tabs.public'), icon: Unlock }
                         ].map((tab) => {
                           const IconComponent = tab.icon;
                           return (
@@ -318,7 +320,7 @@ function NotesPageContent() {
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-foreground-muted" />
                       <input
                         type="text"
-                        placeholder="搜索笔记标题或内容..."
+                        placeholder={t('notes.search.placeholder')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme-border rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent text-theme-foreground placeholder-theme-foreground-muted"
@@ -332,15 +334,15 @@ function NotesPageContent() {
                         onChange={(e) => setSortBy(e.target.value as 'created_at' | 'updated_at' | 'title')}
                         className="px-3 py-2 bg-theme-card border border-theme-border rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent text-theme-foreground"
                       >
-                        <option value="updated_at">更新时间</option>
-                        <option value="created_at">创建时间</option>
-                        <option value="title">标题</option>
+                        <option value="updated_at">{t('notes.sort.updatedAt')}</option>
+                        <option value="created_at">{t('notes.sort.createdAt')}</option>
+                        <option value="title">{t('notes.sort.title')}</option>
                       </select>
                       
                       <button
                         onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
                         className="px-3 py-2 bg-theme-card border border-theme-border rounded-lg hover:bg-theme-background-secondary transition-colors duration-200 text-theme-foreground"
-                        title={sortOrder === 'desc' ? '降序排列' : '升序排列'}
+                        title={sortOrder === 'desc' ? t('notes.sort.descending') : t('notes.sort.ascending')}
                       >
                         {sortOrder === 'desc' ? <SortDesc className="w-4 h-4" /> : <SortAsc className="w-4 h-4" />}
                       </button>
@@ -353,7 +355,7 @@ function NotesPageContent() {
                     <div className="flex items-center justify-center py-16">
                       <div className="flex flex-col items-center space-y-4">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
-                        <p className="text-theme-foreground-muted text-sm">加载中...</p>
+                        <p className="text-theme-foreground-muted text-sm">{t('notes.loadingShort')}</p>
                       </div>
                     </div>
                   ) : filteredAndSortedNotes.length === 0 ? (
@@ -363,16 +365,16 @@ function NotesPageContent() {
                            <Search className="w-8 h-8 text-theme-foreground-muted" />
                          </div>
                          <h3 className="text-xl font-semibold text-theme-foreground mb-3">
-                           未找到匹配的笔记
+                           {t('notes.empty.noSearchResults.title')}
                          </h3>
                          <p className="text-theme-foreground-muted mb-8 max-w-md">
-                           尝试使用不同的关键词搜索
+                           {t('notes.empty.noSearchResults.description')}
                          </p>
                          <button 
                            onClick={() => setSearchTerm('')}
                            className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors duration-200 font-medium shadow-sm"
                          >
-                           清除搜索
+                           {t('notes.actions.clearSearch')}
                          </button>
                        </div>
                      ) : (
@@ -381,10 +383,10 @@ function NotesPageContent() {
                            <FileText className="w-8 h-8 text-theme-foreground-muted" />
                          </div>
                          <h3 className="text-xl font-semibold text-theme-foreground mb-3">
-                           还没有笔记
+                           {t('notes.empty.noNotes.title')}
                          </h3>
                          <p className="text-theme-foreground-muted mb-8 max-w-md">
-                           开始创建您的第一个笔记，记录想法、整理知识、分享见解
+                           {t('notes.empty.noNotes.description')}
                          </p>
 
                        </div>
@@ -446,7 +448,7 @@ function NotesPageContent() {
                                    ) : (
                                      <span className="px-2 py-1 bg-theme-background-tertiary text-theme-foreground-muted text-xs rounded flex items-center flex-shrink-0">
                                        <FileText className="w-3 h-3 mr-1"/>
-                                       无标签
+                                       {t('notes.status.noTags')}
                                      </span>
                                    )}
                                  </div>
@@ -457,13 +459,13 @@ function NotesPageContent() {
                                  <span className="flex items-center gap-1">
                                    <Calendar className="w-3 h-3" />
                                    {note.created_at === note.updated_at 
-                                     ? `创建于 ${formatTime(note.created_at)}`
-                                     : `更新于 ${formatTime(note.updated_at)}`
+                                     ? t('notes.time.createdAt').replace('{time}', formatTime(note.created_at))
+                                     : t('notes.time.updatedAt').replace('{time}', formatTime(note.updated_at))
                                    }
                                  </span>
                                  <span className="flex items-center gap-1">
                                    <User className="w-3 h-3" />
-                                   {note.author_name || '未知作者'}
+                                   {note.author_name || t('notes.time.unknownAuthor')}
                                  </span>
                                </div>
                              </div>
@@ -484,7 +486,7 @@ function NotesPageContent() {
                                    onMouseLeave={(e) => {
                                      e.currentTarget.style.backgroundColor = '';
                                    }}
-                                   title="查看详情"
+                                   title={t('notes.actions.view')}
                                  >
                                    <Eye className="w-5 h-5" />
                                  </button>
@@ -502,7 +504,7 @@ function NotesPageContent() {
                                    onMouseLeave={(e) => {
                                      e.currentTarget.style.backgroundColor = '';
                                    }}
-                                   title="编辑"
+                                   title={t('notes.actions.edit')}
                                  >
                                    <Edit className="w-5 h-5" />
                                  </button>
@@ -520,7 +522,7 @@ function NotesPageContent() {
                                    onMouseLeave={(e) => {
                                      e.currentTarget.style.backgroundColor = '';
                                    }}
-                                   title="分享笔记"
+                                   title={t('notes.actions.share')}
                                  >
                                    <Share2 className="w-5 h-5" />
                                  </button>
@@ -538,7 +540,7 @@ function NotesPageContent() {
                                    onMouseLeave={(e) => {
                                      e.currentTarget.style.backgroundColor = '';
                                    }}
-                                   title="删除"
+                                   title={t('notes.actions.delete')}
                                  >
                                    <Trash2 className="w-5 h-5" />
                                  </button>
@@ -560,16 +562,16 @@ function NotesPageContent() {
         <Modal
           open={deleteModalOpen}
           onClose={() => { setDeleteModalOpen(false); setNoteToDelete(null); }}
-          title="确认删除笔记"
+          title={t('notes.deleteModal.title')}
           icon={<AlertTriangle className="w-6 h-6 text-theme-warning" />}
           actions={[
             {
-              label: '取消',
+              label: t('notes.deleteModal.cancel'),
               onClick: () => { setDeleteModalOpen(false); setNoteToDelete(null); },
               variant: 'secondary',
             },
             {
-              label: '确认删除',
+              label: t('notes.deleteModal.confirm'),
               onClick: confirmDeleteNote,
               variant: 'danger',
               autoFocus: true,
@@ -579,7 +581,7 @@ function NotesPageContent() {
         >
           {noteToDelete && (
             <span>
-              确定要删除笔记「<b>{noteToDelete.title}</b>」吗？此操作不可撤销。
+              {t('notes.deleteModal.content').replace('{title}', noteToDelete.title)}
             </span>
           )}
         </Modal>

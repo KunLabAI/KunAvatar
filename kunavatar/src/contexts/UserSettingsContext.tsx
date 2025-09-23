@@ -9,6 +9,7 @@ interface UserSettings {
   colorTheme: string;
   chatStyle: string;
   displaySize: string;
+  language: string;
 }
 
 interface UserSettingsContextType {
@@ -24,7 +25,8 @@ const defaultSettings: UserSettings = {
   themePreference: 'system',
   colorTheme: 'kun',
   chatStyle: 'assistant',
-  displaySize: 'fullscreen'
+  displaySize: 'fullscreen',
+  language: 'zh'
 };
 
 const UserSettingsContext = createContext<UserSettingsContextType | undefined>(undefined);
@@ -37,13 +39,14 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
   const { checkAuth } = useAuth();
   // 优化：先从localStorage读取初始值，避免闪屏
   const [settings, setSettings] = useState<UserSettings>(() => {
-    // 尝试从localStorage获取初始设置，避免默认值导致的闪屏
+    // 尝试介localStorage获取初始设置，避免默认值导致的闪屏
     try {
       return {
         themePreference: localStorage.getItem('theme-preference') || defaultSettings.themePreference,
         colorTheme: localStorage.getItem('color-theme') || defaultSettings.colorTheme,
         chatStyle: localStorage.getItem('simple-chat-style') || defaultSettings.chatStyle,
-        displaySize: localStorage.getItem('simple-chat-display-size') || defaultSettings.displaySize
+        displaySize: localStorage.getItem('simple-chat-display-size') || defaultSettings.displaySize,
+        language: localStorage.getItem('locale') || defaultSettings.language
       };
     } catch {
       return defaultSettings;
@@ -98,7 +101,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
           themePreference: localStorage.getItem('theme-preference') || 'system',
           colorTheme: localStorage.getItem('color-theme') || 'kun',
           chatStyle: localStorage.getItem('simple-chat-style') || 'assistant',
-          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen'
+          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen',
+          language: localStorage.getItem('locale') || 'zh'
         };
         setSettings(localSettings);
         setLoading(false);
@@ -138,7 +142,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
           themePreference: localStorage.getItem('theme-preference') || 'system',
           colorTheme: localStorage.getItem('color-theme') || 'kun',
           chatStyle: localStorage.getItem('simple-chat-style') || 'assistant',
-          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen'
+          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen',
+          language: localStorage.getItem('locale') || 'zh'
         };
         setSettings(localSettings);
         setLastFetchTime(now);
@@ -153,7 +158,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
           themePreference: localStorage.getItem('theme-preference') || 'system',
           colorTheme: localStorage.getItem('color-theme') || 'kun',
           chatStyle: localStorage.getItem('simple-chat-style') || 'assistant',
-          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen'
+          displaySize: localStorage.getItem('simple-chat-display-size') || 'fullscreen',
+          language: localStorage.getItem('locale') || 'zh'
         };
         setSettings(localSettings);
       }
@@ -182,7 +188,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
         themePreference: 'theme-preference',
         colorTheme: 'color-theme',
         chatStyle: 'simple-chat-style',
-        displaySize: 'simple-chat-display-size'
+        displaySize: 'simple-chat-display-size',
+        language: 'locale'
       }[key];
       
       if (localStorageKey) {
@@ -199,7 +206,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
           themePreference: 'theme-preference',
           colorTheme: 'color-theme',
           chatStyle: 'chat-style',
-          displaySize: 'display-size'
+          displaySize: 'display-size',
+          language: 'language'
         }[key] || key,
         value,
         category: 'appearance'
@@ -215,7 +223,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
               themePreference: 'theme-preference',
               colorTheme: 'color-theme',
               chatStyle: 'chat-style',
-              displaySize: 'display-size'
+              displaySize: 'display-size',
+              language: 'language'
             }[key] || key,
             value,
             category: 'appearance'
@@ -256,7 +265,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
           themePreference: 'theme-preference',
           colorTheme: 'color-theme',
           chatStyle: 'simple-chat-style',
-          displaySize: 'simple-chat-display-size'
+          displaySize: 'simple-chat-display-size',
+          language: 'locale'
         }[key];
         
         if (localStorageKey && value) {
@@ -274,7 +284,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
           themePreference: newSettings.themePreference,
           colorTheme: newSettings.colorTheme,
           chatStyle: newSettings.chatStyle,
-          displaySize: newSettings.displaySize
+          displaySize: newSettings.displaySize,
+          language: newSettings.language
         }
       });
 
@@ -288,7 +299,8 @@ export function UserSettingsProvider({ children }: UserSettingsProviderProps) {
               themePreference: newSettings.themePreference,
               colorTheme: newSettings.colorTheme,
               chatStyle: newSettings.chatStyle,
-              displaySize: newSettings.displaySize
+              displaySize: newSettings.displaySize,
+              language: newSettings.language
             }
           });
         }

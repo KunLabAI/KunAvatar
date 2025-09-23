@@ -16,9 +16,11 @@ import { CustomModel } from '@/lib/database/custom-models';
 import { McpServer, McpTool } from '@/lib/database';
 import { useConversations } from '@/hooks/useConversations';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useI18n } from '@/contexts/I18nContext';
 
 
 function AgentsPageContent() {
+  const { t } = useI18n();
   const router = useRouter();
   const [agents, setAgents] = useState<AgentWithRelations[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -51,7 +53,7 @@ function AgentsPageContent() {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        throw new Error('未找到访问令牌，请重新登录');
+        throw new Error(t('agents.messages.tokenNotFound'));
       }
 
       const response = await fetch('/api/agents', {
@@ -62,14 +64,14 @@ function AgentsPageContent() {
       });
       
       if (!response.ok) {
-        throw new Error('加载智能体失败');
+        throw new Error(t('agents.messages.loadFailed'));
       }
       const data = await response.json();
       setAgents(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : '加载智能体时发生未知错误';
+      const message = err instanceof Error ? err.message : t('agents.messages.unknownError');
       setError(message);
-      notification.error('加载失败', message);
+      notification.error(t('agents.messages.loadFailed'), message);
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ function AgentsPageContent() {
       ]);
 
       if (!modelsRes.ok || !serversRes.ok || !toolsRes.ok) {
-        throw new Error('加载表单数据失败');
+        throw new Error(t('agents.messages.loadFormDataFailed'));
       }
 
       const modelsData = await modelsRes.json();
@@ -113,9 +115,9 @@ function AgentsPageContent() {
       setIsModalOpen(true);
 
     } catch (err) {
-      const message = err instanceof Error ? err.message : '无法打开智能体编辑器';
+      const message = err instanceof Error ? err.message : t('agents.messages.cannotOpenEditor');
       setError(message);
-      notification.error('操作失败', message);
+      notification.error(t('common.error'), message);
     } finally {
       setIsModalDataLoading(false);
     }
@@ -143,7 +145,7 @@ function AgentsPageContent() {
       setIsProcessing(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        throw new Error('未找到访问令牌，请重新登录');
+        throw new Error(t('agents.messages.tokenNotFound'));
       }
 
       const response = await fetch(`/api/agents/${agentToDelete.id}`, { 
@@ -155,15 +157,15 @@ function AgentsPageContent() {
       });
       
       if (!response.ok) {
-        throw new Error('删除智能体失败');
+        throw new Error(t('agents.messages.deleteFailed'));
       }
       
       await fetchAgents();
-      notification.success('删除成功', `智能体 "${agentToDelete.name}" 已删除`);
+      notification.success(t('agents.messages.deleteSuccess'), t('agents.messages.deleteSuccessDesc').replace('{name}', agentToDelete.name));
     } catch (err) {
-      const message = err instanceof Error ? err.message : '删除智能体失败';
+      const message = err instanceof Error ? err.message : t('agents.messages.deleteFailed');
       setError(message);
-      notification.error('删除失败', message);
+      notification.error(t('agents.messages.deleteFailed'), message);
     } finally {
       setIsProcessing(false);
       setDeleteModalOpen(false);
@@ -180,8 +182,8 @@ function AgentsPageContent() {
     handleModalClose();
     fetchAgents();
     notification.success(
-      selectedAgent ? '更新成功' : '创建成功',
-      selectedAgent ? '智能体已更新' : '新智能体已创建'
+      selectedAgent ? t('agents.messages.updateSuccess') : t('agents.messages.createSuccess'),
+      selectedAgent ? t('agents.messages.updateSuccessDesc') : t('agents.messages.createSuccessDesc')
     );
   };
 
@@ -208,7 +210,7 @@ function AgentsPageContent() {
         />
         <div className="flex-1 overflow-auto scrollbar-thin">
           <PageLoading 
-            text="loading..." 
+            text={t('agents.actions.loading')} 
             fullScreen={true}
           />
         </div>
@@ -234,10 +236,10 @@ function AgentsPageContent() {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div>
                     <h1 className="page-title">
-                      智能体管理
+                      {t('agents.title')}
                     </h1>
                     <p className="page-subtitle mt-2">
-                      创建和管理 AI 智能体 · 共 {agents.length} 个智能体
+                      {t('agents.subtitle')} · {t('agents.count').replace('{count}', agents.length.toString())}
                     </p>
                   </div>
                   <div className="flex-shrink-0">
@@ -252,7 +254,7 @@ function AgentsPageContent() {
                         <Plus className="w-4 h-4" />
                       )}
                       <span className="hidden sm:inline">
-                        {isModalDataLoading ? '加载中...' : '创建智能体'}
+                        {isModalDataLoading ? t('agents.actions.loading') : t('agents.actions.create')}
                       </span>
                     </button>
                   </div>
@@ -271,7 +273,7 @@ function AgentsPageContent() {
                   <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40">
                     <div className="bg-theme-card border border-theme-border rounded-lg px-4 py-2 shadow-lg">
                       <InlineLoading 
-                        text="处理中..."
+                        text={t('agents.actions.processing')}
                         size="small"
                       />
                     </div>
@@ -309,16 +311,16 @@ function AgentsPageContent() {
               <Modal
                 open={deleteModalOpen}
                 onClose={() => { setDeleteModalOpen(false); setAgentToDelete(null); }}
-                title="确认删除智能体"
+                title={t('agents.deleteModal.title')}
                 icon={<AlertTriangle className="w-6 h-6 text-theme-warning" />}
                 actions={[
                   {
-                    label: '取消',
+                    label: t('agents.deleteModal.cancel'),
                     onClick: () => { setDeleteModalOpen(false); setAgentToDelete(null); },
                     variant: 'secondary',
                   },
                   {
-                    label: '确认删除',
+                    label: t('agents.deleteModal.confirm'),
                     onClick: confirmDeleteAgent,
                     variant: 'danger',
                     autoFocus: true,
@@ -328,7 +330,7 @@ function AgentsPageContent() {
               >
                 {agentToDelete && (
                   <span>
-                    确定要删除智能体「<b>{agentToDelete.name}</b>」吗？此操作不可撤销。
+                    {t('agents.deleteModal.content').replace('{name}', agentToDelete.name)}
                   </span>
                 )}
               </Modal>
