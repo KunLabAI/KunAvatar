@@ -3,6 +3,7 @@
 import React from 'react';
 import { Server } from 'lucide-react';
 import { BaseControlButton } from './BaseControlButton';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ToolControlProps {
   enableTools: boolean;
@@ -33,13 +34,14 @@ export function ToolControl({
   onToggle,
   onValidationError,
 }: ToolControlProps) {
+  const { t } = useI18n();
   
   const handleClick = () => {
     // 如果模型不支持工具调用，显示错误提示
     if (modelSupportsTools === false) {
       onValidationError?.(
-        'MCP工具不可用', 
-        '当前模型不支持工具调用功能，请选择支持工具调用的模型。'
+        t('chat.messageInput.controls.tool.unavailableTitle'), 
+        t('chat.messageInput.controls.tool.unavailableMessage')
       );
       return;
     }
@@ -65,16 +67,16 @@ export function ToolControl({
   // 确定工具提示文本
   const getTooltip = () => {
     if (isCheckingModel) {
-      return '正在检测模型工具支持...';
+      return t('chat.messageInput.controls.tool.checkingModel');
     }
     if (modelSupportsTools === false) {
-      return '当前模型不支持工具调用，请选择其他模型';
+      return t('chat.messageInput.controls.tool.modelNotSupported');
     }
     if (enableTools) {
       const panelOpen = isOpen !== undefined ? isOpen : showToolSettings;
-      return panelOpen ? '关闭MCP工具面板' : '打开MCP工具面板';
+      return panelOpen ? t('chat.messageInput.controls.tool.closePanel') : t('chat.messageInput.controls.tool.openPanel');
     }
-    return '启用MCP工具调用功能';
+    return t('chat.messageInput.controls.tool.enableTools');
   };
 
 

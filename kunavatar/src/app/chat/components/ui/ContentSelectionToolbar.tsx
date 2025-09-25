@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Copy, Check, NotebookPen } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SelectableCopyWrapperProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
   style,
   onQuickNote,
 }) => {
+  const { t } = useI18n();
   const [copyButton, setCopyButton] = useState<CopyButtonPosition>({
     x: 0,
     y: 0,
@@ -224,7 +226,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
             <button
               onClick={handleCopy}
               className="flex items-center gap-2 p-2.5 text-sm text-theme-foreground hover:bg-theme-primary/10 hover:text-theme-primary rounded-md transition-all duration-200 hover:scale-105 active:scale-95"
-              title={isCopied ? "已复制" : "复制选中文字"}
+              title={isCopied ? t('chat.tools.contentSelection.copied') : t('chat.tools.contentSelection.copy')}
             >
               {isCopied ? (
                 <>
@@ -240,7 +242,7 @@ export const SelectableCopyWrapper: React.FC<SelectableCopyWrapperProps> = ({
               <button
                 onClick={handleQuickNote}
                 className="flex items-center gap-2 p-2.5 text-sm text-theme-foreground hover:bg-theme-primary/10 hover:text-theme-primary rounded-md transition-all duration-200 hover:scale-105 active:scale-95"
-                title="快速笔记"
+                title={t('chat.tools.contentSelection.quickNote')}
               >
                 <NotebookPen className="w-4 h-4" />
               </button>

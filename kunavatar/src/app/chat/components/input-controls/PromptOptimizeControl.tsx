@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { BaseControlButton } from './BaseControlButton';
 import { usePromptOptimizeSettings } from '../../../settings/hooks/usePromptOptimizeSettings';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface PromptOptimizeControlProps {
   currentText: string;
@@ -18,6 +19,7 @@ export function PromptOptimizeControl({
 }: PromptOptimizeControlProps) {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const { settings } = usePromptOptimizeSettings();
+  const { t } = useI18n();
 
   // 直接优化当前输入框的内容
   const handleOptimize = async () => {
@@ -26,7 +28,7 @@ export function PromptOptimizeControl({
     
     // 检查设置是否启用
     if (!settings.promptEnabled || !settings.promptModel) {
-      console.warn('提示词优化功能未启用或未配置模型');
+      console.warn(t('chat.messageInput.controls.promptOptimize.notConfigured'));
       return;
     }
     
@@ -47,26 +49,26 @@ export function PromptOptimizeControl({
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || '优化失败';
+        const errorMessage = errorData.error || t('chat.messageInput.controls.promptOptimize.optimizeFailed');
         throw new Error(errorMessage);
       }
       
       const data = await response.json();
       if (!data.success) {
-        throw new Error(data.error || '优化失败');
+        throw new Error(data.error || t('chat.messageInput.controls.promptOptimize.optimizeFailed'));
       }
       
       // 直接替换输入框内容
       onTextChange(data.optimizedText);
     } catch (error) {
-      console.error('优化提示词失败:', error);
+      console.error(t('chat.messageInput.controls.promptOptimize.optimizeFailedLog'), error);
       
       // 显示具体的错误信息
-      const errorMessage = error instanceof Error ? error.message : '优化失败';
+      const errorMessage = error instanceof Error ? error.message : t('chat.messageInput.controls.promptOptimize.optimizeFailed');
       
       // 这里可以添加toast通知或其他用户友好的错误提示
       // 暂时使用alert，后续可以替换为更好的UI组件
-      alert(`提示词优化失败：${errorMessage}`);
+      alert(`${t('chat.messageInput.controls.promptOptimize.optimizeFailedAlert')}：${errorMessage}`);
     } finally {
       setIsOptimizing(false);
     }
@@ -86,12 +88,12 @@ export function PromptOptimizeControl({
       disabled={!canOptimize}
       tooltip={
         isOptimizing 
-          ? "正在优化..." 
+          ? t('chat.messageInput.controls.promptOptimize.optimizing')
           : !currentText.trim() 
-          ? "请先输入内容" 
+          ? t('chat.messageInput.controls.promptOptimize.enterContentFirst')
           : !settings.promptEnabled || !settings.promptModel
-          ? "请先在设置中配置提示词优化"
-          : "优化当前输入的提示词"
+          ? t('chat.messageInput.controls.promptOptimize.configureFirst')
+          : t('chat.messageInput.controls.promptOptimize.optimizePrompt')
       }
       className="!bg-transparent hover:!bg-[var(--color-background-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed"
     >

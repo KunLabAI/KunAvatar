@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { CheckSquare, Square, ChevronDown, ChevronRight, Server, Globe, GripVertical, X } from 'lucide-react';
 import { Tool } from '@/lib/ollama';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ToolPanelProps {
   allTools: Tool[];
@@ -25,6 +26,7 @@ interface ServerGroup {
 }
 
 export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }: ToolPanelProps) {
+  const { t } = useI18n();
   const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set(['local']));
   const [panelHeight, setPanelHeight] = useState(300); // 默认高度与记忆面板保持一致
   const [isDragging, setIsDragging] = useState(false);
@@ -58,7 +60,7 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
       if (!groups.has(serverName)) {
         groups.set(serverName, {
           name: serverName,
-          displayName: serverName === 'local' ? '本地工具' : serverName,
+          displayName: serverName === 'local' ? t('chat.tools.toolPanel.localTools') : serverName,
           type: serverType,
           tools: [],
           expanded: expandedServers.has(serverName)
@@ -240,7 +242,7 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
         onMouseDown={handleMouseDown}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
-        title="拖拽调整面板高度"
+        title={t('chat.tools.toolPanel.dragToResize')}
         style={{ userSelect: 'none' }}
       >
         {/* 拖拽进度指示器 */}
@@ -268,17 +270,17 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <Server className="w-4 h-4 text-theme-primary" />
-              <span className="text-sm font-medium text-theme-foreground">MCP 工具选择</span>
+              <span className="text-sm font-medium text-theme-foreground">{t('chat.tools.toolPanel.title')}</span>
             </div>
             <div className="text-xs text-theme-foreground-muted ml-6">
-              选择要启用的工具，已选择 {selectedTools.length} 个工具
+              {t('chat.tools.toolPanel.selectedCount').replace('{count}', selectedTools.length.toString())}
             </div>
           </div>
           <div className="flex items-center">
             <button
               onClick={onToggle}
               className="p-1 hover:bg-theme-card-hover rounded-lg transition-colors"
-              title="关闭工具面板"
+              title={t('chat.tools.toolPanel.closePanel')}
             >
               <X className="w-4 h-4 text-theme-foreground-muted hover:text-theme-foreground transition-colors" />
             </button>
@@ -323,13 +325,13 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
                       {serverGroup.displayName}
                     </span>
                     <span className="ml-2 text-xs text-theme-foreground-muted">
-                      ({serverGroup.type === 'local' ? '本地' : '外部'})
+                      ({serverGroup.type === 'local' ? t('chat.tools.toolPanel.local') : t('chat.tools.toolPanel.external')})
                     </span>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-theme-foreground-muted">
-                      {serverGroup.tools.length} 个工具
+                      {t('chat.tools.toolPanel.toolsCount').replace('{count}', serverGroup.tools.length.toString())}
                     </span>
                   </div>
                 </div>
@@ -368,7 +370,7 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
                               ? 'text-theme-primary/80'
                               : 'text-theme-foreground-muted'
                           }`}>
-                            {tool.function.description || '暂无描述'}
+                            {tool.function.description || t('chat.tools.toolPanel.noDescription')}
                           </div>
                         </div>
                       </div>
@@ -385,8 +387,8 @@ export function ToolPanel({ allTools, selectedTools, onToolSelection, onToggle }
         {serverGroups.length === 0 && (
           <div className="flex-1 flex items-center justify-center text-center py-8">
             <div className="text-theme-foreground-muted">
-              <div className="text-sm mb-2">暂无可用工具</div>
-              <div className="text-xs">请检查 MCP 服务器配置</div>
+              <div className="text-sm mb-2">{t('chat.tools.toolPanel.noTools')}</div>
+              <div className="text-xs">{t('chat.tools.toolPanel.checkConfig')}</div>
             </div>
           </div>
         )}

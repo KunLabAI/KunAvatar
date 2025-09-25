@@ -556,15 +556,9 @@ export default function BlackHoleAnimation({ className = '', offsetX = 0, starsO
 
       // 键盘交互事件 - 只在非仅星空模式时处理
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (starsOnly) return;
+        if (starsOnly || !event.key) return;
         
         switch(event.key.toLowerCase()) {
-          case 'r': // 切换自动旋转
-            autoRotateEnabled = !autoRotateEnabled;
-            if (controls) {
-              controls.autoRotate = autoRotateEnabled;
-            }
-            break;
           case 'arrowup': // 增加时间速度
             timeScale = Math.min(timeScale + 0.2, 3.0);
             event.preventDefault();
@@ -585,14 +579,6 @@ export default function BlackHoleAnimation({ className = '', offsetX = 0, starsO
             if (bloomPass) {
               bloomPass.strength = bloomIntensity;
             }
-            break;
-          case ' ': // 空格键暂停/恢复
-            timeScale = timeScale > 0 ? 0 : 1.0;
-            event.preventDefault();
-            break;
-          case 'escape': // ESC键重置到默认状态
-            resetToDefaults();
-            event.preventDefault();
             break;
         }
       };

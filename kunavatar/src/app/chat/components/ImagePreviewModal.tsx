@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function ImagePreviewModal({
   imageIndex,
   images
 }: ImagePreviewModalProps) {
+  const { t } = useI18n();
   const [scale, setScale] = React.useState(1);
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = React.useState(false);
@@ -122,12 +124,12 @@ export default function ImagePreviewModal({
           })
           .catch(error => {
             console.error('下载图片失败:', error);
-            alert('下载图片失败，请重试');
+            alert(t('chat.image.downloadFailed'));
           });
       }
     } catch (error) {
       console.error('下载图片失败:', error);
-      alert('下载图片失败，请重试');
+      alert(t('chat.image.downloadFailed'));
     }
   };
 
@@ -279,7 +281,7 @@ export default function ImagePreviewModal({
                     handleZoomOut();
                   }}
                   className="p-2 text-white hover:bg-white/20 rounded transition-colors"
-                  title="缩小 (-)"
+                  title={t('chat.image.zoomOut')}
                 >
                   <ZoomOut className="w-4 h-4" />
                 </button>
@@ -294,7 +296,7 @@ export default function ImagePreviewModal({
                     handleZoomIn();
                   }}
                   className="p-2 text-white hover:bg-white/20 rounded transition-colors"
-                  title="放大 (+)"
+                  title={t('chat.image.zoomIn')}
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
@@ -307,7 +309,7 @@ export default function ImagePreviewModal({
                   handleDownload();
                 }}
                 className="p-2 text-white hover:bg-white/20 rounded transition-colors"
-                title="下载图片"
+                title={t('chat.image.download')}
               >
                 <Download className="w-4 h-4" />
               </button>
@@ -321,7 +323,7 @@ export default function ImagePreviewModal({
               onClose();
             }}
             className="absolute top-4 right-4 z-20 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
-            title="关闭 (Esc)"
+            title={t('chat.image.close')}
           >
             <X className="w-6 h-6" />
           </button>
@@ -337,7 +339,7 @@ export default function ImagePreviewModal({
                     handlePrevious();
                   }}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 p-3 text-white hover:bg-white/20 rounded-full transition-colors"
-                  title="上一张 (←)"
+                  title={t('chat.image.previous')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -353,7 +355,7 @@ export default function ImagePreviewModal({
                     handleNext();
                   }}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 p-3 text-white hover:bg-white/20 rounded-full transition-colors"
-                  title="下一张 (→)"
+                  title={t('chat.image.next')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -374,8 +376,8 @@ export default function ImagePreviewModal({
               // 错误状态
               <div className="text-center text-white">
                 <div className="text-6xl mb-4">⚠️</div>
-                <div className="text-lg mb-2">图片加载失败</div>
-                <div className="text-sm opacity-70">请检查图片是否有效</div>
+                <div className="text-lg mb-2">{t('chat.image.loadFailed')}</div>
+                <div className="text-sm opacity-70">{t('chat.image.checkImage')}</div>
               </div>
             ) : (
               <>
@@ -384,7 +386,7 @@ export default function ImagePreviewModal({
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
                     <div className="text-white text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                      <div>加载中...</div>
+                      <div>{t('chat.image.loading')}</div>
                     </div>
                   </div>
                 )}
@@ -393,7 +395,7 @@ export default function ImagePreviewModal({
                 <motion.img
                   ref={imageRef}
                   src={currentImageUrl}
-                  alt={`预览图片 ${currentIndex + 1}`}
+                  alt={t('chat.image.previewAlt') + ' ' + (currentIndex + 1)}
                   className={`max-w-full max-h-full object-contain select-none ${isDragging ? 'cursor-grabbing' : scale > 1 ? 'cursor-grab' : 'cursor-zoom-in'}`}
                   style={{
                     transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
@@ -433,10 +435,10 @@ export default function ImagePreviewModal({
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
             <div className="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 text-white text-sm text-center">
               <div className="flex items-center gap-4 text-xs opacity-70">
-                <span>点击放大/还原</span>
-                <span>滚轮缩放</span>
-                {totalImages > 1 && <span>← → 切换</span>}
-                <span>Esc 关闭</span>
+                <span>{t('chat.image.clickToZoom')}</span>
+                <span>{t('chat.image.wheelZoom')}</span>
+                {totalImages > 1 && <span>{t('chat.image.arrowSwitch')}</span>}
+                <span>{t('chat.image.escClose')}</span>
               </div>
             </div>
           </div>

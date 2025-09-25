@@ -5,6 +5,7 @@ import { Bot, MessageCircle } from 'lucide-react';
 import { MessageList } from './MessageList';
 import Modal from '@/components/Modal';
 import ImagePreviewModal from './ImagePreviewModal';
+import { useI18n } from '@/contexts/I18nContext';
 
 type ChatMode = 'model' | 'agent';
 
@@ -106,6 +107,7 @@ export function ChatArea({
 
 // 欢迎界面组件
 function WelcomeScreen({ chatMode }: { chatMode: ChatMode }) {
+  const { t } = useI18n(); // 多语言支持
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="text-center max-w-md">
@@ -120,9 +122,6 @@ function WelcomeScreen({ chatMode }: { chatMode: ChatMode }) {
         <h2 className="text-2xl font-bold text-theme-foreground mb-4">
           Kun Avatar
         </h2>
-        
-        <p className="text-theme-foreground-muted mb-6 leading-relaxed">
-        </p>
       </div>
     </div>
   );
@@ -155,6 +154,7 @@ function ChatInterface({
   onQuickNote?: (selectedText: string) => void; // 添加快速笔记回调类型
   isQuickNotePanelOpen?: boolean; // 快速笔记面板状态类型
 }) {
+  const { t } = useI18n(); // 多语言支持
   // 删除确认弹窗状态
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
     open: boolean;
@@ -191,14 +191,14 @@ function ChatInterface({
   const handleDeleteMessage = useCallback(async (messageId: string) => {
     // 检查是否为临时ID（前端生成的ID）
     if (messageId.startsWith('msg_')) {
-      alert('无法删除临时消息，请刷新页面后重试');
+      alert(t('chat.message.delete.tempMessageError'));
       return;
     }
 
     // 检查是否为有效的数字ID
     const numericId = parseInt(messageId, 10);
     if (isNaN(numericId)) {
-      alert('无效的消息ID格式');
+      alert(t('chat.message.delete.invalidIdError'));
       return;
     }
 
@@ -217,7 +217,7 @@ function ChatInterface({
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert('请先登录');
+        alert(t('chat.message.delete.loginRequired'));
         return;
       }
 
@@ -230,8 +230,8 @@ function ChatInterface({
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: '删除失败' }));
-        throw new Error(errorData.error || '删除消息失败');
+        const errorData = await response.json().catch(() => ({ error: t('chat.message.delete.deleteFailed') }));
+        throw new Error(errorData.error || t('chat.message.delete.deleteMessageFailed'));
       }
 
       const result = await response.json();
@@ -240,12 +240,12 @@ function ChatInterface({
         // 删除成功，立即更新前端消息列表
         messageSender.removeMessage(messageId);
       } else {
-        throw new Error(result.error || '删除消息失败');
+        throw new Error(result.error || t('chat.message.delete.deleteMessageFailed'));
       }
     } catch (error) {
-      console.error('删除消息失败:', error);
-      const errorMessage = error instanceof Error ? error.message : '删除消息失败';
-      alert(`删除消息失败: ${errorMessage}`);
+      console.error(t('chat.message.delete.deleteFailedLog'), error);
+      const errorMessage = error instanceof Error ? error.message : t('chat.message.delete.deleteMessageFailed');
+      alert(`${t('chat.message.delete.deleteFailed')}: ${errorMessage}`);
     } finally {
       // 关闭确认弹窗
       setDeleteConfirmModal({
@@ -291,7 +291,7 @@ function ChatInterface({
             <div className="h-full flex flex-col justify-end">
               <div className="text-center pb-1">
                 <p className="text-theme-foreground-muted text-sm">
-                  发送消息将自动创建新对话
+                  {t('chat.noConversation.hint')}
                 </p>
               </div>
             </div>
@@ -303,23 +303,23 @@ function ChatInterface({
       <Modal
         open={deleteConfirmModal.open}
         onClose={cancelDeleteMessage}
-        title="确认删除"
+        title={t('chat.message.delete.confirmTitle')}
         icon="🗑️"
         actions={[
           {
-            label: '取消',
+            label: t('chat.message.delete.cancel'),
             onClick: cancelDeleteMessage,
             variant: 'secondary',
           },
           {
-            label: '删除',
+            label: t('chat.message.delete.delete'),
             onClick: confirmDeleteMessage,
             variant: 'danger',
             autoFocus: true,
           },
         ]}
       >
-        <p>确定要删除这条消息吗？此操作无法撤销。</p>
+        <p>{t('chat.message.delete.confirmMessage')}</p>
       </Modal>
 
       {/* 图片预览模态框 */}

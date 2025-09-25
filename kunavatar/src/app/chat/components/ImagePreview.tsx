@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ImagePreviewProps {
   images: string[];
@@ -10,12 +11,14 @@ interface ImagePreviewProps {
 }
 
 export function ImagePreview({ images, onRemoveImage, disabled = false }: ImagePreviewProps) {
+  const { t } = useI18n();
+  
   if (images.length === 0) {
     return null;
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pb-2">
+    <div className="max-w-4xl mx-auto pb-2">
       <div className="flex flex-wrap gap-2">
         {images.map((image, index) => (
           <div
@@ -26,7 +29,7 @@ export function ImagePreview({ images, onRemoveImage, disabled = false }: ImageP
             {/* 图片预览 */}
             <img
               src={`data:image/jpeg;base64,${image}`}
-              alt={`上传的图片 ${index + 1}`}
+              alt={t('chat.image.uploadedImage') + ' ' + (index + 1)}
               className="w-full h-full object-cover"
             />
             
@@ -35,7 +38,7 @@ export function ImagePreview({ images, onRemoveImage, disabled = false }: ImageP
               <button
                 onClick={() => onRemoveImage(index)}
                 className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-sm"
-                title="删除图片"
+                title={t('chat.image.deleteImage')}
               >
                 <X className="w-3 h-3" />
               </button>

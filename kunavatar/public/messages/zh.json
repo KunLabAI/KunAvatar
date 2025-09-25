@@ -980,17 +980,323 @@
     "copy": "复制",
     "copySuccess": "已复制!",
     "copyCode": "复制代码",
-    "copyFailed": "复制失败"
-  },
+    "copyFailed": "复制失败",
+    "user": {
+      "you": "你"
+    },
+    "agent": {
+      "defaultName": "智能体"
+    },
+    "model": {
+      "defaultName": "模型"
+    },
+    "message": {
+      "empty": "消息内容为空",
+      "copybutton": "复制",
+      "copiedbutton": "已复制",
+      "deletebutton": "删除",
+      "delete": {
+        "tempMessageError": "无法删除临时消息，请刷新页面后重试",
+        "invalidIdError": "无效的消息ID格式",
+        "loginRequired": "请先登录",
+        "deleteFailed": "删除失败",
+        "deleteMessageFailed": "删除消息失败",
+        "deleteFailedLog": "删除消息失败:",
+        "confirmTitle": "确认删除",
+        "cancel": "取消",
+        "delete": "删除",
+        "confirmMessage": "确定要删除这条消息吗？此操作无法撤销。"
+      },
+      "expand": "展开",
+      "collapse": "收起"
+    },
+    "tool": {
+      "viewDetails": "查看工具调用详情",
+      "count": "个工具"
+    },
+    "scroll": {
+      "toTop": "回到顶部",
+      "toBottom": "回到底部",
+      "clearChat": "清空当前对话"
+    },
+    "clearModal": {
+      "title": "确认清空对话",
+      "content": "确定要清空当前对话吗？此操作将删除所有聊天记录，且无法撤销。",
+      "cancel": "取消",
+      "confirm": "确认清空"
+    },
+    "header": {
+      "newConversation": "新对话",
+      "selectAgent": "请选择Agent",
+      "selectModel": "请选择模型",
+      "selectMode": "选择模式",
+      "noAgent": "无Agent",
+      "pleaseSelectModel": "请选择模型",
+      "noModelsAvailable": "没有可用模型",
+      "modeSwitchTitle": "切换模式",
+      "modeSwitchCancel": "取消",
+      "modeSwitchConfirm": "确认切换",
+      "modeSwitchContent": "切换到 {mode} 模式将开启新的对话。当前对话内容将被保存，您确定要切换模式并开启新对话吗？",
+      "modelMode": "模型",
+      "agentMode": "智能体"
+    },
+    "welcome": {
+      "description": "与AI助手进行智能对话，探索无限可能"
+    },
+    "noConversation": {
+      "hint": "发送消息将自动创建新对话"
+    },
+    "messageInput": {
+      "placeholderWithModel": "与{modelName}对话...",
+      "placeholderSelectFirst": "请先选择{type}...",
+      "characterCount": "{count}字符",
+      "imageCount": "{count}张图片",
+      "uploadImage": "上传图片 ({current}/{max})",
+      "screenshot": "截图(Alt+Z)",
+      "stopGeneration": "停止生成",
+      "sendMessage": "发送消息 (Enter)",
+      "model": "模型",
+      "agent": "智能体",
+      "alerts": {
+        "maxImagesReached": "最多只能上传{max}张图片",
+        "invalidFileType": "不支持的文件类型，请上传图片文件",
+        "fileSizeExceeded": "文件大小超过{maxSize}MB限制",
+        "fileConversionError": "文件转换失败，请重试",
+        "screenshotError": "截图失败，请重试"
+      },
+      "controls": {
+        "imageUpload": {
+          "unavailableTitle": "图片上传不可用",
+          "unavailableMessage": "当前模型不支持多模态功能，请选择支持图片识别的模型（如 llava、bakllava 等）。",
+          "checkingModel": "正在检测模型多模态支持...",
+          "modelNotSupported": "当前模型不支持图片识别"
+        },
+        "screenshot": {
+          "unavailableTitle": "截图功能不可用",
+          "unavailableMessage": "当前模型不支持多模态功能，请选择支持图片识别的模型（如 llava、bakllava 等）。",
+          "checkingModel": "正在检测模型多模态支持...",
+          "modelNotSupported": "当前模型不支持图片识别",
+          "capturing": "正在截图...",
+          "failedTitle": "截图失败",
+           "createOverlayError": "创建截图覆盖窗口失败"
+         },
+         "tool": {
+           "unavailableTitle": "MCP工具不可用",
+           "unavailableMessage": "当前模型不支持工具调用功能，请选择支持工具调用的模型。",
+           "checkingModel": "正在检测模型工具支持...",
+           "modelNotSupported": "当前模型不支持工具调用，请选择其他模型",
+           "closePanel": "关闭MCP工具面板",
+           "openPanel": "打开MCP工具面板",
+           "enableTools": "启用MCP工具调用功能"
+         },
+         "promptOptimize": {
+           "notConfigured": "提示词优化功能未启用或未配置模型",
+           "optimizeFailed": "优化失败",
+           "optimizeFailedLog": "优化提示词失败:",
+           "optimizeFailedAlert": "提示词优化失败",
+           "optimizing": "正在优化...",
+           "enterContentFirst": "请先输入内容",
+           "configureFirst": "请先在设置中配置提示词优化",
+           "optimizePrompt": "优化当前输入的提示词"
+         },
+         "memory": {
+           "selectAgentFirst": "请选择智能体查看记忆",
+           "closePanel": "关闭对话记忆面板",
+           "openPanel": "打开对话记忆面板"
+         }
+       }
+    },
+    "deleteMessage": {
+      "tempMessageError": "无法删除临时消息，请刷新页面后重试",
+      "invalidIdError": "无效的消息ID格式",
+      "deleteFailed": "删除失败",
+      "deleteMessageFailed": "删除消息失败",
+      "confirmTitle": "确认删除",
+      "confirmMessage": "确定要删除这条消息吗？此操作无法撤销。"
+    },
+    "tools": {
+      "memory": {
+        "title": "对话记忆",
+        "agentTitle": "Agent记忆",
+        "noMemoryData": "无记忆数据",
+        "noAgentMemory": "暂无Agent记忆",
+        "noConversationMemory": "暂无对话记忆",
+        "closePanel": "关闭记忆面板",
+        "dragToResize": "拖拽调整面板高度",
+        "loading": "正在加载记忆数据...",
+        "stats": "共 {count} 条记忆，节省 {tokens} tokens",
+        "importance": "重要性: {score}",
+        "tokensSaved": "节省: {tokens} tokens",
+        "editMemory": "编辑记忆",
+        "deleteMemory": "删除记忆",
+        "confirmDelete": "确定要删除这条记忆吗？",
+        "editContent": "编辑记忆内容",
+        "contentPlaceholder": "输入记忆内容...",
+        "save": "保存",
+        "cancel": "取消",
+        "content": "内容",
+        "importantTopics": "重要话题",
+        "keyFacts": "关键事实",
+        "userPreferences": "用户偏好",
+        "memoryId": "记忆ID: {id}",
+        "messageRange": "消息范围: {range}",
+        "memoryType": "类型: {type}",
+        "createdAt": "创建时间: {time}",
+        "errors": {
+          "loadFailed": "获取记忆数据失败",
+          "requestFailed": "请求失败 ({status})",
+          "networkError": "网络错误",
+          "getDetailsFailed": "获取记忆详情失败",
+          "getDetailsError": "获取记忆详情失败，请稍后重试",
+          "contentEmpty": "记忆内容不能为空",
+          "updateFailed": "更新失败: {error}",
+          "updateError": "更新记忆失败，请稍后重试",
+          "deleteFailed": "删除失败"
+        }
+      },
+      "toolCall": {
+        "title": "工具调用 - {toolName}",
+        "noToolCalls": "没有工具调用",
+        "callsCount": "{count} 个调用",
+        "unknownTool": "未知工具",
+        "parameters": "参数：",
+        "result": "结果",
+        "error": "错误",
+        "errorInfo": "错误信息：",
+        "unknownError": "未知错误",
+        "executionResult": "执行结果：",
+        "copyCode": "复制代码",
+        "copied": "已复制!",
+        "copyFailed": "复制失败"
+      },
+      "toolPanel": {
+        "title": "MCP 工具选择",
+        "selectedCount": "选择要启用的工具，已选择 {count} 个工具",
+        "closePanel": "关闭工具面板",
+        "dragToResize": "拖拽调整面板高度",
+        "localTools": "本地工具",
+        "local": "本地",
+        "external": "外部",
+        "toolsCount": "{count} 个工具",
+        "noDescription": "暂无描述",
+        "noTools": "暂无可用工具",
+        "checkConfig": "请检查 MCP 服务器配置"
+      }
+    },
+    "quickNote": {
+      "title": "快速笔记",
+      "titlePlaceholder": "输入笔记标题...",
+      "contentPlaceholder": "开始记录你的想法...",
+      "saving": "保存中...",
+      "save": "保存",
+      "cancel": "取消",
+      "saveFailed": "保存笔记失败:",
+      "titleRequired": "请输入标题",
+      "titleRequiredMessage": "笔记标题不能为空，请输入标题后再保存。",
+      "confirm": "确认",
+      "unknownError": "未知错误"
+    },
+    "stats": {
+      "totalTime": "总耗时",
+      "generatedTokens": "生成tokens",
+      "generationSpeed": "生成速度",
+      "contextTokens": "上下文tokens"
+    },
+    "thinking": {
+      "mode": "思考模式"
+    },
+    "upload": {
+      "fileSizeLimit": "文件大小超过限制，最大允许",
+      "maxImagesLimit": "最多只能上传",
+      "remaining": "张图片，还可以上传",
+      "fileError": "文件处理失败：",
+      "conversionFailed": "文件转换失败：",
+      "supportedFormats": "支持的格式：JPG、PNG、GIF、WebP，最大",
+      "maxImages": "最多",
+      "current": "张，当前已上传",
+      "uploadedImages": "已上传图片"
+    },
+    "image": {
+        "zoomOut": "缩小",
+        "zoomIn": "放大",
+        "download": "下载",
+        "close": "关闭",
+        "previous": "上一张",
+        "next": "下一张",
+        "loadFailed": "图片加载失败",
+        "checkImage": "请检查图片是否损坏",
+        "loading": "加载中...",
+        "previewAlt": "图片预览",
+        "clickToZoom": "点击缩放",
+        "wheelZoom": "滚轮缩放",
+        "arrowSwitch": "方向键切换",
+        "escClose": "ESC键关闭",
+        "uploadedImage": "上传的图片",
+        "deleteImage": "删除图片"
+      }
+    },
   "auth": {
     "login": "登录",
     "logout": "登出",
-    "register": "注册",
     "username": "用户名",
     "password": "密码",
     "confirmPassword": "确认密码",
     "forgotPassword": "忘记密码",
-    "rememberMe": "记住我"
+    "rememberMe": "记住我",
+    "welcomeBack": "👋 嗨，欢迎回来！",
+    "loginTitle": "登录",
+    "registerTitle": "注册新账号",
+    "createAccount": "创建新账户",
+    "createAccountButton": "创建账户",
+    "loginToExisting": "登录到现有账户",
+    "usernamePlaceholder": "请输入用户名或邮箱",
+    "usernameRegisterPlaceholder": "请输入用户名",
+    "emailPlaceholder": "请输入邮箱地址",
+    "passwordPlaceholder": "请输入密码",
+    "passwordRegisterPlaceholder": "请输入密码（6-20个字符）",
+    "confirmPasswordPlaceholder": "请再次输入密码",
+    "loggingIn": "登录中...",
+    "registering": "注册中...",
+    "loginFailed": "登录失败",
+    "registerFailed": "注册失败",
+    "loginFailedRetry": "登录失败，请稍后重试",
+    "registerFailedRetry": "注册失败，请稍后重试",
+    "firstRunNotice": "💡 注册完成后自动激活并获得超级管理员账号",
+    "copyright": "© 2025 KunpuAI, Inc. All rights reserved.",
+    "showPassword": "显示密码",
+    "loginRequired": "请先登录",
+    "hidePassword": "隐藏密码",
+    "validation": {
+      "usernameRequired": "用户名不能为空",
+      "usernameMinLength": "用户名至少需要3个字符",
+      "usernameMaxLength": "用户名不能超过20个字符",
+      "usernameInvalidChars": "用户名只能包含字母、数字和下划线",
+      "usernameValid": "用户名格式正确",
+      "emailRequired": "邮箱不能为空",
+      "emailInvalid": "请输入有效的邮箱地址",
+      "emailValid": "邮箱格式正确",
+      "passwordRequired": "密码不能为空",
+      "passwordMinLength": "密码至少需要6个字符",
+      "passwordMaxLength": "密码不能超过20个字符",
+      "passwordValid": "密码格式正确",
+      "confirmPasswordRequired": "请确认密码",
+      "confirmPasswordMismatch": "两次输入的密码不一致",
+      "confirmPasswordValid": "密码确认正确",
+      "formErrors": "请修正表单中的错误后再提交"
+    },
+    "success": {
+      "registerSuccess": "注册成功！",
+      "superAdminCreated": "🎉 超级管理员创建成功！",
+      "redirecting": "正在跳转到登录页面...",
+      "superAdminPrivileges": "🔑 超级管理员权限",
+      "privileges": {
+        "userManagement": "• 用户管理：创建、编辑、删除用户",
+        "roleManagement": "• 角色权限：管理所有角色和权限",
+        "systemSettings": "• 系统设置：配置系统参数",
+        "modelManagement": "• 模型管理：添加和配置AI模型",
+        "fullAccess": "• 完整访问：所有功能无限制"
+      }
+    }
   },
   "conversations": {
     "title": "对话历史",

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Axe, Loader2, Check, AlertCircle, Copy } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Message {
   id: string;
@@ -32,11 +33,13 @@ interface ToolCallPanelProps {
 const CodeBlock = ({ 
   language, 
   children,
-  isDark = false
+  isDark = false,
+  t
 }: { 
   language?: string;
   children: string;
   isDark?: boolean;
+  t: (key: string, fallback?: string) => string;
 }) => {
   const [copied, setCopied] = React.useState(false);
 
@@ -47,7 +50,7 @@ const CodeBlock = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('复制失败:', err);
+      console.error('复制失败', err);
     }
   };
 
@@ -63,7 +66,7 @@ const CodeBlock = ({
         <button
           onClick={handleCopy}
           className={`markdown-code-copy-btn ${copied ? 'copied' : ''}`}
-          title={copied ? '已复制!' : '复制代码'}
+          title={copied ? t('chat.tools.toolCall.copied') : t('chat.tools.toolCall.copyCode')}
         >
           {copied ? (
             <Check className="w-4 h-4" />
@@ -128,6 +131,7 @@ const useIsDarkTheme = () => {
 };
 
 export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) {
+  const { t } = useI18n();
   const [selectedTool, setSelectedTool] = useState<number>(0);
   const isDark = useIsDarkTheme();
 
@@ -183,9 +187,9 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
           <div className="flex items-center gap-3">
             <Axe className="w-5 h-5 text-theme-primary" />
             <div>
-              <h3 className="font-semibold text-theme-foreground">工具调用</h3>
+              <h3 className="font-semibold text-theme-foreground">{t('chat.tools.toolCall.title')}</h3>
               <p className="text-sm text-theme-foreground-muted">
-                {message.model} • {toolCalls.length} 个调用
+                {message.model} • {t('chat.tools.toolCall.callsCount').replace('{count}', toolCalls.length.toString())}
               </p>
             </div>
           </div>
@@ -200,7 +204,7 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
         {toolCalls.length === 0 ? (
           <div className="p-8 text-center">
             <Axe className="w-12 h-12 text-theme-foreground-muted mx-auto mb-3" />
-            <p className="text-theme-foreground-muted">没有工具调用</p>
+            <p className="text-theme-foreground-muted">{t('chat.tools.toolCall.noToolCalls')}</p>
           </div>
         ) : (
           <div className="flex flex-col" style={{ height: 'calc(85vh - 120px)' }}>
@@ -220,7 +224,7 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
                     >
                       {renderStatusIcon(tool.status)}
                       <span className="truncate max-w-32">
-                        {tool.toolName || tool.function?.name || '未知工具'}
+                        {tool.toolName || tool.function?.name || t('chat.tools.toolCall.unknownTool')}
                       </span>
                     </button>
                   ))}
@@ -237,7 +241,7 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
                     <div className="flex items-center gap-3">
                       {renderStatusIcon(currentTool.status)}
                       <h4 className="text-lg font-semibold text-theme-foreground">
-                        {currentTool.toolName || currentTool.function?.name || '未知工具'}
+                        {currentTool.toolName || currentTool.function?.name || t('chat.tools.toolCall.unknownTool')}
                       </h4>
                     </div>
                     {currentTool.executionTime && (
@@ -249,10 +253,11 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
 
                   {/* 工具参数 - 使用代码块样式 */}
                   <div>
-                    <h5 className="text-sm font-medium text-theme-foreground mb-3">参数</h5>
+                    <h5 className="text-sm font-medium text-theme-foreground mb-3">{t('chat.tools.toolCall.parameters')}</h5>
                     <CodeBlock 
                       language="json"
                       isDark={isDark}
+                      t={t}
                     >
                       {JSON.stringify(
                         currentTool.args || currentTool.function?.arguments || {},
@@ -265,7 +270,7 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
                   {/* 工具结果或错误 */}
                   {currentTool.error ? (
                     <div>
-                      <h5 className="text-sm font-medium text-red-500 mb-3">错误</h5>
+                      <h5 className="text-sm font-medium text-red-500 mb-3">{t('chat.tools.toolCall.error')}</h5>
                       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                         <div className="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap">
                           {currentTool.error}
@@ -274,10 +279,11 @@ export function ToolCallPanel({ isOpen, onClose, message }: ToolCallPanelProps) 
                     </div>
                   ) : currentTool.result ? (
                     <div>
-                      <h5 className="text-sm font-medium text-theme-foreground mb-3">结果</h5>
+                      <h5 className="text-sm font-medium text-theme-foreground mb-3">{t('chat.tools.toolCall.result')}</h5>
                       <CodeBlock 
                         language="text"
                         isDark={isDark}
+                        t={t}
                       >
                         {typeof currentTool.result === 'string' 
                           ? currentTool.result 

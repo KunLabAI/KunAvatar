@@ -1098,6 +1098,24 @@ html[data-sidebar-state="expanded"] .sidebar-tooltip {
   display: list-item !important;
 }
 
+/* 挥手动画效果 */
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: rotate(14deg);
+  }
+  20%, 40%, 60%, 80% {
+    transform: rotate(-8deg);
+  }
+}
+
+.animate-wave {
+  animation: wave 4s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
 /* 登录注册页面响应式布局优化 */
 /* 小于1440px：注册/登录窗口在页面中间 */
 /* 大于1440px：注册/登录窗口在页面右侧（左侧2/3黑洞动画，右侧1/3表单） */

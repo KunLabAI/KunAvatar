@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { X, Upload } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ImageUploadProps {
   images?: string[]; // 当前图片数组
@@ -27,6 +28,7 @@ export function ImageUpload({
   maxFileSize = 5 * 1024 * 1024, // 5MB
   className = ''
 }: ImageUploadProps) {
+  const { t } = useI18n();
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,13 +51,13 @@ export function ImageUpload({
   const validateFile = (file: File): string | null => {
     // 检查文件类型
     if (!file.type.startsWith('image/')) {
-      return '只能上传图片文件';
+      return t('chat.upload.onlyImages');
     }
 
     // 检查文件大小
     if (file.size > maxFileSize) {
       const maxSizeMB = maxFileSize / (1024 * 1024);
-      return `文件大小不能超过 ${maxSizeMB}MB`;
+      return t('chat.upload.fileSizeLimit') + maxSizeMB + 'MB';
     }
 
     return null;
@@ -69,7 +71,7 @@ export function ImageUpload({
     const remainingSlots = maxImages - uploadedImages.length;
     
     if (fileArray.length > remainingSlots) {
-      alert(`最多只能上传 ${maxImages} 张图片，当前还可以上传 ${remainingSlots} 张`);
+      alert(t('chat.upload.maxImagesLimit') + maxImages + t('chat.upload.remaining') + remainingSlots);
       return;
     }
 
@@ -78,7 +80,7 @@ export function ImageUpload({
     for (const file of fileArray) {
       const error = validateFile(file);
       if (error) {
-        alert(`文件 "${file.name}" ${error}`);
+        alert(t('chat.upload.fileError') + file.name + ': ' + error);
         continue;
       }
 
@@ -92,7 +94,7 @@ export function ImageUpload({
         });
       } catch (error) {
         console.error('文件转换失败:', error);
-        alert(`文件 "${file.name}" 转换失败`);
+        alert(t('chat.upload.conversionFailed') + file.name);
       }
     }
 
@@ -149,13 +151,13 @@ export function ImageUpload({
         <div className="flex flex-col items-center justify-center space-y-2 text-center">
           <Upload className="w-8 h-8 text-gray-400" />
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            <span className="font-medium text-blue-600 dark:text-blue-400">点击上传图片</span>
+            <span className="font-medium text-blue-600 dark:text-blue-400">{t('chat.upload.clickToUpload')}</span>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-500">
-            支持 JPG、PNG、GIF 等格式，单个文件不超过 {formatFileSize(maxFileSize)}
+            {t('chat.upload.supportedFormats') + formatFileSize(maxFileSize)}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-500">
-            最多上传 {maxImages} 张图片 ({uploadedImages.length}/{maxImages})
+            {t('chat.upload.maxImages') + maxImages + t('chat.upload.current') + uploadedImages.length + '/' + maxImages + ')'}
           </div>
         </div>
       </div>
@@ -164,7 +166,7 @@ export function ImageUpload({
       {uploadedImages.length > 0 && (
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            已上传的图片 ({uploadedImages.length})
+            {t('chat.upload.uploadedImages') + ' (' + uploadedImages.length + ')'}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {uploadedImages.map((image) => (
