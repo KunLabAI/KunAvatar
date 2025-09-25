@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, LogIn, Info } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Languages } from 'lucide-react';
 import BlackHoleAnimation from '@/components/BlackHoleAnimation';
 import { validateRedirectUrl } from '@/lib/security/url-validator';
+import { useI18n } from '@/contexts/I18nContext';
+import { type Locale } from '@/i18n/config';
 
 export default function LoginPage() {
+  const { t, locale, setLocale } = useI18n();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -16,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isFirstRun, setIsFirstRun] = useState(false);
   const [showAdminInfo, setShowAdminInfo] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   // 检查是否为首次运行
   useEffect(() => {
@@ -35,6 +39,23 @@ export default function LoginPage() {
     
     checkFirstRun();
   }, []);
+
+  // 点击外部关闭语言菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showLanguageMenu) {
+        const target = event.target as Element;
+        if (!target.closest('.language-menu-container')) {
+          setShowLanguageMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showLanguageMenu]);
 
 
 
@@ -70,11 +91,11 @@ export default function LoginPage() {
           window.location.href = safeRedirectTo;
         }, 300);
       } else {
-        setError(data.error || '登录失败');
+        setError(data.error || t('auth.loginFailed'));
       }
     } catch (error) {
       console.error('登录失败:', error);
-      setError('登录失败，请稍后重试');
+      setError(t('auth.loginFailedRetry'));
     } finally {
       setLoading(false);
     }
@@ -91,6 +112,11 @@ export default function LoginPage() {
     }));
   };
 
+  const handleLanguageChange = async (newLocale: Locale) => {
+    await setLocale(newLocale);
+    setShowLanguageMenu(false);
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <BlackHoleAnimation className="absolute inset-0" offsetX={-3} hideControls={true} />
@@ -101,13 +127,46 @@ export default function LoginPage() {
         <div className="hidden lg:block lg:w-2/3 auth-left-section"></div>
         
         {/* 右侧登录表单区域 */}
-        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8 auth-right-section">        
+        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8 auth-right-section">
           <div className="auth-form-card">
+            {/* 语言切换按钮 - 移动到登录卡片内的右上角 */}
+            <div className="absolute top-4 right-4 z-20">
+              <div className="relative language-menu-container">
+                <button
+                  onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                  className="group flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-card)]/80 backdrop-blur-sm border border-[var(--color-border)] hover:bg-[var(--color-card-hover)] transition-all duration-200"
+                  title={locale === 'zh' ? '中文' : 'English'}
+                >
+                  <Languages className="w-4 h-4 text-[var(--color-foreground-muted)] group-hover:text-[var(--color-foreground)] transition-colors" />
+                </button>
+                
+                {showLanguageMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-32 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg shadow-lg backdrop-blur-sm z-30">
+                    <button
+                      onClick={() => handleLanguageChange('zh')}
+                      className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-card-hover)] transition-colors first:rounded-t-lg ${
+                        locale === 'zh' ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10' : 'text-[var(--color-foreground)]'
+                      }`}
+                    >
+                      中文
+                    </button>
+                    <button
+                      onClick={() => handleLanguageChange('en')}
+                      className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-card-hover)] transition-colors last:rounded-b-lg ${
+                        locale === 'en' ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10' : 'text-[var(--color-foreground)]'
+                      }`}
+                    >
+                      English
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="w-full space-y-6">
               {/* 品牌标题 */}
               <div className="text-center mb-6">
                 <h1 className="text-3xl lg:text-4xl font-bold mb-2 text-theme-foreground">
-                  Kun Avatar
+                  {t('app.title')}
                 </h1>
                 <div className="w-16 h-1 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] mx-auto rounded-full mb-4"></div>
               </div>
@@ -118,23 +177,20 @@ export default function LoginPage() {
                   <div className="flex-1 items-start space-x-3">
                       </div>
                       <p className="flex justify-center text-xs text-blue-300 m-2">
-                        💡 注册完成后自动激活并获得超级管理员账号
+                        {t('auth.firstRunNotice')}
                       </p>
                     </div>
               )}
               
               <div>
                 <h2 className="text-center text-xl lg:text-2xl font-bold text-[var(--color-foreground)] mb-6">
-                  嗨，欢迎回来！
+                  <span className="inline-block animate-wave mr-1">👋</span>{t('auth.welcomeBack').replace('👋', '')}
                 </h2>
               </div>
 
                <form className="space-y-5" onSubmit={handleSubmit}>
                  <div className="space-y-4">
                    <div>
-                     <label htmlFor="username" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                       用户名或邮箱
-                     </label>
                      <input
                        id="username"
                        name="username"
@@ -144,14 +200,11 @@ export default function LoginPage() {
                        value={formData.username}
                        onChange={handleChange}
                        className="w-full px-4 py-3 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
-                       placeholder="请输入用户名或邮箱"
+                       placeholder={t('auth.usernamePlaceholder')}
                      />
                    </div>
 
                    <div>
-                     <label htmlFor="password" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                       密码
-                     </label>
                      <div className="relative">
                        <input
                          id="password"
@@ -162,7 +215,7 @@ export default function LoginPage() {
                          value={formData.password}
                          onChange={handleChange}
                          className="w-full px-4 py-3 pr-12 border border-[var(--color-input-border)] placeholder-[var(--color-foreground-muted)] text-[var(--color-foreground)] rounded-lg focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-input)] backdrop-blur-sm transition-all duration-200"
-                         placeholder="请输入密码"
+                         placeholder={t('auth.passwordPlaceholder')}
                        />
                        <button
                          type="button"
@@ -191,7 +244,7 @@ export default function LoginPage() {
                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] hover:from-[var(--color-primary-hover)] hover:to-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                  >
                    <LogIn className="w-4 h-4 mr-2" />
-                   {loading ? '登录中...' : '登录'}
+                   {loading ? t('auth.loggingIn') : t('auth.login')}
                  </button>
                  
                  {/* 注册新账号按钮 */}
@@ -199,23 +252,21 @@ export default function LoginPage() {
                    href="/register"
                    className="w-full flex justify-center items-center py-3 px-4 border border-[var(--color-border)] text-sm font-medium rounded-lg text-[var(--color-foreground)] bg-transparent hover:bg-[var(--color-card-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-all duration-200"
                  >
-                   注册新账号
+                   {t('auth.registerTitle')}
                  </Link>
                </form>
                
                {/* 版权信息 */}
                <div className="text-center pt-4 ">
                  <p className="text-xs text-[var(--color-foreground-muted)]">
-                   © 2025{' '}
-                   <a 
+                   © 2025 <a 
                      href="https://kunpuai.com" 
                      target="_blank" 
                      rel="noopener noreferrer"
-                     className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+                     className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors font-medium"
                    >
                      KunpuAI
-                   </a>
-                   , Inc. All rights reserved.
+                   </a>, Inc. All rights reserved.
                  </p>
                </div>
             </div>

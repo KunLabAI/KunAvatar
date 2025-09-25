@@ -11,6 +11,7 @@ import {
 } from './input-controls';
 import { useModelVisionValidation } from '../hooks/useModelVisionValidation';
 import { ImagePreview } from './ImagePreview';
+import { useI18n } from '@/contexts/I18nContext';
 
 type ChatMode = 'model' | 'agent';
 
@@ -112,6 +113,19 @@ export function MessageInput({
   
   // 快速笔记面板状态
 }: MessageInputProps) {
+  const { t } = useI18n();
+  
+  // 支持参数替换的翻译函数
+  const tWithParams = (key: string, params?: Record<string, any>, fallback?: string): string => {
+    let text = t(key, fallback);
+    if (params) {
+      Object.entries(params).forEach(([paramKey, value]) => {
+        text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(value));
+      });
+    }
+    return text;
+  };
+  
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -297,7 +311,7 @@ export function MessageInput({
     const remainingSlots = maxImages - images.length;
     
     if (fileArray.length > remainingSlots) {
-      alert(`最多只能上传 ${maxImages} 张图片，当前还可以上传 ${remainingSlots} 张`);
+      alert(tWithParams('chat.messageInput.alerts.maxImagesReached', { max: maxImages }));
       return;
     }
 
@@ -306,14 +320,14 @@ export function MessageInput({
     for (const file of fileArray) {
       // 验证文件类型
       if (!file.type.startsWith('image/')) {
-        alert(`文件 "${file.name}" 不是图片文件`);
+        alert(t('chat.messageInput.alerts.invalidFileType'));
         continue;
       }
 
       // 验证文件大小
       if (file.size > maxImageSize) {
         const maxSizeMB = maxImageSize / (1024 * 1024);
-        alert(`文件 "${file.name}" 大小超过 ${maxSizeMB}MB`);
+        alert(tWithParams('chat.messageInput.alerts.fileSizeExceeded', { maxSize: maxSizeMB }));
         continue;
       }
 
@@ -334,7 +348,7 @@ export function MessageInput({
         newImages.push(base64);
       } catch (error) {
         console.error('文件转换失败:', error);
-        alert(`文件 "${file.name}" 转换失败`);
+        alert(t('chat.messageInput.alerts.fileConversionError'));
       }
     }
 
@@ -349,7 +363,7 @@ export function MessageInput({
 
     // 检查是否还能添加更多图片
     if (images.length >= maxImages) {
-      alert(`最多只能上传 ${maxImages} 张图片`);
+      alert(tWithParams('chat.messageInput.alerts.maxImagesReached', { max: maxImages }));
       return;
     }
 
@@ -361,7 +375,7 @@ export function MessageInput({
       }
     } catch (error) {
       console.error('截图处理失败:', error);
-      alert('截图处理失败，请重试');
+      alert(t('chat.messageInput.alerts.screenshotError'));
     }
   }, [enableImageUpload, modelSupportsVision, disabled, images.length, maxImages]);
 
@@ -415,8 +429,8 @@ export function MessageInput({
                   onKeyDown={handleKeyPress}
                   placeholder={
                     hasSelection 
-                      ? `与${getModelDisplayName()}对话...`
-                      : `请先选择${chatMode === 'model' ? '模型' : '智能体'}...`
+                      ? tWithParams('chat.messageInput.placeholderWithModel', { modelName: getModelDisplayName() })
+                      : tWithParams('chat.messageInput.placeholderSelectFirst', { type: t(`chat.messageInput.${chatMode}`) })
                   }
                   disabled={disabled || !hasSelection}
                   className="w-full px-4 py-3 bg-transparent text-theme-foreground placeholder-theme-foreground-muted border-0 resize-none focus:outline-none scrollbar-thin"
@@ -427,9 +441,9 @@ export function MessageInput({
                 {/* 字符计数指示器（可选） */}
                 {(message.length > 0 || images.length > 0) && (
                   <div className="absolute bottom-2 right-4 text-xs text-theme-foreground-muted pointer-events-none">
-                    {message.length > 0 && `${message.length}字符`}
+                    {message.length > 0 && tWithParams('chat.messageInput.characterCount', { count: message.length })}
                     {message.length > 0 && images.length > 0 && ' • '}
-                    {images.length > 0 && `${images.length}张图片`}
+                    {images.length > 0 && tWithParams('chat.messageInput.imageCount', { count: images.length })}
                   </div>
                 )}
               </div>
@@ -446,7 +460,7 @@ export function MessageInput({
                   hasImages={images.length > 0}
                   imageCount={images.length}
                   maxImages={maxImages}
-                  tooltip={`上传图片 (${images.length}/${maxImages})`}
+                  tooltip={tWithParams('chat.messageInput.uploadImage', { current: images.length, max: maxImages })}
                   isCheckingModel={isCheckingModel}
                   modelSupportsVision={modelSupportsVision}
                   onValidationError={(title: string, message: string) => {
@@ -461,7 +475,7 @@ export function MessageInput({
                 <ScreenshotControl
                   onScreenshotTaken={handleScreenshotTaken}
                   disabled={disabled || isStreaming}
-                  tooltip="截图(Alt+Z)"
+                  tooltip={t('chat.messageInput.screenshot')}
                   isCheckingModel={isCheckingModel}
                   modelSupportsVision={modelSupportsVision}
                   onValidationError={(title: string, message: string) => {
@@ -520,7 +534,7 @@ export function MessageInput({
                       : 'text-theme-foreground-muted cursor-not-allowed'
                   }
                 `}
-                title={isStreaming ? "停止生成" : "发送消息 (Enter)"}
+                title={isStreaming ? t('chat.messageInput.stopGeneration') : t('chat.messageInput.sendMessage')}
               >
                 {isStreaming ? (
                   <Circle className="w-4 h-4 fill-current" />

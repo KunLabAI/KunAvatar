@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Brain, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ThinkingModeProps {
   content: string;
@@ -95,6 +96,7 @@ export function ThinkingMode({
   onToggleExpand,
   defaultHidden = false
 }: ThinkingModeProps) {
+  const { t } = useI18n();
   const [initiallyHidden, setInitiallyHidden] = useState(defaultHidden);
 
 
@@ -163,7 +165,7 @@ export function ThinkingMode({
           </div>
 
           <span className="text-sm font-medium text-theme-foreground">
-            思考模式
+            {t('chat.thinking.mode')}
           </span>
         </div>
       </div>

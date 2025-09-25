@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, UserPlus, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, CheckCircle, XCircle, Languages } from 'lucide-react';
 import BlackHoleAnimation from '@/components/BlackHoleAnimation';
+import { useI18n } from '@/contexts/I18nContext';
+import { type Locale } from '@/i18n/config';
 
 // 验证状态类型
 type ValidationStatus = 'idle' | 'valid' | 'invalid';
@@ -15,6 +17,7 @@ interface ValidationState {
 }
 
 export default function RegisterPage() {
+  const { t, locale, setLocale } = useI18n();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -28,6 +31,8 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [isFirstUser, setIsFirstUser] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const languageMenuRef = useRef<HTMLDivElement>(null);
   
   // 验证状态管理
   const [validationStates, setValidationStates] = useState<{
@@ -44,55 +49,75 @@ export default function RegisterPage() {
   
   const router = useRouter();
 
+  // 处理语言菜单外部点击
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
+        setShowLanguageMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // 语言切换处理
+  const handleLanguageChange = async (newLocale: Locale) => {
+    await setLocale(newLocale);
+    setShowLanguageMenu(false);
+  };
+
   // 验证函数
   const validateUsername = (username: string): ValidationState => {
     if (!username) {
-      return { status: 'invalid', message: '用户名不能为空' };
+      return { status: 'invalid', message: t('auth.validation.usernameRequired') };
     }
     if (username.length < 3) {
-      return { status: 'invalid', message: '用户名至少需要3个字符' };
+      return { status: 'invalid', message: t('auth.validation.usernameMinLength') };
     }
     if (username.length > 20) {
-      return { status: 'invalid', message: '用户名不能超过20个字符' };
+      return { status: 'invalid', message: t('auth.validation.usernameMaxLength') };
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return { status: 'invalid', message: '用户名只能包含字母、数字和下划线' };
+      return { status: 'invalid', message: t('auth.validation.usernameInvalidChars') };
     }
-    return { status: 'valid', message: '用户名格式正确' };
+    return { status: 'valid', message: t('auth.validation.usernameValid') };
   };
 
   const validateEmail = (email: string): ValidationState => {
     if (!email) {
-      return { status: 'invalid', message: '邮箱不能为空' };
+      return { status: 'invalid', message: t('auth.validation.emailRequired') };
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return { status: 'invalid', message: '请输入有效的邮箱地址' };
+      return { status: 'invalid', message: t('auth.validation.emailInvalid') };
     }
-    return { status: 'valid', message: '邮箱格式正确' };
+    return { status: 'valid', message: t('auth.validation.emailValid') };
   };
 
   const validatePassword = (password: string): ValidationState => {
     if (!password) {
-      return { status: 'invalid', message: '密码不能为空' };
+      return { status: 'invalid', message: t('auth.validation.passwordRequired') };
     }
     if (password.length < 6) {
-      return { status: 'invalid', message: '密码至少需要6个字符' };
+      return { status: 'invalid', message: t('auth.validation.passwordMinLength') };
     }
     if (password.length > 20) {
-      return { status: 'invalid', message: '密码不能超过20个字符' };
+      return { status: 'invalid', message: t('auth.validation.passwordMaxLength') };
     }
-    return { status: 'valid', message: '密码格式正确' };
+    return { status: 'valid', message: t('auth.validation.passwordValid') };
   };
 
   const validateConfirmPassword = (password: string, confirmPassword: string): ValidationState => {
     if (!confirmPassword) {
-      return { status: 'invalid', message: '请确认密码' };
+      return { status: 'invalid', message: t('auth.validation.confirmPasswordRequired') };
     }
     if (password !== confirmPassword) {
-      return { status: 'invalid', message: '两次输入的密码不一致' };
+      return { status: 'invalid', message: t('auth.validation.confirmPasswordMismatch') };
     }
-    return { status: 'valid', message: '密码确认正确' };
+    return { status: 'valid', message: t('auth.validation.confirmPasswordValid') };
   };
 
   // 处理字段验证
@@ -182,7 +207,7 @@ export default function RegisterPage() {
       passwordValidation.status === 'invalid' ||
       confirmPasswordValidation.status === 'invalid'
     ) {
-      setError('请修正表单中的错误后再提交');
+      setError(t('auth.validation.formErrors'));
       setLoading(false);
       return;
     }
@@ -201,7 +226,7 @@ export default function RegisterPage() {
       if (response.ok && data.success) {
         setSuccess(true);
         setIsFirstUser(data.isFirstUser || false);
-        setSuccessMessage(data.message || '注册成功！');
+        setSuccessMessage(data.message || t('auth.success.registerSuccess'));
         setTimeout(() => {
           router.push('/login');
         }, data.isFirstUser ? 4000 : 2000); // 第一个用户显示更长时间
@@ -211,12 +236,12 @@ export default function RegisterPage() {
           const errorMessages = data.details.map((detail: any) => detail.message).join(', ');
           setError(errorMessages);
         } else {
-          setError(data.error || '注册失败');
+          setError(data.error || t('auth.registerFailed'));
         }
       }
     } catch (error) {
       console.error('注册失败:', error);
-      setError('注册失败，请稍后重试');
+      setError(t('auth.registerFailedRetry'));
     } finally {
       setLoading(false);
     }
@@ -271,7 +296,7 @@ export default function RegisterPage() {
                   }`} />
                 </div>
                 <h2 className="text-2xl lg:text-3xl font-extrabold text-[var(--color-foreground)] mb-4">
-                  {isFirstUser ? '🎉 超级管理员创建成功！' : '注册成功！'}
+                  {isFirstUser ? t('auth.success.superAdminCreated') : t('auth.success.registerSuccess')}
                 </h2>
                 <div className="text-[var(--color-foreground-secondary)] space-y-3">
                   <p className="text-base">
@@ -279,18 +304,18 @@ export default function RegisterPage() {
                   </p>
                   {isFirstUser && (
                     <div className="bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border border-yellow-400/20 rounded-lg p-4 mt-4">
-                      <div className="text-yellow-400 font-semibold mb-2">🔑 超级管理员权限</div>
+                      <div className="text-yellow-400 font-semibold mb-2">{t('auth.success.superAdminPrivileges')}</div>
                       <ul className="text-sm text-left space-y-1">
-                        <li>• 用户管理：创建、编辑、删除用户</li>
-                        <li>• 角色权限：管理所有角色和权限</li>
-                        <li>• 系统设置：配置系统参数</li>
-                        <li>• 模型管理：添加和配置AI模型</li>
-                        <li>• 完整访问：所有功能无限制</li>
+                        <li>{t('auth.success.privileges.userManagement')}</li>
+                        <li>{t('auth.success.privileges.roleManagement')}</li>
+                        <li>{t('auth.success.privileges.systemSettings')}</li>
+                        <li>{t('auth.success.privileges.modelManagement')}</li>
+                        <li>{t('auth.success.privileges.fullAccess')}</li>
                       </ul>
                     </div>
                   )}
                   <p className="text-sm">
-                    正在跳转到登录页面...
+                    {t('auth.success.redirecting')}
                   </p>
                 </div>
               </div>
@@ -311,9 +336,41 @@ export default function RegisterPage() {
         <div className="hidden lg:block lg:w-2/3 auth-left-section"></div>
         
         {/* 右侧注册表单区域 */}
-        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-4 lg:p-8 auth-right-section">
+        <div className="flex-1 lg:w-1/3 relative flex items-center justify-center p-2 sm:p-4 lg:p-8 auth-right-section">
           
-          <div className="auth-form-card max-h-[90vh] overflow-y-auto scrollbar-thin">
+          <div className="auth-form-card w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto scrollbar-thin relative">
+            {/* 语言切换按钮 */}
+            <div className="absolute top-4 right-4 z-20" ref={languageMenuRef}>
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="group flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-card)]/80 backdrop-blur-sm border border-[var(--color-border)] hover:bg-[var(--color-card-hover)] transition-all duration-200"
+                title="切换语言 / Switch Language"
+              >
+                <Languages className="h-4 w-4 text-[var(--color-foreground-muted)] group-hover:text-[var(--color-foreground)] transition-colors" />
+              </button>
+              
+              {showLanguageMenu && (
+                <div className="absolute top-full right-0 mt-2 w-32 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg shadow-lg backdrop-blur-sm z-30">
+                  <button
+                    onClick={() => handleLanguageChange('zh')}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-card-hover)] transition-colors first:rounded-t-lg ${
+                      locale === 'zh' ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10' : 'text-[var(--color-foreground)]'
+                    }`}
+                  >
+                    中文
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange('en')}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-[var(--color-card-hover)] transition-colors last:rounded-b-lg ${
+                      locale === 'en' ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10' : 'text-[var(--color-foreground)]'
+                    }`}
+                  >
+                    English
+                  </button>
+                </div>
+              )}
+            </div>
+            
             {/* 品牌标题 */}
             <div className="text-center mb-6 lg:mb-8">
               <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
@@ -323,16 +380,13 @@ export default function RegisterPage() {
             </div>
             <div className="text-center mb-4 lg:mb-6">
               <h2 className="text-xl lg:text-2xl font-bold text-[var(--color-foreground)] mb-6">
-                创建新账户
+                {t('auth.createAccount')}
               </h2>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                    用户名 <span className="text-[var(--color-error)]">*</span>
-                  </label>
                   <input
                     id="username"
                     name="username"
@@ -346,15 +400,12 @@ export default function RegisterPage() {
                       validationStates.username.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                       'border-[var(--color-input-border)]'
                     }`}
-                    placeholder="请输入用户名"
+                    placeholder={t('auth.usernameRegisterPlaceholder')}
                   />
                   <ValidationMessage validation={validationStates.username} />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                    邮箱 <span className="text-[var(--color-error)]">*</span>
-                  </label>
                   <input
                     id="email"
                     name="email"
@@ -368,15 +419,12 @@ export default function RegisterPage() {
                       validationStates.email.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                       'border-[var(--color-input-border)]'
                     }`}
-                    placeholder="请输入邮箱地址"
+                    placeholder={t('auth.emailPlaceholder')}
                   />
                   <ValidationMessage validation={validationStates.email} />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                    密码 <span className="text-[var(--color-error)]">*</span>
-                  </label>
                   <div className="relative">
                     <input
                       id="password"
@@ -391,7 +439,7 @@ export default function RegisterPage() {
                         validationStates.password.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                         'border-[var(--color-input-border)]'
                       }`}
-                      placeholder="请输入密码（6-20个字符）"
+                      placeholder={t('auth.passwordRegisterPlaceholder')}
                     />
                     <button
                       type="button"
@@ -409,9 +457,6 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
-                    确认密码 <span className="text-[var(--color-error)]">*</span>
-                  </label>
                   <div className="relative">
                     <input
                       id="confirmPassword"
@@ -426,7 +471,7 @@ export default function RegisterPage() {
                         validationStates.confirmPassword.status === 'invalid' ? 'border-[var(--color-error)]/50' :
                         'border-[var(--color-input-border)]'
                       }`}
-                      placeholder="请再次输入密码"
+                      placeholder={t('auth.confirmPasswordPlaceholder')}
                     />
                     <button
                       type="button"
@@ -456,7 +501,7 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="w-full py-3 px-4 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] text-white font-medium rounded-lg hover:from-[var(--color-primary-hover)] hover:to-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                {loading ? '注册中...' : '创建账户'}
+                {loading ? t('auth.registering') : t('auth.createAccountButton')}
               </button>
               
               {/* 登录到现有账户按钮 */}
@@ -464,7 +509,7 @@ export default function RegisterPage() {
                 href="/login"
                 className="w-full flex justify-center items-center py-3 px-4 mt-3 border border-[var(--color-border)] text-sm font-medium rounded-lg text-[var(--color-foreground)] bg-transparent hover:bg-[var(--color-card-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-all duration-200"
               >
-                登录到现有账户
+                {t('auth.loginToExisting')}
               </Link>
             </div>
         </form>
@@ -472,16 +517,7 @@ export default function RegisterPage() {
         {/* 版权信息 */}
         <div className="text-center pt-4 ">
           <p className="text-xs text-[var(--color-foreground-muted)]">
-            © 2025{' '}
-            <a 
-              href="https://kunpuai.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
-            >
-              KunpuAI
-            </a>
-            , Inc. All rights reserved.
+            © 2025 <span className="text-[var(--color-primary)] font-medium">KunpuAI</span>, Inc. All rights reserved.
           </p>
         </div>
          </div>

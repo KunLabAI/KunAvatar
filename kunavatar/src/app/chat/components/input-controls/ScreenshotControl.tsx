@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SquareDashedMousePointer } from 'lucide-react';
 import { BaseControlButton } from './BaseControlButton';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ScreenshotControlProps {
   onScreenshotTaken: (imageDataUrl: string) => void;
@@ -24,6 +25,7 @@ export function ScreenshotControl({
   onValidationError
 }: ScreenshotControlProps) {
   // 所有 Hooks 必须在组件顶部调用
+  const { t } = useI18n();
   const [isCapturing, setIsCapturing] = useState(false);
   const onScreenshotTakenRef = useRef(onScreenshotTaken);
   
@@ -80,7 +82,6 @@ export function ScreenshotControl({
     
     // 清理函数 - 移除所有截图相关的事件监听器
     return () => {
-      console.log('清理截图事件监听器');
       if (electronAPI && electronAPI.removeAllListeners) {
         electronAPI.removeAllListeners('screenshot-selection');
         electronAPI.removeAllListeners('screenshot-cancel');
@@ -94,8 +95,8 @@ export function ScreenshotControl({
     // 如果模型不支持多模态，显示错误提示
     if (modelSupportsVision === false) {
       onValidationError?.(
-        '截图功能不可用', 
-        '当前模型不支持多模态功能，请选择支持图片识别的模型（如 llava、bakllava 等）。'
+        t('chat.messageInput.controls.screenshot.unavailableTitle'), 
+        t('chat.messageInput.controls.screenshot.unavailableMessage')
       );
       return;
     }
@@ -106,11 +107,11 @@ export function ScreenshotControl({
       // 在 Electron 中创建全屏覆盖窗口
       const result = await (window as any).electronAPI.createScreenshotOverlay();
       if (!result.success) {
-        throw new Error(result.error || '创建截图覆盖窗口失败');
+        throw new Error(result.error || t('chat.messageInput.controls.screenshot.createOverlayError'));
       }
     } catch (error) {
       console.error('创建截图覆盖窗口失败:', error);
-      onValidationError?.('截图失败', error instanceof Error ? error.message : '创建截图覆盖窗口失败');
+      onValidationError?.(t('chat.messageInput.controls.screenshot.failedTitle'), error instanceof Error ? error.message : t('chat.messageInput.controls.screenshot.createOverlayError'));
     }
   }, [modelSupportsVision, disabled, onValidationError]);
 
@@ -144,13 +145,13 @@ export function ScreenshotControl({
   // 确定工具提示文本
   const getTooltip = () => {
     if (isCheckingModel) {
-      return '正在检测模型多模态支持...';
+      return t('chat.messageInput.controls.screenshot.checkingModel');
     }
     if (modelSupportsVision === false) {
-      return '当前模型不支持图片识别';
+      return t('chat.messageInput.controls.screenshot.modelNotSupported');
     }
     if (isCapturing) {
-      return '正在截图...';
+      return t('chat.messageInput.controls.screenshot.capturing');
     }
     return tooltip;
   };

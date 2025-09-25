@@ -3,6 +3,7 @@ import { Brain, X, Clock, Star, TrendingUp, ChevronRight, ChevronDown, Edit3, Tr
 import { InlineLoading } from '@/components/Loading';
 import { formatTime } from '@/lib/utils/time';
 import { authenticatedFetch, useAuthErrorHandler } from '@/lib/utils/auth-utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface MemoryItem {
   id: number;
@@ -37,6 +38,8 @@ interface MemoryPanelProps {
 }
 
 export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: MemoryPanelProps) {
+  const { t } = useI18n();
+  
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [stats, setStats] = useState<MemoryStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -118,18 +121,18 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
           setMemories(data.memories || []);
           setStats(data.stats || null);
         } else {
-          setError('获取记忆数据失败');
+          setError(t('chat.tools.memory.errors.loadFailed'));
         }
       } else {
-        setError(`请求失败 (${response.status})`);
+        setError(t('chat.tools.memory.errors.requestFailed').replace('{status}', response.status.toString()));
       }
     } catch (err) {
-      setError('网络错误');
-      console.error('加载记忆失败:', err);
+      setError(t('chat.tools.memory.errors.networkError'));
+      console.error(t('chat.tools.memory.errors.loadFailed'), err);
     } finally {
       setLoading(false);
     }
-  }, [conversationId, agentId, handleAuthError]);
+  }, [conversationId, agentId, handleAuthError, t]);
 
   useEffect(() => {
     if ((conversationId || agentId) && isVisible) {
@@ -160,7 +163,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
       }
       
       if (!response.ok) {
-        throw new Error('获取记忆详情失败');
+        throw new Error(t('chat.tools.memory.errors.getDetailsFailed'));
       }
       
       const data = await response.json();
@@ -180,15 +183,15 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
       }
       
     } catch (error) {
-      console.error('获取记忆详情时发生错误:', error);
-      alert('获取记忆详情失败，请稍后重试');
+      console.error(t('chat.tools.memory.errors.getDetailsFailed'), error);
+      alert(t('chat.tools.memory.errors.getDetailsError'));
     }
   };
   
   // 保存编辑
   const handleSaveEdit = async (memoryId: number) => {
     if (editingContent.trim() === '') {
-      alert('记忆内容不能为空');
+      alert(t('chat.tools.memory.errors.contentEmpty'));
       return;
     }
     
@@ -222,12 +225,12 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
         console.log('✏️ 记忆更新成功');
       } else {
         const errorData = await updateResponse.json();
-        alert(`更新失败: ${errorData.error}`);
+        alert(t('chat.tools.memory.errors.updateFailed') + ': ' + (errorData.error || ''));
       }
       
     } catch (error) {
-      console.error('更新记忆时发生错误:', error);
-      alert('更新记忆失败，请稍后重试');
+      console.error(t('chat.tools.memory.errors.updateError'), error);
+      alert(t('chat.tools.memory.errors.updateError'));
     }
   };
   
@@ -239,7 +242,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
 
   // 删除记忆
   const handleDeleteMemory = async (memoryId: number) => {
-    if (!confirm('确定要删除这条记忆吗？')) {
+    if (!confirm(t('chat.tools.memory.confirmDelete'))) {
       return;
     }
     
@@ -258,11 +261,11 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
         // 重新加载记忆列表
         loadMemories();
       } else {
-        alert('删除失败');
+        alert(t('chat.tools.memory.errors.deleteFailed'));
       }
     } catch (err) {
-      console.error('删除记忆失败:', err);
-      alert('删除失败');
+      console.error(t('chat.tools.memory.errors.deleteFailed') + ':', err);
+      alert(t('chat.tools.memory.errors.deleteFailed'));
     }
   };
 
@@ -288,7 +291,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-theme-background/50 rounded-lg border border-theme-border">
         <Brain className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-400">无记忆数据</span>
+        <span className="text-sm text-gray-400">{t('chat.tools.memory.noMemoryData')}</span>
       </div>
     );
   }
@@ -311,7 +314,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
         onMouseDown={handleMouseDown}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
-        title="拖拽调整面板高度"
+        title={t('chat.tools.memory.dragToResize')}
         style={{ userSelect: 'none' }}
       >
         {/* 拖拽进度指示器 */}
@@ -340,12 +343,12 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
             <div className="flex items-center gap-2">
               <Brain className="w-4 h-4 text-theme-primary" />
               <span className="text-sm font-medium text-theme-foreground">
-                {agentId ? 'Agent记忆' : '对话记忆'}
+                {agentId ? t('chat.tools.memory.agentTitle') : t('chat.tools.memory.title')}
               </span>
             </div>
             {stats && (
               <div className="text-xs text-theme-foreground-muted ml-6">
-                共 {stats.total_memories} 条记忆，节省 {stats.total_tokens_saved} tokens
+                {t('chat.tools.memory.stats').replace('{count}', stats.total_memories.toString()).replace('{tokens}', stats.total_tokens_saved.toString())}
               </div>
             )}
           </div>
@@ -353,7 +356,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
             <button
               onClick={onToggle}
               className="p-1 hover:bg-theme-card-hover rounded-lg transition-colors"
-              title="关闭记忆面板"
+              title={t('chat.tools.memory.closePanel')}
             >
               <X className="w-4 h-4 text-theme-foreground-muted hover:text-theme-foreground transition-colors" />
             </button>
@@ -365,7 +368,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
           {loading ? (
             <div className="flex justify-center py-8">
               <InlineLoading 
-                text="正在加载记忆数据..." 
+                text={t('chat.tools.memory.loading')} 
                 size="small"
               />
             </div>
@@ -377,7 +380,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
             <div className="text-center py-8">
               <Brain className="w-8 h-8 text-theme-foreground-muted mx-auto mb-2" />
               <p className="text-sm text-theme-foreground-muted">
-                {agentId ? '暂无Agent记忆' : '暂无对话记忆'}
+                {agentId ? t('chat.tools.memory.noAgentMemory') : t('chat.tools.memory.noConversationMemory')}
               </p>
             </div>
           ) : (
@@ -406,11 +409,11 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                          </div>
                          <div className="flex items-center gap-1">
                            <Star className="w-3 h-3" />
-                           <span>重要性: {memory.importance_score.toFixed(1)}</span>
+                           <span>{t('chat.tools.memory.importance').replace('{score}', memory.importance_score.toFixed(1))}</span>
                          </div>
                          <div className="flex items-center gap-1">
                            <TrendingUp className="w-3 h-3" />
-                           <span>节省: {memory.tokens_saved} tokens</span>
+                           <span>{t('chat.tools.memory.tokensSaved').replace('{tokens}', memory.tokens_saved.toString())}</span>
                          </div>
                        </div>
                      </div>
@@ -423,7 +426,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                            handleEditMemory(memory.id);
                          }}
                          className="p-1 hover:bg-theme-card-hover rounded-lg transition-colors"
-                         title="编辑记忆"
+                         title={t('chat.tools.memory.editMemory')}
                        >
                          <Edit3 className="w-3 h-3 text-theme-foreground-muted hover:text-theme-primary transition-colors" />
                        </button>
@@ -433,7 +436,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                            handleDeleteMemory(memory.id);
                          }}
                          className="p-1 hover:bg-theme-card-hover rounded-lg transition-colors"
-                         title="删除记忆"
+                         title={t('chat.tools.memory.deleteMemory')}
                        >
                          <Trash2 className="w-3 h-3 text-theme-foreground-muted hover:text-red-500 transition-colors" />
                        </button>
@@ -446,12 +449,12 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                       {editingMemoryId === memory.id ? (
                         <div className="space-y-3">
                           <div>
-                            <h4 className="text-xs font-medium text-theme-foreground-muted mb-2">编辑记忆内容</h4>
+                            <h4 className="text-xs font-medium text-theme-foreground-muted mb-2">{t('chat.tools.memory.editContent')}</h4>
                             <textarea
                               value={editingContent}
                               onChange={(e) => setEditingContent(e.target.value)}
                               className="w-full h-32 p-3 text-sm bg-theme-background border border-theme-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-theme-primary/20 focus:border-theme-primary"
-                              placeholder="输入记忆内容..."
+                              placeholder={t('chat.tools.memory.contentPlaceholder')}
                               autoFocus
                             />
                           </div>
@@ -460,13 +463,13 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                               onClick={() => handleSaveEdit(memory.id)}
                               className="px-3 py-1.5 bg-theme-primary text-white text-xs rounded-lg hover:bg-theme-primary/90 transition-colors"
                             >
-                              保存
+                              {t('chat.tools.memory.save')}
                             </button>
                             <button
                               onClick={handleCancelEdit}
                               className="px-3 py-1.5 bg-theme-background-secondary text-theme-foreground-muted text-xs rounded-lg hover:bg-theme-card-hover transition-colors"
                             >
-                              取消
+                              {t('chat.tools.memory.cancel')}
                             </button>
                           </div>
                         </div>
@@ -476,14 +479,14 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                           {/* 原始内容 */}
                           {memory.content && (
                             <div>
-                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">内容</h4>
+                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">{t('chat.tools.memory.content')}</h4>
                               <p className="text-sm text-theme-foreground leading-relaxed whitespace-pre-wrap">{formatMemoryContent(memory.content)}</p>
                             </div>
                           )}
                           
                           {memory.parsedContent.importantTopics && memory.parsedContent.importantTopics.length > 0 && (
                             <div>
-                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">重要话题</h4>
+                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">{t('chat.tools.memory.importantTopics')}</h4>
                               <div className="flex flex-wrap gap-1">
                                 {memory.parsedContent.importantTopics.map((topic, index) => (
                                   <span key={index} className="px-2 py-1 bg-theme-primary/10 text-theme-primary text-xs rounded">
@@ -495,7 +498,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                           )}
                           {memory.parsedContent.keyFacts && memory.parsedContent.keyFacts.length > 0 && (
                             <div>
-                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">关键事实</h4>
+                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">{t('chat.tools.memory.keyFacts')}</h4>
                               <ul className="text-sm text-theme-foreground space-y-1">
                                 {memory.parsedContent.keyFacts.map((fact, index) => (
                                   <li key={index} className="flex items-start gap-2">
@@ -508,7 +511,7 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                           )}
                           {memory.parsedContent.preferences && memory.parsedContent.preferences.length > 0 && (
                             <div>
-                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">用户偏好</h4>
+                              <h4 className="text-xs font-medium text-theme-foreground-muted mb-1">{t('chat.tools.memory.userPreferences')}</h4>
                               <ul className="text-sm text-theme-foreground space-y-1">
                                 {memory.parsedContent.preferences.map((pref, index) => (
                                   <li key={index} className="flex items-start gap-2">
@@ -521,12 +524,12 @@ export function MemoryPanel({ conversationId, agentId, isVisible, onToggle }: Me
                           )}
                           <div className="pt-2 border-t border-theme-border">
                             <div className="flex items-center justify-between text-xs text-theme-foreground-muted">
-                              <span>记忆ID: {memory.id}</span>
-                              <span>消息范围: {memory.source_message_range || 'N/A'}</span>
-                              <span>节省: {memory.tokens_saved} tokens</span>
+                              <span>{t('chat.tools.memory.memoryId').replace('{id}', memory.id.toString())}</span>
+                              <span>{t('chat.tools.memory.messageRange').replace('{range}', memory.source_message_range || 'N/A')}</span>
+                              <span>{t('chat.tools.memory.tokensSaved').replace('{tokens}', memory.tokens_saved.toString())}</span>
                             </div>
                             <div className="mt-1 text-xs text-theme-foreground-muted">
-                              类型: {memory.memory_type} | 创建时间: {formatTime(memory.created_at)}
+                              {t('chat.tools.memory.memoryType').replace('{type}', memory.memory_type)} | {t('chat.tools.memory.createdAt').replace('{time}', formatTime(memory.created_at))}
                             </div>
                           </div>
                         </>

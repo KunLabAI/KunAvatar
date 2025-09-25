@@ -5,6 +5,7 @@ import ModelLogo from '@/app/model-manager/components/ModelLogo';
 import { AgentAvatar } from './ui/AgentAvatar';
 import { Brain, Bot, ChevronDown, MessageSquare } from 'lucide-react';
 import Modal from '@/components/Modal';
+import { useI18n } from '@/contexts/I18nContext';
 
 type ChatMode = 'model' | 'agent';
 
@@ -82,11 +83,12 @@ export function ChatHeader({
   const [showModeChangeModal, setShowModeChangeModal] = useState(false);
   const [pendingMode, setPendingMode] = useState<ChatMode | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n(); // 多语言支持
   
   // 标题逻辑：如果有对话则显示对话标题，否则显示默认格式的新对话标题
   const title = currentConversation 
     ? currentConversation.title 
-    : `新对话 - ${new Date().toLocaleString('zh-CN', {
+    : `${t('chat.header.newConversation')} - ${new Date().toLocaleString('zh-CN', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -225,7 +227,7 @@ export function ChatHeader({
           icon: <div className="w-5 h-5 bg-theme-background-secondary rounded-md border border-theme-border flex-shrink-0 flex items-center justify-center">
             <Bot className="w-4 h-4 text-theme-foreground-muted" />
           </div>,
-          name: '请选择Agent',
+          name: t('chat.header.selectAgent'),
           label: 'Agent'
         };
       }
@@ -254,7 +256,7 @@ export function ChatHeader({
           icon: <div className="w-5 h-5 bg-theme-background-secondary rounded-md flex-shrink-0 flex items-center justify-center">
             <Brain className="w-4 h-4 text-theme-foreground-muted" />
           </div>,
-          name: '请选择模型',
+          name: t('chat.header.selectModel'),
           label: 'Model'
         };
       }
@@ -301,7 +303,7 @@ export function ChatHeader({
               <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card rounded-lg shadow-lg z-50">
                 {/* 模式切换区域 */}
                 <div className="p-3 border-b border-theme-border bg-theme-background-secondary/50">
-                  <div className="text-xs text-theme-foreground-muted mb-2 font-medium">选择模式</div>
+                  <div className="text-xs text-theme-foreground-muted mb-2 font-medium">{t('chat.header.selectMode')}</div>
                   <div className="flex items-center bg-theme-background-tertiary p-0.5 rounded-md">
                     <button 
                       onClick={() => handleModeChange('model')}
@@ -347,7 +349,7 @@ export function ChatHeader({
                         </div>
                         
                         <span className="flex-1 truncate text-theme-foreground-muted">
-                          无Agent
+                          {t('chat.header.noAgent')}
                         </span>
                         
                         {!selectedAgent && (
@@ -403,7 +405,7 @@ export function ChatHeader({
                         </div>
                         
                         <span className="flex-1 truncate text-theme-foreground-muted">
-                          请选择模型
+                          {t('chat.header.pleaseSelectModel')}
                         </span>
                         
                         {!selectedModel && (
@@ -453,7 +455,7 @@ export function ChatHeader({
                           </button>
                         );
                       }) : (
-                        <div className="px-3 py-2 text-sm text-theme-foreground-muted">没有可用模型</div>
+                        <div className="px-3 py-2 text-sm text-theme-foreground-muted">{t('chat.header.noModelsAvailable')}</div>
                       )}
                     </>
                   )}
@@ -487,23 +489,23 @@ export function ChatHeader({
       <Modal
         open={showModeChangeModal}
         onClose={handleCancelModeChange}
-        title="切换模式"
+        title={t('chat.header.modeSwitchTitle')}
         icon={<MessageSquare className="text-theme-primary" />}
         actions={[
           {
-            label: '取消',
+            label: t('chat.header.modeSwitchCancel'),
             onClick: handleCancelModeChange,
             variant: 'secondary',
           },
           {
-            label: '确认切换',
+            label: t('chat.header.modeSwitchConfirm'),
             onClick: handleConfirmModeChange,
             variant: 'primary',
             autoFocus: true,
           },
         ]}
       >
-        切换到 {pendingMode === 'model' ? '模型' : '智能体'} 模式将开启新的对话。当前对话内容将被保存，您确定要切换模式并开启新对话吗？
+        {t('chat.header.modeSwitchContent').replace('{mode}', pendingMode === 'model' ? t('chat.header.modelMode') : t('chat.header.agentMode'))}
       </Modal>
     </div>
   );

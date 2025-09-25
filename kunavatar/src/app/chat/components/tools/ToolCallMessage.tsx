@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Axe, ChevronDown, ChevronRight, Loader2, Check, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ToolCallMessageProps {
   toolCall: {
@@ -16,6 +17,7 @@ interface ToolCallMessageProps {
 }
 
 export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
+  const { t } = useI18n();
   // 当状态为错误时，默认展开显示错误信息
   const [isExpanded, setIsExpanded] = useState(toolCall.status === 'error');
   
@@ -73,9 +75,9 @@ export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
     if (toolCall.status === 'error') {
       return (
         <div>
-          <div className="text-sm font-medium text-theme-foreground mb-1">错误信息：</div>
+          <div className="text-sm font-medium text-theme-foreground mb-1">{t('tools.toolCall.errorInfo', '错误信息：')}</div>
           <div className="text-sm text-theme-foreground-secondary whitespace-pre-wrap break-words min-w-0 word-wrap streaming-content">
-            {toolCall.error || '未知错误'}
+            {toolCall.error || t('tools.toolCall.unknownError', '未知错误')}
           </div>
         </div>
       );
@@ -96,7 +98,7 @@ export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
       
       return (
         <div>
-          <div className="text-sm font-medium text-theme-foreground mb-1">执行结果：</div>
+          <div className="text-sm font-medium text-theme-foreground mb-1">{t('tools.toolCall.executionResult', '执行结果：')}</div>
           <div className="text-sm text-theme-foreground-secondary max-h-96 overflow-y-auto scrollbar-thin">
             {isJsonResult ? (
               <pre className="whitespace-pre-wrap font-mono text-xs bg-theme-background-secondary p-2 rounded-lg overflow-x-auto scrollbar-thin">
@@ -133,7 +135,7 @@ export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
               
               <Axe className="w-4 h-4 text-theme-primary" />
               <span className="text-sm font-medium text-theme-foreground">
-                工具调用 - {toolCall.toolName}
+                {t('tools.toolCall.title', '工具调用 - {toolName}').replace('{toolName}', toolCall.toolName)}
               </span>
               
               {/* 状态图标显示 - 移到工具名称旁边 */}
@@ -154,7 +156,7 @@ export function ToolCallMessage({ toolCall }: ToolCallMessageProps) {
             <div className="p-2">
               {/* 参数显示 */}
               <div className="mb-3">
-                <div className="text-sm font-medium text-theme-foreground mb-1">参数：</div>
+                <div className="text-sm font-medium text-theme-foreground mb-1">{t('tools.toolCall.parameters', '参数：')}</div>
                 <pre className="text-xs text-theme-foreground-secondary whitespace-pre-wrap break-words min-w-0 word-wrap streaming-content bg-theme-background-secondary p-2 rounded-lg overflow-x-auto scrollbar-thin">
                   {JSON.stringify(toolCall.args, null, 2)}
                 </pre>

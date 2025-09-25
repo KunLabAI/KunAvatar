@@ -44,7 +44,7 @@
       "roles": "Role Management",
       "assistant": "Assistant Model",
       "inference": "Inference Engine",
-      "appearance": "Appearance",
+      "appearance": "Interface",
       "logs": "Log Management",
       "appinfo": "App Info"
     },
@@ -136,7 +136,7 @@
       "loadMemorySettingsFailed": "Unable to load memory settings."
     },
     "appearance": {
-      "title": "Appearance Settings",
+      "title": "Interface Settings",
       "theme": {
         "title": "Interface Theme",
         "description": "Choose light or dark theme",
@@ -980,17 +980,335 @@
     "copy": "Copy",
     "copySuccess": "Copied!",
     "copyCode": "Copy Code",
-    "copyFailed": "Copy failed"
+    "copyFailed": "Copy failed",
+    "user": {
+      "you": "You"
+    },
+    "agent": {
+      "defaultName": "Agent"
+    },
+    "model": {
+      "defaultName": "Model"
+    },
+    "message": {
+      "empty": "Message content is empty",
+      "copybutton": "Copy",
+      "copiedbutton": "Copied",
+      "deletebutton": "Delete",
+      "delete": {
+        "tempMessageError": "Cannot delete temporary message, please refresh the page and try again",
+        "invalidIdError": "Invalid message ID format",
+        "loginRequired": "Please login first",
+        "deleteFailed": "Delete failed",
+        "deleteMessageFailed": "Failed to delete message",
+        "deleteFailedLog": "Failed to delete message:",
+        "confirmTitle": "Confirm Delete",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "confirmMessage": "Are you sure you want to delete this message? This action cannot be undone."
+      },
+      "expand": "Expand",
+      "collapse": "Collapse"
+    },
+    "tool": {
+      "viewDetails": "View tool call details",
+      "count": "tools"
+    },
+    "scroll": {
+      "toTop": "Scroll to top",
+      "toBottom": "Scroll to bottom",
+      "clearChat": "Clear current chat"
+    },
+    "clearModal": {
+      "title": "Confirm Clear Chat",
+      "content": "Are you sure you want to clear the current chat? This action will delete all chat records and cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Confirm Clear"
+    },
+    "header": {
+      "newConversation": "New Conversation",
+      "selectAgent": "Please select Agent",
+      "selectModel": "Please select model",
+      "selectMode": "Select mode",
+      "noAgent": "No Agent",
+      "pleaseSelectModel": "Please select model",
+      "noModelsAvailable": "No models available",
+      "modeSwitchTitle": "Switch Mode",
+      "modeSwitchCancel": "Cancel",
+      "modeSwitchConfirm": "Confirm Switch",
+      "modeSwitchContent": "Switching to {mode} mode will start a new conversation. The current conversation content will be saved. Are you sure you want to switch modes and start a new conversation?",
+      "modelMode": "Model",
+      "agentMode": "Agent"
+    },
+    "welcome": {
+      "description": "Have intelligent conversations with the AI assistant and explore infinite possibilities"
+    },
+    "messageInput": {
+      "placeholderWithModel": "Chat with {modelName}...",
+      "placeholderSelectFirst": "Please select a {type} first...",
+      "characterCount": "{count} characters",
+      "imageCount": "{count} images",
+      "uploadImage": "Upload image ({current}/{max})",
+      "screenshot": "Screenshot (Alt+Z)",
+      "stopGeneration": "Stop generation",
+      "sendMessage": "Send message (Enter)",
+      "model": "Model",
+      "agent": "Agent",
+      "alerts": {
+        "maxImagesReached": "Maximum {max} images allowed",
+        "invalidFileType": "Unsupported file type, please upload image files",
+        "fileSizeExceeded": "File size exceeds {maxSize}MB limit",
+        "fileConversionError": "File conversion failed, please try again",
+        "screenshotError": "Screenshot failed, please try again"
+      },
+      "controls": {
+        "imageUpload": {
+          "unavailableTitle": "Image upload unavailable",
+          "unavailableMessage": "Current model does not support multimodal functionality. Please select a model that supports image recognition (such as llava, bakllava, etc.).",
+          "checkingModel": "Checking model multimodal support...",
+          "modelNotSupported": "Current model does not support image recognition"
+        },
+        "screenshot": {
+          "unavailableTitle": "Screenshot function unavailable",
+          "unavailableMessage": "Current model does not support multimodal functionality. Please select a model that supports image recognition (such as llava, bakllava, etc.).",
+          "checkingModel": "Checking model multimodal support...",
+          "modelNotSupported": "Current model does not support image recognition",
+          "capturing": "Taking screenshot...",
+          "failedTitle": "Screenshot failed",
+           "createOverlayError": "Failed to create screenshot overlay window"
+         },
+         "tool": {
+           "unavailableTitle": "MCP tools unavailable",
+           "unavailableMessage": "Current model does not support tool calling functionality. Please select a model that supports tool calling.",
+           "checkingModel": "Checking model tool support...",
+           "modelNotSupported": "Current model does not support tool calling, please select another model",
+           "closePanel": "Close MCP tools panel",
+           "openPanel": "Open MCP tools panel",
+           "enableTools": "Enable MCP tool calling functionality"
+         },
+         "promptOptimize": {
+           "notConfigured": "Prompt optimization feature is not enabled or model is not configured",
+           "optimizeFailed": "Optimization failed",
+           "optimizeFailedLog": "Prompt optimization failed:",
+           "optimizeFailedAlert": "Prompt optimization failed",
+           "optimizing": "Optimizing...",
+           "enterContentFirst": "Please enter content first",
+           "configureFirst": "Please configure prompt optimization in settings first",
+           "optimizePrompt": "Optimize current input prompt"
+         },
+         "memory": {
+           "selectAgentFirst": "Please select an agent to view memory",
+           "closePanel": "Close conversation memory panel",
+           "openPanel": "Open conversation memory panel"
+         }
+       }
+    },
+    "deleteMessage": {
+      "tempMessageError": "Cannot delete temporary message, please refresh the page and try again",
+      "invalidIdError": "Invalid message ID format",
+      "deleteFailed": "Delete failed",
+      "deleteMessageFailed": "Failed to delete message",
+      "confirmTitle": "Confirm Delete",
+      "confirmMessage": "Are you sure you want to delete this message? This action cannot be undone."
+    },
+    "noConversation": {
+      "hint": "Sending a message will automatically create a new conversation"
+    },
+    "tools": {
+      "memory": {
+        "title": "Conversation Memory",
+        "agentTitle": "Agent Memory",
+        "noMemoryData": "No memory data",
+        "noAgentMemory": "No agent memory",
+        "noConversationMemory": "No conversation memory",
+        "closePanel": "Close",
+        "dragToResize": "Drag to resize panel height",
+        "loading": "Loading memory data...",
+        "stats": "{count} memories, saved {tokens} tokens",
+        "importance": "Importance: {score}",
+        "tokensSaved": "Saved: {tokens} tokens",
+        "editMemory": "Edit memory",
+        "deleteMemory": "Delete memory",
+        "confirmDelete": "Are you sure you want to delete this memory?",
+        "editContent": "Edit memory content",
+        "contentPlaceholder": "Enter memory content...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "content": "Content",
+        "importantTopics": "Important Topics",
+        "keyFacts": "Key Facts",
+        "userPreferences": "User Preferences",
+        "memoryId": "Memory ID: {id}",
+        "messageRange": "Message Range: {range}",
+        "memoryType": "Type: {type}",
+        "createdAt": "Created: {time}",
+        "errors": {
+          "loadFailed": "Failed to load memory data",
+          "requestFailed": "Request failed ({status})",
+          "networkError": "Network error",
+          "getDetailsFailed": "Failed to get memory details",
+          "getDetailsError": "Failed to get memory details, please try again later",
+          "contentEmpty": "Memory content cannot be empty",
+          "updateFailed": "Update failed: {error}",
+          "updateError": "Failed to update memory, please try again later",
+          "deleteFailed": "Delete failed"
+        }
+      },
+      "toolCall": {
+        "title": "Tool Call - {toolName}",
+        "noToolCalls": "No tool calls",
+        "callsCount": "{count} calls",
+        "unknownTool": "Unknown tool",
+        "parameters": "Parameters:",
+        "result": "Result",
+        "error": "Error",
+        "errorInfo": "Error message:",
+        "unknownError": "Unknown error",
+        "executionResult": "Execution result:",
+        "copyCode": "Copy code",
+        "copied": "Copied!",
+        "copyFailed": "Copy failed"
+      },
+      "toolPanel": {
+        "title": "MCP Tool Selection",
+        "selectedCount": "Select tools to enable, {count} tools selected",
+        "closePanel": "Close",
+        "dragToResize": "Drag to resize panel height",
+        "localTools": "Local Tools",
+        "local": "Local",
+        "external": "External",
+        "toolsCount": "{count} tools",
+        "noDescription": "No description",
+        "noTools": "No available tools",
+        "checkConfig": "Please check MCP server configuration"
+      },
+      "quickNote": {
+        "title": "Quick Note",
+        "titlePlaceholder": "Enter note title...",
+        "contentPlaceholder": "Start recording your thoughts...",
+        "saving": "Saving...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "saveFailed": "Failed to save note:",
+        "titleRequired": "Please enter title",
+        "titleRequiredMessage": "Note title cannot be empty, please enter a title before saving.",
+        "confirm": "Confirm",
+        "unknownError": "Unknown error"
+      },
+      "contentSelection": {
+        "copy": "Copy selected text",
+        "copied": "Copied",
+        "quickNote": "Quick note"
+      },
+      "markdown": {
+        "collapse": "Collapse",
+        "expandCode": "Expand to view full code",
+        "copied": "Copied!",
+        "copyCode": "Copy code",
+        "image": "Image"
+      }
+    },
+    "stats": {
+      "totalTime": "Total Time",
+      "generatedTokens": "Generated Tokens",
+      "generationSpeed": "Generation Speed",
+      "contextTokens": "Context Tokens"
+    },
+    "thinking": {
+      "mode": "Thinking Mode"
+    },
+    "upload": {
+      "fileSizeLimit": "File size exceeds limit, maximum allowed",
+      "maxImagesLimit": "Maximum upload limit is",
+      "remaining": "images, you can upload",
+      "fileError": "File processing failed: ",
+      "conversionFailed": "File conversion failed: ",
+      "supportedFormats": "Supported formats: JPG, PNG, GIF, WebP, maximum",
+      "maxImages": "Maximum",
+      "current": "images, currently uploaded",
+      "uploadedImages": "Uploaded Images"
+    },
+    "image": {
+      "zoomOut": "Zoom Out",
+      "zoomIn": "Zoom In",
+      "download": "Download",
+      "close": "Close",
+      "previous": "Previous",
+      "next": "Next",
+      "loadFailed": "Image failed to load",
+      "checkImage": "Please check if the image is valid",
+      "loading": "Loading...",
+      "previewAlt": "Image preview",
+      "clickToZoom": "Click to zoom",
+      "wheelZoom": "Wheel to zoom",
+      "arrowSwitch": "Arrow keys to switch",
+      "escClose": "ESC to close",
+      "uploadedImage": "Uploaded image",
+      "deleteImage": "Delete image"
+    }
   },
   "auth": {
     "login": "Login",
     "logout": "Logout",
-    "register": "Register",
     "username": "Username",
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "forgotPassword": "Forgot Password",
-    "rememberMe": "Remember Me"
+    "rememberMe": "Remember Me",
+    "welcomeBack": "👋 Hi, Welcome Back!",
+    "loginTitle": "Login",
+    "registerTitle": "Sign up",
+    "createAccount": "Sign up",
+    "createAccountButton": "Create Account",
+    "loginToExisting": "Login",
+    "usernamePlaceholder": "Please enter username or email",
+    "usernameRegisterPlaceholder": "Please enter username",
+    "emailPlaceholder": "Please enter email address",
+    "passwordPlaceholder": "Please enter password",
+    "passwordRegisterPlaceholder": "Please enter password (6-20 characters)",
+    "confirmPasswordPlaceholder": "Please enter password again",
+    "loggingIn": "Logging in...",
+    "registering": "Registering...",
+    "loginFailed": "Login failed",
+    "registerFailed": "Registration failed",
+    "loginFailedRetry": "Login failed, please try again later",
+    "registerFailedRetry": "Registration failed, please try again later",
+    "firstRunNotice": "💡 Automatically activated and granted super admin privileges after registration",
+    "copyright": "© 2025 KunpuAI, Inc. All rights reserved.",
+    "showPassword": "Show password",
+    "loginRequired": "Please login first",
+    "hidePassword": "Hide password",
+    "validation": {
+      "usernameRequired": "Username cannot be empty",
+      "usernameMinLength": "Username must be at least 3 characters",
+      "usernameMaxLength": "Username cannot exceed 20 characters",
+      "usernameInvalidChars": "Username can only contain letters, numbers and underscores",
+      "usernameValid": "Username format is correct",
+      "emailRequired": "Email cannot be empty",
+      "emailInvalid": "Please enter a valid email address",
+      "emailValid": "Email format is correct",
+      "passwordRequired": "Password cannot be empty",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordMaxLength": "Password cannot exceed 20 characters",
+      "passwordValid": "Password format is correct",
+      "confirmPasswordRequired": "Please confirm password",
+      "confirmPasswordMismatch": "Passwords do not match",
+      "confirmPasswordValid": "Password confirmation is correct",
+      "formErrors": "Please fix the errors in the form before submitting"
+    },
+    "success": {
+      "registerSuccess": "Registration successful!",
+      "superAdminCreated": "🎉 Super Administrator Created Successfully!",
+      "redirecting": "Redirecting to login page...",
+      "superAdminPrivileges": "🔑 Super Administrator Privileges",
+      "privileges": {
+        "userManagement": "• User Management: Create, edit, delete users",
+        "roleManagement": "• Role Management: Manage all roles and permissions",
+        "systemSettings": "• System Settings: Configure system parameters",
+        "modelManagement": "• Model Management: Add and configure AI models",
+        "fullAccess": "• Full Access: Unlimited access to all features"
+      }
+    }
   },
   "conversations": {
     "title": "Conversation History",

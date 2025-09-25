@@ -13,6 +13,7 @@ import { useChatStyle } from '../hooks/useChatStyle';
 import { StatsDisplay } from './ui/StatsDisplay';
 import { SelectableCopyWrapper } from './ui/ContentSelectionToolbar';
 import Modal from '@/components/Modal';
+import { useI18n } from '@/contexts/I18nContext';
 
 // 消息类型定义
 interface Message {
@@ -159,6 +160,7 @@ const MessageListComponent = ({
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [showToolCallPanel, setShowToolCallPanel] = useState(false);
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
+  const { t } = useI18n(); // 多语言支持
   
   // 获取智能体信息（仅用于其他用途，不再用于状态管理）
   const { agents } = useAgentData();
@@ -257,7 +259,7 @@ const MessageListComponent = ({
                 <button
                   onClick={() => scrollToTop('smooth')}
                   className="w-10 h-10 bg-theme-background/80 hover:bg-theme-background hover:border-theme-border rounded-full transition-all duration-200 flex items-center justify-center hover:scale-110 backdrop-blur-sm"
-                  title="回到顶部"
+                  title={t('chat.scroll.toTop')}
                 >
                   <ChevronUp className="w-4 h-4" />
                 </button>
@@ -268,7 +270,7 @@ const MessageListComponent = ({
                 <button
                   onClick={() => scrollToBottom('smooth')}
                   className="w-10 h-10 bg-theme-background/80 hover:bg-theme-background hover:border-theme-border rounded-full transition-all duration-200 flex items-center justify-center hover:scale-110 backdrop-blur-sm"
-                  title="回到底部"
+                  title={t('chat.scroll.toBottom')}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </button>
@@ -279,7 +281,7 @@ const MessageListComponent = ({
                 <button
                   onClick={handleClearClick}
                   className="w-10 h-10 bg-red-500/80 hover:bg-red-500 hover:border-red-400 rounded-full transition-all duration-200 flex items-center justify-center hover:scale-110 backdrop-blur-sm text-white"
-                  title="清空当前对话"
+                  title={t('chat.scroll.clearChat')}
                 >
                   <Eraser className="w-4 h-4" />
                 </button>
@@ -302,23 +304,23 @@ const MessageListComponent = ({
       <Modal
         open={showClearConfirmModal}
         onClose={handleCancelClear}
-        title="确认清空对话"
+        title={t('chat.clearModal.title')}
         icon={<AlertTriangle className="text-yellow-500" />}
         actions={[
           {
-            label: '取消',
+            label: t('chat.clearModal.cancel'),
             onClick: handleCancelClear,
             variant: 'secondary',
           },
           {
-            label: '确认清空',
+            label: t('chat.clearModal.confirm'),
             onClick: handleConfirmClear,
             variant: 'danger',
             autoFocus: true,
           },
         ]}
       >
-        确定要清空当前对话吗？此操作将删除所有聊天记录，且无法撤销。
+        {t('chat.clearModal.content')}
       </Modal>
     </>
   );
@@ -357,6 +359,7 @@ const MessageItemComponent = ({
 }) => {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
+  const { t } = useI18n(); // 多语言支持
   
   // 思考面板状态管理
   const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
@@ -415,12 +418,12 @@ const MessageItemComponent = ({
       } else if (selectedAgent) {
         return selectedAgent.name;
       } else {
-        return '智能体';
+        return t('chat.agent.defaultName');
       }
     } else {
       // 普通模型对话：使用消息中的模型信息
       const model = models.find(m => m.base_model === message.model);
-      return model?.display_name || message.model || '模型';
+      return model?.display_name || message.model || t('chat.model.defaultName');
     }
   };
 
@@ -616,13 +619,13 @@ const MessageItemComponent = ({
         {(isAssistant || (chatStyle === 'assistant' && isUser)) && (
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium text-theme-foreground-muted">
-              {isUser ? '你' : getDisplayName()}
+              {isUser ? t('chat.user.you') : getDisplayName()}
             </span>
             {isAssistant && hasToolCallsWithResults && (
               <button
                 onClick={() => onMcpIconClick(message.id)}
                 className="p-1 text-theme-foreground-muted hover:text-theme-primary hover:bg-theme-primary/10 rounded transition-all duration-200"
-                title={`查看工具调用详情 (${message.toolCalls!.length} 个工具)`}
+                title={`${t('chat.tool.viewDetails')} (${message.toolCalls!.length} ${t('chat.tool.count')})`}
               >
                 <Axe className="w-4 h-4" />
               </button>
@@ -672,7 +675,7 @@ const MessageItemComponent = ({
                   </div>
                 </div>
               ) : (
-                <div className="text-theme-foreground-muted italic">消息内容为空</div>
+                <div className="text-theme-foreground-muted italic">{t('chat.message.empty')}</div>
               ))}
             </div>
           </SelectableCopyWrapper>
@@ -687,10 +690,12 @@ const MessageItemComponent = ({
                 {isUserMessageExpanded ? (
                   <>
                     <ChevronUp className="w-4 h-4" />
+                    {t('chat.message.collapse')}
                   </>
                 ) : (
                   <>
                     <ChevronDown className="w-4 h-4" />
+                    {t('chat.message.expand')}
                   </>
                 )}
               </button>
@@ -732,7 +737,7 @@ const MessageItemComponent = ({
               <button
                 onClick={isUser ? handleUserCopy : handleCopy}
                 className="p-1 text-theme-foreground-muted hover:text-theme-foreground rounded transition-colors"
-                title={isUser ? (isUserCopied ? "已复制" : "复制") : (isCopied ? "已复制" : "复制")}
+                title={isUser ? (isUserCopied ? t('chat.message.copiedbutton') : t('chat.message.copybutton')) : (isCopied ? t('chat.message.copiedbutton') : t('chat.message.copybutton'))}
               >
                 {(isUser ? isUserCopied : isCopied) ? (
                   <Check className="w-4 h-4 text-green-500" />
@@ -747,7 +752,7 @@ const MessageItemComponent = ({
               <button
                 onClick={() => onDeleteMessage(message.id)}
                 className="p-1 text-theme-foreground-muted hover:text-red-500 rounded transition-colors"
-                title="删除消息"
+                title={t('chat.message.deletebutton')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>

@@ -284,7 +284,7 @@ export default function ModelfileForm({ onSave, onCancel, customModels = [] }: M
       console.error('优化提示词失败:', error);
       
       // 显示具体的错误信息
-      const errorMessage = error instanceof Error ? error.message : t('settings.models.modelfileForm.messages.optimizePromptFailed', 'Optimization failed');
+      const errorMessage = error instanceof Error ? error.message : 'Optimization failed';
       alert(t('settings.models.modelfileForm.messages.optimizePromptFailed').replace('{error}', errorMessage));
     } finally {
       setIsOptimizing(false);

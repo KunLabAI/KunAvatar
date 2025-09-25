@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { Eraser, AlertTriangle } from 'lucide-react';
 import { BaseControlButton } from './BaseControlButton';
 import Modal from '@/components/Modal';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ChatActionsControlProps {
   onClearChat: () => void;
 }
 
 export function ChatActionsControl({ onClearChat }: ChatActionsControlProps) {
+  const { t } = useI18n();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // 处理清除对话点击
@@ -32,7 +34,7 @@ export function ChatActionsControl({ onClearChat }: ChatActionsControlProps) {
     <>
       <BaseControlButton
         onClick={handleClearClick}
-        tooltip="清空当前对话"
+        tooltip={t('chat.messageInput.controls.chatActions.clearChat')}
         variant="danger"
       >
         <Eraser className="w-5 h-5" />
@@ -42,23 +44,23 @@ export function ChatActionsControl({ onClearChat }: ChatActionsControlProps) {
       <Modal
         open={showConfirmModal}
         onClose={handleCancelClear}
-        title="确认清空对话"
+        title={t('chat.messageInput.controls.chatActions.confirmClearTitle')}
         icon={<AlertTriangle className="text-yellow-500" />}
         actions={[
           {
-            label: '取消',
+            label: t('chat.messageInput.controls.chatActions.cancel'),
             onClick: handleCancelClear,
             variant: 'secondary',
           },
           {
-            label: '确认清空',
+            label: t('chat.messageInput.controls.chatActions.confirmClear'),
             onClick: handleConfirmClear,
             variant: 'danger',
             autoFocus: true,
           },
         ]}
       >
-        确定要清空当前对话吗？此操作将删除所有聊天记录，且无法撤销。
+        {t('chat.messageInput.controls.chatActions.confirmClearMessage')}
       </Modal>
     </>
   );

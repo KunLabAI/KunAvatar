@@ -9,6 +9,7 @@ import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
 import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 // 导入 KaTeX CSS
 import 'katex/dist/katex.min.css';
@@ -267,6 +268,7 @@ const CodeBlock = React.memo(({
   children: string;
   isDark?: boolean;
 }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const displayLanguage = language || 'text';
@@ -401,21 +403,21 @@ const CodeBlock = React.memo(({
         <div className="flex items-center gap-2 md:gap-3">
           {isCollapsible && (
             <button
-              onClick={toggleExpand}
-              className="markdown-code-copy-btn"
-              title={isExpanded ? '收起' : '展开查看完整代码'}
-            >
-              {isExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
+            onClick={toggleExpand}
+            className="markdown-code-copy-btn"
+            title={isExpanded ? t('chat.tools.markdown.collapse') : t('chat.tools.markdown.expandCode')}
+          >
+            {isExpanded ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
           )}
           <button
             onClick={handleCopy}
             className={`markdown-code-copy-btn ${copied ? 'copied' : ''}`}
-            title={copied ? '已复制!' : '复制代码'}
+            title={copied ? t('chat.tools.markdown.copied') : t('chat.tools.markdown.copyCode')}
           >
             {copied ? (
               <Check className="w-4 h-4" />
@@ -440,7 +442,7 @@ const CodeBlock = React.memo(({
               className="pointer-events-auto mb-2 px-2 py-1 text-xs rounded bg-theme-background/70 hover:bg-theme-background transition-colors"
               onClick={toggleExpand}
             >
-              展开查看完整代码
+              {t('chat.tools.markdown.expandCode')}
             </button>
           </div>
         )}
@@ -535,6 +537,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
   style,
   onImagePreview,
 }) => {
+  const { t } = useI18n();
   const isDark = useIsDarkTheme();
 
   // 针对流式渲染优化的markdown组件配置
@@ -609,7 +612,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
     img: ({ src, alt, ...props }: any) => (
       <img
         src={src}
-        alt={alt || '图片'}
+        alt={alt || t('chat.tools.markdown.image')}
         className="max-w-full h-auto max-h-48 object-cover rounded-lg cursor-pointer"
         onClick={() => {
           if (src && onImagePreview) {
