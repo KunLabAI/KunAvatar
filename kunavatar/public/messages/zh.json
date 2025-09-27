@@ -1115,6 +1115,11 @@
       "confirmMessage": "确定要删除这条消息吗？此操作无法撤销。"
     },
     "tools": {
+      "contentSelection": {
+        "copy": "复制选中文本",
+        "copied": "已复制",
+        "quickNote": "快速笔记"
+      },
       "memory": {
         "title": "对话记忆",
         "agentTitle": "Agent记忆",

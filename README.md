@@ -8,6 +8,7 @@
 <div class="badges-container">
 
 [![Ollama](https://img.shields.io/badge/Ollama-Compatible-00D4AA?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/) [![License](https://img.shields.io/badge/License-Apache%202.0-FF6B6B?style=for-the-badge&logo=apache&logoColor=white)](https://opensource.org/licenses/Apache-2.0) 
+[![Verified on MseeP](https://mseep.ai/badge.svg)](https://mseep.ai/app/fdb0db94-da47-4150-b370-4931a6da9ca4)
 
 </div>
 

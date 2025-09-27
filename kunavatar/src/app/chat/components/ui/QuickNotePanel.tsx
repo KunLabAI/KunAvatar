@@ -87,7 +87,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
       }
     } catch (error) {
       console.error('保存笔记失败:', error);
-      alert(t('chat.tools.quickNote.saveFailed') + ' ' + (error instanceof Error ? error.message : t('chat.tools.quickNote.unknownError')));
+      alert(t('chat.quickNote.saveFailed') + ' ' + (error instanceof Error ? error.message : t('chat.quickNote.unknownError')));
     } finally {
       setIsSaving(false);
     }
@@ -126,7 +126,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
       } w-1/2 ${className}`}>
         {/* 头部 */}
         <div className="flex items-center justify-between p-3 border-b border-theme-border bg-theme-muted/30">
-          <h2 className="text-lg font-semibold text-theme-foreground">{t('chat.tools.quickNote.title')}</h2>
+          <h2 className="text-lg font-semibold text-theme-foreground">{t('chat.quickNote.title')}</h2>
         </div>
 
         {/* 内容区域 */}
@@ -139,7 +139,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={t('chat.tools.quickNote.titlePlaceholder')}
+              placeholder={t('chat.quickNote.titlePlaceholder')}
               className="form-input-base w-full"
             />
             </div>
@@ -149,7 +149,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
               <VditorEditor
                 value={content}
                 onChange={setContent}
-                placeholder={t('chat.tools.quickNote.contentPlaceholder')}
+                placeholder={t('chat.quickNote.contentPlaceholder')}
                 height="100%"
                 className="h-full"
               />
@@ -163,7 +163,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme-border text-theme-foreground rounded-lg hover:bg-theme-card-hover transition-colors duration-200 font-medium"
             >
               <X className="w-4 h-4" />
-              {t('chat.tools.quickNote.cancel')}
+              {t('chat.quickNote.cancel')}
             </button>
             <button
               onClick={handleSave}
@@ -171,7 +171,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-theme-primary-foreground rounded-lg hover:bg-theme-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
             >
               <Save className="w-4 h-4" />
-              {isSaving ? t('chat.tools.quickNote.saving') : t('chat.tools.quickNote.save')}
+              {isSaving ? t('chat.quickNote.saving') : t('chat.quickNote.save')}
             </button>
           </div>
         </div>
@@ -181,11 +181,11 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
       <Modal
         open={showTitleModal}
         onClose={() => setShowTitleModal(false)}
-        title={t('chat.tools.quickNote.titleRequired')}
+        title={t('chat.quickNote.titleRequired')}
         icon={<AlertTriangle className="w-6 h-6 text-theme-warning" />}
         actions={[
           {
-            label: t('chat.tools.quickNote.confirm'),
+            label: t('chat.quickNote.confirm'),
             onClick: () => setShowTitleModal(false),
             variant: 'primary',
             autoFocus: true,
@@ -194,7 +194,7 @@ const QuickNotePanel: React.FC<QuickNotePanelProps> = ({
         width={380}
       >
         <span>
-          {t('chat.tools.quickNote.titleRequiredMessage')}
+          {t('chat.quickNote.titleRequiredMessage')}
         </span>
       </Modal>
     </>
