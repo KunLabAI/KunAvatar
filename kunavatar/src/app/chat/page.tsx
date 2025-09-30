@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar } from '../Sidebar';
 import { ChatHeader, ChatArea } from './components';
 import { MessageInput } from './components/MessageInput';
 import { ToolSettings } from './components/tools/ToolSettings';
-import QuickNotePanel from './components/ui/QuickNotePanel';
+import QuickNotePanel from './components/tools/QuickNotePanel';
 import { 
   useModelData, 
   useAgentData, 

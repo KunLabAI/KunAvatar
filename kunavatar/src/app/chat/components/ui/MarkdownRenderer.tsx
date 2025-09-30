@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
-import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 // 导入 KaTeX CSS
@@ -25,6 +25,79 @@ interface MarkdownRendererProps {
 // 缓存处理过的内容，避免重复计算
 const contentCache = new Map<string, string>();
 const CACHE_SIZE_LIMIT = 100;
+
+// 语言扩展名映射配置
+// 初始化基本的后备映射
+let languageExtensions: Record<string, string> = {
+  'javascript': 'js',
+  'typescript': 'ts',
+  'python': 'py',
+  'java': 'java',
+  'html': 'html',
+  'css': 'css',
+  'json': 'json',
+  'markdown': 'md',
+  'text': 'txt'
+};
+let defaultExtension = 'txt';
+let configLoaded = false;
+
+// 加载语言扩展名映射配置（仅在客户端）
+const loadLanguageExtensions = async () => {
+  // 只在客户端加载配置
+  if (typeof window === 'undefined' || configLoaded) {
+    return;
+  }
+  
+  try {
+    const response = await fetch('/config/language-extensions.json');
+    if (response.ok) {
+      const config = await response.json();
+      languageExtensions = config.mappings || languageExtensions;
+      defaultExtension = config.defaultExtension || 'txt';
+      configLoaded = true;
+    }
+  } catch (error) {
+    console.warn('Failed to load language extensions config, using fallback mappings:', error);
+  }
+};
+
+// 文件下载功能
+const downloadCodeAsFile = async (code: string, language: string, filename?: string) => {
+  try {
+    // 确保配置已加载
+    await loadLanguageExtensions();
+    
+    // 获取文件扩展名
+    const extension = languageExtensions[language.toLowerCase()] || defaultExtension;
+    
+    // 生成文件名
+    const defaultFilename = filename || `code_${Date.now()}`;
+    const fullFilename = defaultFilename.includes('.') ? defaultFilename : `${defaultFilename}.${extension}`;
+    
+    // 创建 Blob 对象
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    
+    // 创建下载链接
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fullFilename;
+    
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
+    
+    // 清理
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    return true;
+  } catch (error) {
+    console.error('文件下载失败:', error);
+    return false;
+  }
+};
 
 // 轻量级内容处理函数
 const processContentLightweight = (content: string, isStreaming: boolean): string => {
@@ -415,6 +488,13 @@ const CodeBlock = React.memo(({
           </button>
           )}
           <button
+            onClick={() => downloadCodeAsFile(children, language || 'text')}
+            className="markdown-code-copy-btn"
+            title={t('chat.tools.markdown.downloadCode')}
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <button
             onClick={handleCopy}
             className={`markdown-code-copy-btn ${copied ? 'copied' : ''}`}
             title={copied ? t('chat.tools.markdown.copied') : t('chat.tools.markdown.copyCode')}
@@ -428,14 +508,16 @@ const CodeBlock = React.memo(({
         </div>
       </div>
       
-      <div 
-        className={`markdown-code-content relative transition-all duration-300 ease-in-out overflow-x-auto scrollbar-thin ${!isExpanded ? 'overflow-y-auto' : ''}`}
-        style={{ maxHeight, willChange: 'max-height', contain: 'layout paint style' as any }}
-        ref={contentRef}
-      >
-        {highlighted}
+      <div className="relative">
+        <div 
+          className={`markdown-code-content transition-all duration-300 ease-in-out overflow-x-auto scrollbar-thin ${!isExpanded ? 'overflow-y-auto' : ''}`}
+          style={{ maxHeight, willChange: 'max-height', contain: 'layout paint style' as any }}
+          ref={contentRef}
+        >
+          {highlighted}
+        </div>
 
-        {/* 折叠时的底部渐隐与展开按钮 */}
+        {/* 折叠时的底部渐隐与展开按钮 - 固定在容器底部 */}
         {isCollapsible && !isExpanded && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-card)] to-transparent flex items-end justify-center">
             <button

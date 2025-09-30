@@ -990,6 +990,20 @@
     "model": {
       "defaultName": "Model"
     },
+
+    "quickNote": {
+      "title": "Quick Note",
+      "titlePlaceholder": "Enter note title...",
+      "contentPlaceholder": "Start recording your thoughts...",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saveFailed": "Failed to save note:",
+      "titleRequired": "Please enter title",
+      "titleRequiredMessage": "Note title cannot be empty, please enter a title before saving.",
+      "confirm": "Confirm",
+      "unknownError": "Unknown error"
+    },
     "message": {
       "empty": "Message content is empty",
       "copybutton": "Copy",
@@ -1154,6 +1168,14 @@
           "deleteFailed": "Delete failed"
         }
       },
+      "markdown": {
+        "collapse": "Collapse",
+        "expandCode": "Expand Code",
+        "copied": "Copied",
+        "copyCode": "Copy Code",
+        "downloadCode": "Download Code",
+        "image": "Image"
+      },
       "toolCall": {
         "title": "Tool Call - {toolName}",
         "noToolCalls": "No tool calls",
@@ -1182,30 +1204,10 @@
         "noTools": "No available tools",
         "checkConfig": "Please check MCP server configuration"
       },
-      "quickNote": {
-        "title": "Quick Note",
-        "titlePlaceholder": "Enter note title...",
-        "contentPlaceholder": "Start recording your thoughts...",
-        "saving": "Saving...",
-        "save": "Save",
-        "cancel": "Cancel",
-        "saveFailed": "Failed to save note:",
-        "titleRequired": "Please enter title",
-        "titleRequiredMessage": "Note title cannot be empty, please enter a title before saving.",
-        "confirm": "Confirm",
-        "unknownError": "Unknown error"
-      },
       "contentSelection": {
         "copy": "Copy selected text",
         "copied": "Copied",
         "quickNote": "Quick note"
-      },
-      "markdown": {
-        "collapse": "Collapse",
-        "expandCode": "Expand to view full code",
-        "copied": "Copied!",
-        "copyCode": "Copy code",
-        "image": "Image"
       }
     },
     "stats": {
