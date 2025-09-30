@@ -990,6 +990,19 @@
     "model": {
       "defaultName": "模型"
     },
+    "quickNote": {
+      "title": "快速笔记",
+      "titlePlaceholder": "输入笔记标题...",
+      "contentPlaceholder": "开始记录你的想法...",
+      "saving": "保存中...",
+      "save": "保存",
+      "cancel": "取消",
+      "saveFailed": "保存笔记失败:",
+      "titleRequired": "请输入标题",
+      "titleRequiredMessage": "笔记标题不能为空，请输入标题后再保存。",
+      "confirm": "确认",
+      "unknownError": "未知错误"
+    },
     "message": {
       "empty": "消息内容为空",
       "copybutton": "复制",
@@ -1159,6 +1172,14 @@
           "deleteFailed": "删除失败"
         }
       },
+      "markdown": {
+        "collapse": "折叠",
+        "expandCode": "展开代码",
+        "copied": "已复制",
+        "copyCode": "复制代码",
+        "downloadCode": "下载代码",
+        "image": "图片"
+      },
       "toolCall": {
         "title": "工具调用 - {toolName}",
         "noToolCalls": "没有工具调用",
@@ -1187,19 +1208,6 @@
         "noTools": "暂无可用工具",
         "checkConfig": "请检查 MCP 服务器配置"
       }
-    },
-    "quickNote": {
-      "title": "快速笔记",
-      "titlePlaceholder": "输入笔记标题...",
-      "contentPlaceholder": "开始记录你的想法...",
-      "saving": "保存中...",
-      "save": "保存",
-      "cancel": "取消",
-      "saveFailed": "保存笔记失败:",
-      "titleRequired": "请输入标题",
-      "titleRequiredMessage": "笔记标题不能为空，请输入标题后再保存。",
-      "confirm": "确认",
-      "unknownError": "未知错误"
     },
     "stats": {
       "totalTime": "总耗时",
