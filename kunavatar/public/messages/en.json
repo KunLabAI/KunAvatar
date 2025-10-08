@@ -1039,6 +1039,14 @@
       "cancel": "Cancel",
       "confirm": "Confirm Clear"
     },
+    "tokenStats": {
+      "messageCount": "Messages",
+      "totalCharacters": "Characters",
+      "totalTokens": "Total Tokens",
+      "inputTokens": "Input",
+      "outputTokens": "Output",
+      "noData": "No token statistics available"
+    },
     "header": {
       "newConversation": "New Conversation",
       "selectAgent": "Please select Agent",

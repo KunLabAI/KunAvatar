@@ -122,7 +122,7 @@ export function BaseControlButton({
       
       {/* 工具提示 - 主题色样式 */}
       {tooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[var(--color-card)] text-[var(--color-foreground)] text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-[9999] shadow-lg">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[var(--color-card)] text-[var(--color-foreground)] text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-[9999] border border-[var(--color-border)] shadow-lg">
           {tooltip}
           {/* 工具提示箭头 */}
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-transparent border-t-[var(--color-card)]"></div>

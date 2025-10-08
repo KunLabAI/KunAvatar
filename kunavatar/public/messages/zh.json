@@ -1038,6 +1038,14 @@
       "cancel": "取消",
       "confirm": "确认清空"
     },
+    "tokenStats": {
+      "messageCount": "消息数量",
+      "totalCharacters": "字符数",
+      "totalTokens": "总Token",
+      "inputTokens": "输入",
+      "outputTokens": "输出",
+      "noData": "暂无token统计数据"
+    },
     "header": {
       "newConversation": "新对话",
       "selectAgent": "请选择Agent",

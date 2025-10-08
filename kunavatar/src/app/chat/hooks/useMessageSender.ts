@@ -45,6 +45,13 @@ interface Message {
     name: string;
     status: 'start' | 'executing' | 'complete';
   };
+  // Ollama统计信息字段
+  total_duration?: number;
+  load_duration?: number;
+  prompt_eval_count?: number;
+  prompt_eval_duration?: number;
+  eval_count?: number;
+  eval_duration?: number;
 }
 
 interface UseMessageSenderReturn {
@@ -86,6 +93,14 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
   const hasThinkingRef = useRef<boolean>(false);
   const lastFlushedContentRef = useRef<string>('');
   const streamingUpdateTimerRef = useRef<number | null>(null);
+  const assistantStatsRef = useRef<{
+    total_duration?: number;
+    load_duration?: number;
+    prompt_eval_count?: number;
+    prompt_eval_duration?: number;
+    eval_count?: number;
+    eval_duration?: number;
+  } | null>(null);
   const isStreamingRef = useRef<boolean>(false);
   const lastUserMessageIdRef = useRef<string | null>(null);
 
@@ -367,6 +382,7 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       thinkingBufferRef.current = '';
       hasThinkingRef.current = false;
       lastFlushedContentRef.current = '';
+      assistantStatsRef.current = null; // 清空统计信息
       
       // 构建消息内容，支持图片
       const userMessageContent = messageContent.trim();
@@ -475,7 +491,17 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
             if (msg.id === targetId) {
               if (msg.content !== contentToFlush) {
                 changed = true;
-                return { ...msg, content: contentToFlush };
+                return { 
+                  ...msg, 
+                  content: contentToFlush,
+                  // 使用ref中的统计信息，如果没有则保留原有的
+                  total_duration: assistantStatsRef.current?.total_duration ?? msg.total_duration,
+                  load_duration: assistantStatsRef.current?.load_duration ?? msg.load_duration,
+                  prompt_eval_count: assistantStatsRef.current?.prompt_eval_count ?? msg.prompt_eval_count,
+                  prompt_eval_duration: assistantStatsRef.current?.prompt_eval_duration ?? msg.prompt_eval_duration,
+                  eval_count: assistantStatsRef.current?.eval_count ?? msg.eval_count,
+                  eval_duration: assistantStatsRef.current?.eval_duration ?? msg.eval_duration
+                };
               }
             }
             return msg;
@@ -694,6 +720,16 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
                     eval_duration: parsed.eval_duration
                   });
                   
+                  // 将统计信息存储到ref中
+                  assistantStatsRef.current = {
+                    total_duration: parsed.total_duration,
+                    load_duration: parsed.load_duration,
+                    prompt_eval_count: parsed.prompt_eval_count,
+                    prompt_eval_duration: parsed.prompt_eval_duration,
+                    eval_count: parsed.eval_count,
+                    eval_duration: parsed.eval_duration
+                  };
+                  
                   // 将统计信息添加到助手消息
                   setMessages(prev => 
                     prev.map(msg => 
@@ -793,11 +829,23 @@ export function useMessageSender(params: SendMessageParams): UseMessageSenderRet
       }
       if (pendingAssistantContentRef.current && targetAssistantMessageIdRef.current) {
         setMessages(prev =>
-          prev.map(msg =>
-            msg.id === targetAssistantMessageIdRef.current
-              ? { ...msg, content: pendingAssistantContentRef.current }
-              : msg
-          )
+          prev.map(msg => {
+            if (msg.id === targetAssistantMessageIdRef.current) {
+              // 保留现有的统计信息，只更新内容
+              return { 
+                ...msg, 
+                content: pendingAssistantContentRef.current,
+                // 使用ref中的统计信息，如果没有则保留原有的
+                total_duration: assistantStatsRef.current?.total_duration ?? msg.total_duration,
+                load_duration: assistantStatsRef.current?.load_duration ?? msg.load_duration,
+                prompt_eval_count: assistantStatsRef.current?.prompt_eval_count ?? msg.prompt_eval_count,
+                prompt_eval_duration: assistantStatsRef.current?.prompt_eval_duration ?? msg.prompt_eval_duration,
+                eval_count: assistantStatsRef.current?.eval_count ?? msg.eval_count,
+                eval_duration: assistantStatsRef.current?.eval_duration ?? msg.eval_duration
+              };
+            }
+            return msg;
+          })
         );
       }
       setIsStreaming(false);
