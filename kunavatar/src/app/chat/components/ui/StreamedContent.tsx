@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, useCallback, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface StreamedContentProps {
@@ -6,13 +6,41 @@ interface StreamedContentProps {
   isStreaming: boolean;
   className?: string;
   style?: React.CSSProperties;
-  enableMarkdown?: boolean; // 新增参数：是否启用markdown渲染
+  enableMarkdown?: boolean;
+  enableFadeEffect?: boolean;
+  fadeDelay?: number;
   onImagePreview?: (imageUrl: string, index: number, images: string[]) => void;
 }
 
 // 缓存处理过的内容
 const contentProcessCache = new Map<string, string>();
 const PROCESS_CACHE_SIZE = 50;
+
+// 简单的字符淡入效果组件
+const FadeInText: React.FC<{ 
+  text: string; 
+  delay?: number; 
+  isStreaming: boolean;
+}> = ({ text, delay = 50, isStreaming }) => {
+  if (!text) return null;
+  
+  return (
+    <span className="fade-in-text">
+      {text.split('').map((char, index) => (
+        <span
+          key={index}
+          className="fade-char"
+          style={{
+            animationDelay: `${index * delay}ms`,
+            opacity: isStreaming ? 0 : 1
+          }}
+        >
+          {char}
+        </span>
+      ))}
+    </span>
+  );
+};
 
 // 优化的移除思考标签内容的函数
 const removeThinkingContent = (content: string): string => {
@@ -43,149 +71,73 @@ const removeThinkingContent = (content: string): string => {
 const StreamedContentComponent: React.FC<StreamedContentProps> = ({
   content,
   isStreaming,
-  className,
+  className = '',
   style,
-  enableMarkdown = false,
-  onImagePreview,
+  enableMarkdown = true,
+  enableFadeEffect = false,
+  fadeDelay = 50,
+  onImagePreview
 }) => {
-  const prevContentRef = useRef('');
-  const lastProcessedContentRef = useRef('');
-  const [displayContent, setDisplayContent] = useState('');
-  const lastUpdateTsRef = useRef(0);
-  const throttleTimerRef = useRef<number | null>(null);
-
-  // 使用 useMemo 优化内容处理
+  // 🔧 修复：将所有Hooks调用移到条件判断之前，确保调用顺序一致
+  
+  // 处理内容，移除thinking标签
   const processedContent = useMemo(() => {
-    // 如果内容没有变化，直接返回缓存的结果
-    if (content === lastProcessedContentRef.current) {
-      return removeThinkingContent(content);
-    }
-    
-    lastProcessedContentRef.current = content;
     return removeThinkingContent(content);
   }, [content]);
 
-  // 流式 Markdown 渲染节流，减少 ReactMarkdown 重排压力
-  useEffect(() => {
-    const STREAM_THROTTLE_MS = 120;
-    const STREAM_MAX_WAIT_MS = 600;
+  // 必须在条件判断之前调用所有Hooks
+  const contentRef = useRef<HTMLDivElement>(null);
 
-    // 非 markdown 或非流式，立即同步
-    if (!enableMarkdown || !isStreaming) {
-      if (throttleTimerRef.current) {
-        clearTimeout(throttleTimerRef.current);
-        throttleTimerRef.current = null;
-      }
-      setDisplayContent(processedContent);
-      lastUpdateTsRef.current = Date.now();
-      return;
-    }
+  // 渲染逻辑
+  const containerClasses = [
+    className,
+    'streamed-content',
+    isStreaming ? 'streaming' : 'completed'
+  ].filter(Boolean).join(' ');
 
-    const now = Date.now();
-    const prev = displayContent;
-    const next = processedContent;
-    if (next === prev) return;
+  // 条件判断移到所有Hooks调用之后
+  if (!processedContent) {
+    return null;
+  }
 
-    const diff = next.slice(prev.length);
-    const hasBreakpoint = /[\n。！？.!?]|```/.test(diff);
-    const minDelta = prev.length < 1000 ? 16 : 64;
-    const shouldUpdateNow = hasBreakpoint || diff.length >= minDelta || (now - lastUpdateTsRef.current) >= STREAM_MAX_WAIT_MS;
-
-    if (shouldUpdateNow) {
-      if (throttleTimerRef.current) {
-        clearTimeout(throttleTimerRef.current);
-        throttleTimerRef.current = null;
-      }
-      setDisplayContent(next);
-      lastUpdateTsRef.current = now;
-    } else if (!throttleTimerRef.current) {
-      throttleTimerRef.current = window.setTimeout(() => {
-        setDisplayContent(prev2 => {
-          // 再次比较，避免竞态
-          if (processedContent !== prev2) {
-            lastUpdateTsRef.current = Date.now();
-            return processedContent;
-          }
-          return prev2;
-        });
-        throttleTimerRef.current = null;
-      }, STREAM_THROTTLE_MS);
-    }
-
-    return () => {
-      if (throttleTimerRef.current) {
-        clearTimeout(throttleTimerRef.current);
-        throttleTimerRef.current = null;
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processedContent, isStreaming, enableMarkdown]);
-
-  useEffect(() => {
-    if (isStreaming) {
-      prevContentRef.current = processedContent;
-    } else {
-      prevContentRef.current = '';
-    }
-  }, [processedContent, isStreaming]);
-
-  // 使用 useCallback 优化回调函数
-  const handleImagePreview = useCallback((imageUrl: string, index: number, images: string[]) => {
-    onImagePreview?.(imageUrl, index, images);
-  }, [onImagePreview]);
-
-  // 如果启用了markdown渲染
+  // 根据enableMarkdown决定渲染方式
   if (enableMarkdown) {
     return (
-      <MarkdownRenderer
-        content={displayContent || processedContent}
-        isStreaming={isStreaming}
-        className={className}
+      <div 
+        ref={contentRef}
+        className={containerClasses} 
         style={style}
-        onImagePreview={handleImagePreview}
-      />
-    );
-  }
-
-  // 原有的纯文本渲染逻辑
-  if (!isStreaming) {
-    return (
-      <div className={className} style={style}>
-        {processedContent}
+      >
+        <MarkdownRenderer 
+          content={processedContent} 
+          isStreaming={isStreaming}
+          onImagePreview={onImagePreview}
+        />
+        {isStreaming && (
+          <span className="streaming-cursor" />
+        )}
       </div>
     );
   }
 
-  const prevContent = prevContentRef.current;
-  const newContent = processedContent.substring(prevContent.length);
-  
-  // 优化：如果没有新内容，直接返回之前的内容
-  if (!newContent) {
-    return (
-      <div className={className} style={style}>
-        <span>{prevContent}</span>
-      </div>
-    );
-  }
-
-  // 优化：限制一次渲染的字符数量，避免过多DOM元素
-  const maxCharsPerRender = 50;
-  const characters = newContent.slice(0, maxCharsPerRender).split('');
-
+  // 非Markdown模式：显示纯文本内容
   return (
-    <div className={className} style={style}>
-      <span>{prevContent}</span>
-      {characters.map((char, index) => (
-        <span
-          key={prevContent.length + index}
-          className="fade-in-char"
-          style={{ animationDelay: `${index * 0.02}s` }}
-        >
-          {char}
-        </span>
-      ))}
-      {newContent.length > maxCharsPerRender && (
-        <span>{newContent.slice(maxCharsPerRender)}</span>
+    <div 
+      ref={contentRef}
+      className={containerClasses} 
+      style={style}
+    >
+      {enableFadeEffect ? (
+        <FadeInText 
+          text={processedContent} 
+          delay={fadeDelay}
+          isStreaming={isStreaming}
+        />
+      ) : (
+        <span>{processedContent}</span>
+      )}
+      {isStreaming && (
+        <span className="streaming-cursor" />
       )}
     </div>
   );
@@ -193,14 +145,15 @@ const StreamedContentComponent: React.FC<StreamedContentProps> = ({
 
 StreamedContentComponent.displayName = 'StreamedContent';
 
-// 使用精确的memo比较函数，避免不必要的重渲染
+// 使用精确的memo比较函数
 const StreamedContent = React.memo(StreamedContentComponent, (prevProps, nextProps) => {
-  // 精确比较关键属性
   return (
     prevProps.content === nextProps.content &&
     prevProps.isStreaming === nextProps.isStreaming &&
     prevProps.className === nextProps.className &&
     prevProps.enableMarkdown === nextProps.enableMarkdown &&
+    prevProps.enableFadeEffect === nextProps.enableFadeEffect &&
+    prevProps.fadeDelay === nextProps.fadeDelay &&
     JSON.stringify(prevProps.style) === JSON.stringify(nextProps.style) &&
     prevProps.onImagePreview === nextProps.onImagePreview
   );

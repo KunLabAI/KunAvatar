@@ -748,7 +748,7 @@ function ChatPageContent() {
           />
 
           {/* ⌨️ 输入区域 */}
-          <div className="relative pb-4">
+          <div className={`relative pb-${isCleanMode ? '2' : '8'}`}>
           <MessageInput
             chatMode={chatMode}
             selectedModel={selectedModel}

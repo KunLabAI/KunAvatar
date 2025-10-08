@@ -12,6 +12,8 @@ import {
 import { useModelVisionValidation } from '../hooks/useModelVisionValidation';
 import { ImagePreview } from './ImagePreview';
 import { useI18n } from '@/contexts/I18nContext';
+import { useConversationTokenStats } from '../hooks/useConversationTokenStats';
+import { TokenStatsDisplay } from './ui/TokenStatsDisplay';
 
 type ChatMode = 'model' | 'agent';
 
@@ -150,6 +152,22 @@ export function MessageInput({
     }
   });
 
+  // Token统计Hook
+  const { stats: tokenStats, loading: tokenStatsLoading, error: tokenStatsError, refreshStats: refreshTokenStats } = useConversationTokenStats(currentConversationId);
+
+  // 监听流式传输结束，刷新token统计
+  const prevIsStreamingRef = useRef(isStreaming);
+  useEffect(() => {
+    // 当流式传输从true变为false时，表示消息生成完成
+    if (prevIsStreamingRef.current && !isStreaming && currentConversationId && refreshTokenStats) {
+      // 延迟刷新，确保后端已经处理完消息保存
+      setTimeout(() => {
+        refreshTokenStats();
+      }, 1500);
+    }
+    prevIsStreamingRef.current = isStreaming;
+  }, [isStreaming, currentConversationId, refreshTokenStats]);
+
   // 获取模型显示名称的函数
   const getModelDisplayName = useCallback(() => {
     if (chatMode === 'agent') {
@@ -181,7 +199,7 @@ export function MessageInput({
         textarea.style.height = 'auto';
         const scrollHeight = textarea.scrollHeight;
         const lineHeight = 24; // 大约每行24px
-        const maxHeight = lineHeight * 6; // 最大6行
+        const maxHeight = lineHeight * 16; // 最大16行
         const minHeight = lineHeight * 1; // 最小1行
         
         const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
@@ -265,6 +283,14 @@ export function MessageInput({
       // 发送消息（对话创建逻辑在父组件处理）
       if (onSendMessage) {
         await onSendMessage(messageToSend, imagesToSend.length > 0 ? imagesToSend : undefined);
+        
+        // 消息发送成功后，刷新token统计
+        if (currentConversationId && refreshTokenStats) {
+          // 延迟一下刷新，确保后端已经处理完消息保存
+          setTimeout(() => {
+            refreshTokenStats();
+          }, 1000);
+        }
       }
     } catch (error) {
       console.error('发送消息失败:', error);
@@ -451,7 +477,7 @@ export function MessageInput({
           </div>
           {/* 控件栏 */}
           <div className="flex items-center justify-between p-2 overflow-visible">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               {/* 图片上传控件 - 默认显示，点击时验证模型支持 */}
               {enableImageUpload && (
                 <ImageUploadControl
@@ -512,8 +538,16 @@ export function MessageInput({
               )}
             </div>
             
-            {/* 右侧：用户操作区域（提示词优化 + 发送按钮） */}
+            {/* 右侧：用户操作区域（Token统计 + 提示词优化 + 发送按钮） */}
             <div className="flex items-center gap-2">
+              {/* Token统计显示 */}
+              {currentConversationId && (
+                <TokenStatsDisplay 
+                  stats={tokenStats}
+                  loading={tokenStatsLoading}
+                />
+              )}
+              
               {/* 提示词优化控件 */}
               <PromptOptimizeControl
                 currentText={message}
